@@ -47,8 +47,7 @@ var iglooUserSettings = {
 	maxContentSize: 50,
 	sig: "([[Wikipedia:Igloo|GLOO]])",
 	serverLoc: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/',
-	version: "0.65",
-	versionString: (iglooBranch === "dev" ? (iglooUserSettings.version + " Phoenix") : (iglooUserSettings.version + " Igloo")),
+	version: "0.65 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
 	mesysop: false,
 	localBase: 'Wikipedia:Igloo',
 
@@ -135,7 +134,7 @@ function iglooMain () {
 	this.load = function () {
 		var groups = mw.config.get('wgUserGroups');
 
-		document.title = 'igloo - ' + iglooUserSettings.versionString;
+		document.title = 'igloo - ' + iglooUserSettings.version;
 
 		for ( var i = 0; i < groups.length; i++ ) {
 			if (groups[i] === 'steward' || groups[i] === 'sysop') { 
