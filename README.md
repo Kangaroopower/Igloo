@@ -1,2 +1,4 @@
-ig
-==
+Igloo
+=====
+
+Wikipedia Anti-Vandalism script
