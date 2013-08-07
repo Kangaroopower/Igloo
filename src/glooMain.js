@@ -10,10 +10,9 @@ _iglooViewable = new iglooViewable();
 
 
 // iglooMain alpha copy
-  // based off code by Alex Barley
-  // base code test only
+// based off code by Alex Barley
 	
-	// expected jQuery 1.7.*, jin 1.04a+, Flash 0.72+, Mediawiki 1.20+
+// expected jQuery 1.7.*, jin 1.04a+, Flash 0.72+, Mediawiki 1.20+
 
 /*
 	CLASSES ==========================
