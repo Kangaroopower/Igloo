@@ -47,18 +47,47 @@ var iglooUserSettings = {
 	maxContentSize: 50,
 	sig: "([[Wikipedia:Igloo|GLOO]])",
 	serverLoc: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/',
-	version: "0.65 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
+	version: "0.7 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
 	mesysop: false,
 	localBase: 'Wikipedia:Igloo',
 
 	// Modules
 
 	//Rollback Module
-	vandalTemplate: 'vandalism',
+	vandalTemplate: {
+		vandalism: 'vandalism',
+		spam: 'spam',
+		rmcontent: 'delete',
+		attacks: 'defam',
+		errors: 'error',
+		custom: 'disruptive'
+	},
 	warningMessage: '{'+'{subst:uw-%MESSAGE%%LEVEL%|%PAGE%|2=The reverted edit can be found <span class="plainlinks">[%DIFF% here]</span>.}'+'}<!'+'-- igloo:%MESSAGE%%LEVEL% --'+'> ~~'+'~~',
-	warningSummary: 'Level %LEVEL% warning re. vandalism on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
-	rollbackSummary: 'Reverted edits by [[Special:Contributions/$2|$2]] to last version by $1 ([[Wikipedia:Igloo|GLOO]])',
- 
+	warningSummary: {
+		vandalism: 'Level %LEVEL% warning re. vandalism on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		spam: 'Level %LEVEL% warning re. spam on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		rmcontent: 'Level %LEVEL% warning re. removal of content on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		attacks: 'Level %LEVEL% warning re. personal attacks on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		errors: 'Level %LEVEL% warning re. factual errors on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		custom: 'Level %LEVEL% warning on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])'
+	},
+	rollbackSummary: {
+		vandalism: 'Reverted edits by [[Special:Contributions/$2|$2]] to last version by $1 ([[Wikipedia:Igloo|GLOO]])',
+		spam: 'Reverted edits by [[Special:Contributions/$2|$2]] which violate the external links policy by ([[Wikipedia:Igloo|GLOO]])',
+		rmcontent: 'Reverted unexplained removal of content by [[Special:Contributions/$2|$2]]  ([[Wikipedia:Igloo|GLOO]])',
+		attacks: 'Reverted addition of [[WP:BLP|unsourced negative content]] to a biographical article by [[Special:Contributions/$2|$2]]  ([[Wikipedia:Igloo|GLOO]])',
+		errors: 'Reverted addition of dubious unsourced content by [[Special:Contributions/$2|$2]]  ([[Wikipedia:Igloo|GLOO]])',
+		agf: 'Reverted good faith edits by [[Special:Contributions/$2|$2]] to last version by $1 ([[Wikipedia:Igloo|GLOO]])'
+	},
+	rollbackReasons: {
+		vandalism: 'vandalism',
+		spam: 'spam',
+		rmcontent: 'removal of content',
+		attacks: 'Personal Attacks',
+		errors: 'factual errors',
+		agf: 'good faith edits',
+		custom: 'a custom reason'
+	},
 	warningsOldAfter: 2, // days after which warnings are considered irrelevant
  
 	aiv: 'Wikipedia:Administrator intervention against vandalism',
@@ -69,8 +98,8 @@ var iglooUserSettings = {
 	aivSummary: 'Reporting [[Special:Contributions/%USER%|%USER%]] - vandalism after final warning ',
 	notifyWarningDone: true,
 
-	//History Module
-	histWinTimeout: 0.8,
+	//Dropddowns
+	dropdownWinTimeout: 0.8,
 
 	//Archive Module
 	maxArchives: 20
@@ -903,6 +932,9 @@ iglooRevision.prototype.display = function () {
 			// Clear current display.
 			$(igloo.diffContainer.panel).find('*').remove();
 			
+			//Append rollback module
+			igloo.justice.loadModule();
+
 			//Append history module
 			igloo.past.loadModule();
 
@@ -1278,7 +1310,7 @@ iglooPast.prototype.buildInterface = function () {
 			me.hist.timer = setTimeout(function() {
 				me.hist.end();
 				me.hist.timer = false; 
-			}, iglooUserSettings.histWinTimeout * 1000);
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
 		}
 	});
 };
@@ -1303,7 +1335,7 @@ iglooPast.prototype.loadModule = function () {
 			me.hist.timer = setTimeout(function() {
 				me.hist.end();
 				me.hist.timer = false; 
-			}, iglooUserSettings.histWinTimeout * 1000);
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
 		}
 	});
 
@@ -1367,6 +1399,7 @@ function iglooReversion () {
 	this.revId = -1;
 	this.user = '';
 	this.rollback;
+	this.timer = null;
 	this.reversionEnabled = 'yes';
 
 	//Receives info for new diff
@@ -1381,10 +1414,21 @@ function iglooReversion () {
 }
 
 iglooReversion.prototype.buildInterface = function () {
-	var revertButton = document.createElement('div'), me = this;
+	var revertButton = document.createElement('div'),
+		me = this,
+		summaries = ['Vandalism', 'Spam', 'Removal of Content', 'Personal Attacks', 'Factual Errors', 'AGF', 'Custom Summary'],
+		summaryids = ['vandalism', 'spam', 'rmcontent', 'attacks', 'errors', 'agf', 'custom'];
 
+
+	revertButton.id = 'igloo-revert';
 	revertButton.innerHTML = '<img src= "' + iglooUserSettings.serverLoc + 'images/igloo-revert.png">';
 
+	this.revertDisplay = document.createElement('div');
+	this.revertCont = document.createElement('ul');
+
+	this.revertDisplay.id = "igloo-revert-display";
+	this.revertCont.id = "igloo-revert-cont";
+	
 	$(revertButton).click(function () {
 		if (me.pageTitle !== '') {
 			me.rollback.go();
@@ -1401,7 +1445,122 @@ iglooReversion.prototype.buildInterface = function () {
 		'cursor': 'pointer',
 	});
 
+	$(this.revertDisplay).css({
+		top: '103px',
+		width: '170px',
+		backgroundColor: '' +jin.Colour.GREY,
+		border: '1px solid '+ jin.Colour.BLACK,
+		padding: '2px',
+		'font-size': '10px',
+		cursor: 'pointer',
+		display: 'none',
+		'float':'left',
+		'position':'fixed',
+		'z-index': 999999999999,
+		'left': '27%'
+	});
+
+	$(this.revertCont).css({
+		top: '9px',
+		width: '100%',
+		height: '100%',
+		margin: '0px',
+		padding: '0px',
+		'overflow-x': 'hidden',
+		'overflow-y': 'auto',
+		display: 'none',
+		'float':'left'
+	});
+
 	igloo.toolPane.panel.appendChild(revertButton);
+
+	$('#igloo-revert').mouseover(function () {
+		if (me.pageTitle !== '') {
+			if ( !!me.timer === true ) { 
+				clearTimeout ( me.timer ); 
+				me.timer = false; 
+			} else {
+				document.getElementById('igloo-revert-cont').style.display = 'block'
+				document.getElementById('igloo-revert-display').style.display = 'block';
+			}
+		}
+	});
+
+	$('#igloo-revert').mouseout(function () {
+		if (me.pageTitle !== '') {
+			me.timer = setTimeout(function() {
+				document.getElementById('igloo-revert-display').style.display = 'none';
+				me.timer = false; 
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
+		}
+	});
+};
+
+iglooReversion.prototype.loadModule = function () {
+	var me = this,
+		summaries = ['Vandalism', 'Spam', 'Removal of Content', 'Personal Attacks', 'Factual Errors', 'AGF', 'Custom Summary'],
+		summaryids = ['vandalism', 'spam', 'rmcontent', 'attacks', 'errors', 'agf', 'custom'],
+		revertHtml = '';
+
+	for (var x = 0; x < summaries.length; x++) {
+		revertHtml += '<li id="igRevert_'+summaryids[x]+'" class="igDropdownLink" onclick="igloo.justice.go(\''+summaryids[x]+'\');">'+ summaries[x] + '</li>';
+	}
+
+	$(me.revertCont).append(revertHtml);
+	this.revertDisplay.innerHTML = '';
+
+	$(this.revertDisplay).mouseover(function () {
+		if (me.pageTitle !== '') {
+			if ( !!me.timer === true ) { 
+				clearTimeout ( me.timer ); 
+				me.timer = false; 
+			} else {
+				document.getElementById('igloo-revert-cont').style.display = 'block'
+				document.getElementById('igloo-revert-display').style.display = 'block';
+			}
+		}
+	});
+
+	$(this.revertDisplay).mouseout(function () {
+		if (me.pageTitle !== '') {
+			me.timer = setTimeout(function() {
+				document.getElementById('igloo-revert-display').style.display = 'none';
+				me.timer = false; 
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
+		}
+	});
+
+	$(this.revertDisplay).append(this.revertCont);
+	igloo.diffContainer.panel.appendChild(this.revertDisplay);
+
+	$('.igDropdownLink').mouseover(function () {
+		$(this).css({backgroundColor: jin.Colour.LIGHT_GREY});
+	}).mouseout(function () {
+		$(this).css({backgroundColor: jin.Colour.WHITE});
+	});
+
+	$('.igDropdownLink').css({
+		cursor: 'pointer',
+		width: '186px',
+		padding: '2px',
+		'border-bottom': '1px solid #000000',
+		'list-style-type': 'none',
+		'marker-offset': '0px',
+		'background-color': jin.Colour.WHITE
+	});
+};
+
+iglooReversion.prototype.go = function (summary) {
+	var me = this;
+
+	if (me.pageTitle !== '') {
+		if (summary === 'custom') {
+			var customSummary = prompt('What\'s your custom sumary?');
+			me.rollback.go(customSummary.toLowerCase(), true);
+		} else {
+			me.rollback.go('' + summary.toLowerCase(), false);
+		}
+	}
 };
 
 //class iglooRollback - does Rollback
@@ -1410,6 +1569,8 @@ function iglooRollback (page, user, revId) {
 	this.revId = revId;
 	this.revertUser = user;
 	this.isIp;
+	this.revType = '';
+	this.isCustom = false;
 
 	this.lastRevertedRevision = false;
 	this.revertedPage = false;
@@ -1426,14 +1587,19 @@ function iglooRollback (page, user, revId) {
 	}
 }
 
-iglooRollback.prototype.go = function () {
+iglooRollback.prototype.go = function (type, isCustom) {
+	this.revType = type || 'vandalism';
+	this.isCustom = isCustom;
+
 	// checks
-	if ( this.revertUser === wgUserName ) {
+	if (this.pageTitle === '') {
+		return;
+	} else if ( this.revertUser === wgUserName ) {
 		//igloo.iglooControls.getPermission ( 'You are attempting to revert yourself. Ensure you wish to perform this action. igloo will not warn or report users who are reverting themselves.', function ( thisRevert ) { thisRevert.performRollback ( 0, 'cont' ); } ); 
 	} else if ( igloo.currentView.changedSinceDisplay === true ) {
 		//igloo.iglooControls.getPermission ( 'The page you are viewing has changed since it was first loaded. Ensure that the change you were reverting has not already been fixed.', function ( page, user ) { thisRevert.performRollback ( page, user ); } ); 
 	} else { 
-		this.performRollback ( this.pageTitle, this.revertUser ); 
+		this.performRollback(); 
 	}
 };
 
@@ -1462,7 +1628,12 @@ iglooRollback.prototype.performRollback = function ( callback, details ) {
 			document.getElementById ( 'iglooPageTitle' ).innerHTML = document.getElementById ( 'iglooPageTitle' ).innerHTML + ' - reverting edit...';
 
 			// build the reversion summary
-			var summary = iglooUserSettings.rollbackSummary;
+			var summary = ''; 
+			if (thisRevert.isCustom === true) {
+				summary = thisRevert.revType + ' ' + iglooUserSettings.sig;
+			} else {
+				summary = iglooUserSettings.rollbackSummary[thisRevert.revType];
+			}
 					
 			// attempt the actual rollback
 			var thisReversion = new iglooRequest({
@@ -1504,7 +1675,7 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 	switch ( callback ) {
 		default: case 0:
 			// don't warn self
-			if ( thisRevert.revertUser === wgUserName ) {
+			if ( thisRevert.revertUser === wgUserName || thisRevert.revType === 'agf') {
 				document.getElementById ( 'iglooPageTitle' ).innerHTML = thisRevert.pageTitle;
 				break;
 			}
@@ -1512,7 +1683,8 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			document.getElementById ( 'iglooPageTitle' ).innerHTML = thisRevert.pageTitle + ' - warning user';
 
 			// notify user
-			igloo.statusLog.addStatus( 'Attempting to warn <strong>' + thisRevert.revertUser + '</strong> for vandalism on <strong>' + thisRevert.pageTitle + '</strong>...' );
+			var warnReason = thisRevert.isCustom === true ? iglooUserSettings.rollbackReasons.custom : iglooUserSettings.rollbackReasons[thisRevert.revType];					
+			igloo.statusLog.addStatus( 'Attempting to warn <strong>' + thisRevert.revertUser + '</strong> for ' + warnReason + ' on <strong>' + thisRevert.pageTitle + '</strong>...' );
 
 			// get the user talk page
 			var getUserPage = new iglooRequest({
@@ -1626,23 +1798,36 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			if (this.warningLevel === false) return false;
 					
 			var userPage = 'User_talk:' + this.revertUser;
-			var message = iglooUserSettings.warningMessage;
+			var message = '\n\n' + iglooUserSettings.warningMessage;
 				message = message.replace ( /%LEVEL%/g, this.warningLevel );
 				message = message.replace ( /%PAGE%/g, this.pageTitle );
 				message = message.replace ( /%DIFF%/g, wgServer + wgScript + '?diff=' + this.revId + '' );
-				message = message.replace ( /%MESSAGE%/g, iglooUserSettings.vandalTemplate );
-			var summary = iglooUserSettings.warningSummary;
-				summary = summary.replace ( /%LEVEL%/g, this.warningLevel );
-				summary = summary.replace ( /%PAGE%/g, this.pageTitle );
+
+			if (thisRevert.isCustom === true) {
+				message = message.replace ( /%MESSAGE%/g, iglooUserSettings.vandalTemplate.custom );
+			} else {
+				message = message.replace ( /%MESSAGE%/g, iglooUserSettings.vandalTemplate[thisRevert.revType] );
+			}
+
+			var summary;
+			if (thisRevert.isCustom === true) {
+				summary = iglooUserSettings.warningSummary.custom;
+			} else {
+				summary = iglooUserSettings.warningSummary[thisRevert.revType]
+			}
+			summary = summary.replace ( /%LEVEL%/g, this.warningLevel );
+			summary = summary.replace ( /%PAGE%/g, this.pageTitle );
 				
-			if ( header !== false ) message = '\n' + header + '\n' + message;
+			if ( header !== false ) message = '\n\n' + header + '\n\n' + message;
 
 			var userReport = new iglooRequest({
 				module: 'edit',
 				params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
 				callback: function ( data ) {
-					if ( iglooUserSettings.notifyWarningDone === true )
-						igloo.statusLog.addStatus( 'Successfully issued a level <strong>' + thisRevert.warningLevel + '</strong> warning to <strong>' + thisRevert.revertUser + '</strong> for vandalism on <strong>' + thisRevert.pageTitle + '</strong>!' ); 
+					if ( iglooUserSettings.notifyWarningDone === true ) {
+						var revertReason = thisRevert.isCustom === true ? iglooUserSettings.rollbackReasons.custom : iglooUserSettings.rollbackReasons[thisRevert.revType];
+						igloo.statusLog.addStatus( 'Successfully issued a level <strong>' + thisRevert.warningLevel + '</strong> warning to <strong>' + thisRevert.revertUser + '</strong> for ' + revertReason + ' on <strong>' + thisRevert.pageTitle + '</strong>!' ); 
+					}
 				}
 			}, 0, true, true);
 			userReport.run();
