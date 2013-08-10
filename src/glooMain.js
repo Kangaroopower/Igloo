@@ -899,6 +899,9 @@ iglooRevision.prototype.display = function () {
 
 	// Add to archives
 	igloo.archives.manageHist(this.pageTitle, this.user, this.revId);
+
+	//Clear search error tag
+	$('#igloo-search-error').html('');
 	
 	// Create display element.
 	if (displayWhat === 'revision' || this.type === 'new') {
@@ -1379,22 +1382,35 @@ function iglooSearch () {
 }
 
 iglooSearch.prototype.buildInterface = function () {
-	var search = document.createElement('div'), me = this, browsePos = ( 62 * 2 ) - 15;
+	var search = document.createElement('div'), 
+		me = this, 
+		browsePos = ( 62 * 2 ) - 15,
+		error = document.createElement('div');
 
-	search.innerHTML = '<input id="igloo-search-to" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.serverLoc + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
+	search.innerHTML = '<input placeholder="Search" id="igloo-search-to" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.serverLoc + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
+	error.innerHTML = '';
+
+	error.id = 'igloo-search-error';
 
 	$(search).css({
 		'position': 'relative',
 		'float': 'left',
-		'width': '230px',
+		'width': '330px',
 		'height': '20px',
 		'left': '-' + browsePos + 'px',
-		'margin-top': '65px',
+		'margin-top': '60px',
 		'margin-left': '5px',
 		'cursor': 'pointer',
 	});
 
+	$(error).css({
+		'font-size': '14px',
+		'color': 'red',
+		'cursor': 'auto'
+	});
+
 	igloo.toolPane.panel.appendChild(search);
+	search.appendChild(error);
 
 	$('#igloo-search-to').focus(function(){
 		igloo.piano.mode = 'search';
@@ -1407,14 +1423,21 @@ iglooSearch.prototype.buildInterface = function () {
 
 iglooSearch.prototype.search = function () {
 	var browseTo = $('#igloo-search-to').val();
-	igloo.justice.reversionEnabled = 'pause';
-	
+
 	$('#igloo-search-to').val('');
+	$('#igloo-search-error').html('');
 
 	var search = new iglooRequest({
 		module: 'getPage',
 		params: { targ: browseTo, revisions: 1, properties: 'ids|user' },
-		callback: function ( data ) {  igloo.actions.loadPage(browseTo, data[0].ids.revid); }
+		callback: function (data) {
+			if (data !== false) {
+				igloo.justice.reversionEnabled = 'pause';
+				igloo.actions.loadPage(browseTo, data[0].ids.revid);
+			} else {
+				$('#igloo-search-error').html('Error: '+ browseTo + ' doesn\'t exist');
+			}
+		}
 	}, 0, true, true);
 	search.run();
 };
@@ -1439,7 +1462,7 @@ iglooPast.prototype.buildInterface = function () {
 	var histButton = document.createElement('div'), me = this;
 
 	histButton.id = "igloo-hist"
-	histButton.innerHTML = '<img src= "' + iglooConfiguration.serverLoc + 'images/igloo-hist.png">';
+	histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.serverLoc + 'images/igloo-hist.png">';
 
 	this.histDisplay = document.createElement('div');
 	this.histCont = document.createElement('ul');
@@ -1618,7 +1641,7 @@ iglooReversion.prototype.buildInterface = function () {
 
 
 	revertButton.id = 'igloo-revert';
-	revertButton.innerHTML = '<img src= "' + iglooConfiguration.serverLoc + 'images/igloo-revert.png">';
+	revertButton.innerHTML = '<img title="Revert Edit" src= "' + iglooConfiguration.serverLoc + 'images/igloo-revert.png">';
 
 	this.revertDisplay = document.createElement('div');
 	this.revertCont = document.createElement('ul');
@@ -1995,7 +2018,7 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			if (this.warningLevel === false) return false;
 					
 			var userPage = 'User_talk:' + this.revertUser;
-			var message = '\n\n' + iglooConfiguration.warningMessage;
+			var message = '\n' + iglooConfiguration.warningMessage;
 				message = message.replace ( /%LEVEL%/g, this.warningLevel );
 				message = message.replace ( /%PAGE%/g, this.pageTitle );
 				message = message.replace ( /%DIFF%/g, wgServer + wgScript + '?diff=' + this.revId + '' );
@@ -2015,7 +2038,7 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			summary = summary.replace ( /%LEVEL%/g, this.warningLevel );
 			summary = summary.replace ( /%PAGE%/g, this.pageTitle );
 				
-			if ( header !== false ) message = '\n\n' + header + '\n\n' + message;
+			if ( header !== false ) message = '\n' + header + '\n' + message;
 
 			var userReport = new iglooRequest({
 				module: 'edit',
