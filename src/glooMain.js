@@ -2018,7 +2018,7 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			if (this.warningLevel === false) return false;
 					
 			var userPage = 'User_talk:' + this.revertUser;
-			var message = '\n' + iglooConfiguration.warningMessage;
+			var message = '\n\n' + iglooConfiguration.warningMessage;
 				message = message.replace ( /%LEVEL%/g, this.warningLevel );
 				message = message.replace ( /%PAGE%/g, this.pageTitle );
 				message = message.replace ( /%DIFF%/g, wgServer + wgScript + '?diff=' + this.revId + '' );
@@ -2038,7 +2038,7 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			summary = summary.replace ( /%LEVEL%/g, this.warningLevel );
 			summary = summary.replace ( /%PAGE%/g, this.pageTitle );
 				
-			if ( header !== false ) message = '\n' + header + '\n' + message;
+			if ( header !== false ) message = '\n\n' + header + message;
 
 			var userReport = new iglooRequest({
 				module: 'edit',
