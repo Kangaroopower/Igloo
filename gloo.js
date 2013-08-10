@@ -24,10 +24,10 @@
 **			tracker: [[Wikipedia:Igloo]]
 \* ======================================================== */
 
-//Due to how github handles pull requests, you should not import this unless you want to be on the dev
+//Due to how github handles pull requests, you should NOT import this unless you want to be on the dev
 //branch all the time. Instead, go to http://en.wikipedia.org/wiki/WP:Igloo and follow the instructions
 //there. Once this gets to a general release (1.0), this will no longer be a problem as I'll have deleted the
-//branch, moved all the code to Wikipedia, and retained this Github repo for development, not production
+//dev branch, moved all the code to Wikipedia, and retained this Github repo for development, not production
 var iglooBranch = window.iglooBranch || 'dev';
 
 function iglooImport( page, remote ) {
