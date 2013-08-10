@@ -18,6 +18,69 @@ _iglooViewable = new iglooViewable();
 	CLASSES ==========================
 	*/
 	
+// Class iglooConfiguration
+	/*
+	** iglooConfiguration exists to hold variables that are
+	** the same for all users and are subject to change 
+	** so that in the case that variable needs an update, 
+	** you only need to change, that variable in one spot
+	**
+	** It is written here in simplified object form to ensure
+	** it can be parsed as expected.
+	*/
+var iglooConfiguration = {
+	api: mw.config.get('wgServer') + mw.config.get('wgScriptPath') + '/api.php',
+	defaultContentScore: 20,
+	sig: "([[Wikipedia:Igloo|GLOO]])",
+	serverLoc: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/',
+	localBase: 'Wikipedia:Igloo',
+
+	// Modules
+
+	//Rollback Module
+	vandalTemplate: {
+		vandalism: 'vandalism',
+		spam: 'spam',
+		rmcontent: 'delete',
+		attacks: 'defam',
+		errors: 'error',
+		custom: 'disruptive'
+	},
+	warningMessage: '{'+'{subst:uw-%MESSAGE%%LEVEL%|%PAGE%|2=The reverted edit can be found <span class="plainlinks">[%DIFF% here]</span>.}'+'}<!'+'-- igloo:%MESSAGE%%LEVEL% --'+'> ~~'+'~~',
+	warningSummary: {
+		vandalism: 'Level %LEVEL% warning re. vandalism on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		spam: 'Level %LEVEL% warning re. spam on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		rmcontent: 'Level %LEVEL% warning re. removal of content on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		attacks: 'Level %LEVEL% warning re. personal attacks on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		errors: 'Level %LEVEL% warning re. factual errors on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
+		custom: 'Level %LEVEL% warning on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])'
+	},
+	rollbackSummary: {
+		vandalism: 'Reverted edits by [[Special:Contributions/$2|$2]] to last version by $1 ([[Wikipedia:Igloo|GLOO]])',
+		spam: 'Reverted edits by [[Special:Contributions/$2|$2]] which violate the external links policy by ([[Wikipedia:Igloo|GLOO]])',
+		rmcontent: 'Reverted unexplained removal of content by [[Special:Contributions/$2|$2]]  ([[Wikipedia:Igloo|GLOO]])',
+		attacks: 'Reverted addition of [[WP:BLP|unsourced negative content]] to a biographical article by [[Special:Contributions/$2|$2]]  ([[Wikipedia:Igloo|GLOO]])',
+		errors: 'Reverted addition of dubious unsourced content by [[Special:Contributions/$2|$2]]  ([[Wikipedia:Igloo|GLOO]])',
+		agf: 'Reverted good faith edits by [[Special:Contributions/$2|$2]] to last version by $1 ([[Wikipedia:Igloo|GLOO]])'
+	},
+	rollbackReasons: {
+		vandalism: 'vandalism',
+		spam: 'spam',
+		rmcontent: 'removal of content',
+		attacks: 'Personal Attacks',
+		errors: 'factual errors',
+		agf: 'good faith edits',
+		custom: 'a custom reason'
+	},
+	warningsOldAfter: 2, // days after which warnings are considered irrelevant	aiv: 'Wikipedia:Administrator intervention against vandalism',
+	aivWhere: 'appendtext',
+	aivIp: 'IPvandal',
+	aivUser: 'vandal',
+	aivMessage: '* {'+'{%TEMPLATE%|%USER%}'+'} - vandalism after final warning. ~~'+'~~',
+	aivSummary: 'Reporting [[Special:Contributions/%USER%|%USER%]] - vandalism after final warning '	
+};
+
+	
 // Class iglooUserSettings
 	/*
 	** iglooUserSettings is the class that holds the settings
@@ -31,12 +94,6 @@ _iglooViewable = new iglooViewable();
 	** It is written here in simplified object form to ensure
 	** it can be parsed as expected.
 	*/
-var iglooConfiguration = {
-	api: mw.config.get('wgServer') + mw.config.get('wgScriptPath') + '/api.php',
-
-	defaultContentScore: 20
-};
-
 var iglooUserSettings = {
 	// Ticker
 	
@@ -45,32 +102,22 @@ var iglooUserSettings = {
 
 	// Misc
 	maxContentSize: 50,
-	sig: "([[Wikipedia:Igloo|GLOO]])",
-	serverLoc: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/',
-	version: "0.65 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
+	version: "0.7 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
 	mesysop: false,
-	localBase: 'Wikipedia:Igloo',
+
+	//Diffs
+	profFilter: true,
+
+	//Keys
+	blockKeys: false,
 
 	// Modules
 
 	//Rollback Module
-	vandalTemplate: 'vandalism',
-	warningMessage: '{'+'{subst:uw-%MESSAGE%%LEVEL%|%PAGE%|2=The reverted edit can be found <span class="plainlinks">[%DIFF% here]</span>.}'+'}<!'+'-- igloo:%MESSAGE%%LEVEL% --'+'> ~~'+'~~',
-	warningSummary: 'Level %LEVEL% warning re. vandalism on [[%PAGE%]] ([[Wikipedia:Igloo|GLOO]])',
-	rollbackSummary: 'Reverted edits by [[Special:Contributions/$2|$2]] to last version by $1 ([[Wikipedia:Igloo|GLOO]])',
- 
-	warningsOldAfter: 2, // days after which warnings are considered irrelevant
- 
-	aiv: 'Wikipedia:Administrator intervention against vandalism',
-	aivWhere: 'appendtext',
-	aivIp: 'IPvandal',
-	aivUser: 'vandal',
-	aivMessage: '* {'+'{%TEMPLATE%|%USER%}'+'} - vandalism after final warning. ~~'+'~~',
-	aivSummary: 'Reporting [[Special:Contributions/%USER%|%USER%]] - vandalism after final warning ',
-	notifyWarningDone: true,
+ 	notifyWarningDone: true,
 
-	//History Module
-	histWinTimeout: 0.8,
+	//Dropdowns
+	dropdownWinTimeout: 0.8,
 
 	//Archive Module
 	maxArchives: 20
@@ -154,7 +201,7 @@ function iglooMain () {
 		this.statusLog = new iglooStatus();
 		this.actions = new iglooActions();
 
-		this.recentChanges.setTickTime(2000);
+		this.recentChanges.setTickTime(3000);
 		this.statusLog.buildInterface();
 		this.currentView.displayWelcome();
 
@@ -300,7 +347,10 @@ function iglooMain () {
 	};
 
 	this.loadModules = function () {
-		// do nothing
+		this.piano = new iglooKeys();
+		this.piano.begin();
+		this.announce('keys');
+
 		this.justice = new iglooReversion();
 		this.justice.buildInterface();
 		this.announce('rollback');
@@ -317,7 +367,27 @@ function iglooMain () {
 		this.past.buildInterface();
 		this.announce('hist');
 
+		this.bindKeys();
 		this.fireEvent('core', 'modules-loaded', true);
+	};
+
+	this.bindKeys = function () {
+		this.piano.register('backspace', 'default', 8, 8, function () {
+			igloo.archives.goBack(1);
+		});
+
+		this.piano.register('q', 'default', 81, 113, function () {
+			if ( typeof me.justice.pageTitle !== '' ) {
+				igloo.justice.rollback.go();
+			}
+		});
+
+		this.piano.register('f5', 'default', 116, 0, function () {
+			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+			if (keyCheck === true) {
+				window.location.reload();
+			}
+		});
 	};
 }
 
@@ -619,7 +689,7 @@ iglooView.prototype.displayWelcome = function () {
 	// this function specifically displays the welcome message in the diff window
 	var welcomeRequest = new iglooRequest({
 		module: 'getPage',
-		params: { targ: iglooUserSettings.localBase + '/config', revisions: 1, properties: 'content' },
+		params: { targ: iglooConfiguration.localBase + '/config', revisions: 1, properties: 'content' },
 		callback: function ( data ) {
 			//Perform regex
 			var regTest = /welcome:(.+?);;/i, o, regResult;
@@ -829,6 +899,9 @@ iglooRevision.prototype.display = function () {
 
 	// Add to archives
 	igloo.archives.manageHist(this.pageTitle, this.user, this.revId);
+
+	//Clear search error tag
+	$('#igloo-search-error').html('');
 	
 	// Create display element.
 	if (displayWhat === 'revision' || this.type === 'new') {
@@ -899,10 +972,15 @@ iglooRevision.prototype.display = function () {
 			$(table).find('.diff-deletedline').css({ 'background-color': '#ffffaa' });
 			$(table).find('.diff-context').css({ 'background-color': '#eeeeee' });
 			$(table).find('.diffchange').css({ 'color': 'red' });
+
+			table.innerHTML = me.flagProfanity(table.innerHTML);
 			
 			// Clear current display.
 			$(igloo.diffContainer.panel).find('*').remove();
 			
+			//Append rollback module
+			igloo.justice.loadModule();
+
 			//Append history module
 			igloo.past.loadModule();
 
@@ -964,6 +1042,150 @@ iglooRevision.prototype.show = function () {
 	}
 };
 
+iglooRevision.prototype.flagProfanity = function(html) {
+	// this function flags profanity in the diff window
+	if (iglooUserSettings.profFilter !== true) return html;
+ 
+	var profanity = new Array(
+									/\b((?:moth[era]*)?[ -]*f+(?:u|oo)[ck]{2,}(?:ing?|er|hole)?s*|s[e3]+x+[iey]*|r[a4]p(?:e+d*|i+s+t+s*)|su[ck]+(?:s+|ed+|i+n+g+)?|gang[- ]?bang(?:er|ing)?|(?:(?:t+h+|f+)r[e3]{2,}|four)+s[o0]+me+)\b/ig, 
+									/\b(h[o0]+m[o0]+(?:sexual(?:it(?:y|e)+)?)?|(?:is +)?ga+[iy]+|lesb(?:ian|[o0]*))\b/ig,
+							 
+									/\b([ck][o0]+[ck]{2,}(?:head|face|(?:su[ck]{2,}(?:er|ing)?))?|d[o0]+n+g|p[3e]+n[iu]+s+[3e]*s*|p+[3e]{2,}|d[i1]+[ck]{2,}s*(?:su[ck]{2,}(?:er|ing)?)?|manh(?:[o0]{2,}|u+)d+|b[o0]+n+e*r+s*|ball[sz]+(?:a[ck]{2,})?)\b/ig, 
+									/\b(cun+(?:t|[iey]+)s*|vag(?:ina)?s*|puss+[yie]+s*|fann+[yie]+s*)\b/ig, 
+									/\b(t+i+t+(?:s*|[iey]+[sz]*)|breasts*|b+[o0]{2,}b+[ieys]*)\b/ig, 
+									/\b(anal+|ar*ss+e*|ar*se+s+|(?:bum+|butt+) ?(?:h[o0]+le|cr+a[ck]+|o(?:[ck]+s|x+))?)\b/ig,
+							 
+									/\b((?:bull)?(?:s+hite*|ass+)(?:holes?|he[a4]+d+s*)?|cr[a4*]+p+[iy]*|cru+d+|poo+)\b/ig,
+									/\b(w*h+[o0]+r*e+s*|prostitutes*|s+l+u+t+s*|slags*|cu+m+(?:ing)?|d[il]{2,}d[o0]+[o0e]*s*|(?:b+l+[o0]+w+|h+[a4]+n+d+|t[i1]+t+[iey]*)j+[o0]+b+[sz]*|c[o0]+ndom[sz]*|p[o0]+rn)\b/ig,
+									/\b(nigg+(?:er|a+)s*|naz+i+[sz]+|ped[o0]+(?:[phf]+ile)?[sz]*)\b/ig,
+									/\b(ret[a4]+r+d+(?:ed|s)?|f+[a4]+g+([o0]+t+)?s*|d[ou]+che?(ba+g)?s*|bast[ea]rds*|bit*ch[iey]*|[you]*r+ ?m+[ou]+m+)\b/ig,
+							 
+									/('{3,}bold text'{3,}|'{2,}italic text'{2,}|\[{2,}link title\]{2,}|\[http:\/\/www\.example\.com link title\]|={2,} *headline text *={2,})/ig,
+									/\b(q[qwerty]{5,}|[asdf]{8,}|[ghjkl]{8,}|[uiop]{8,})\b/ig,
+									/\b(lol(?:l*ol|cat[sz]*)*|li+e+k)\b/ig,
+									/\b(ha?i+(?=\/)|he+ll+o+|(?:ha+|hee+|ho+)+|l[ou]+v+|ya|ye+h+)\b/ig,
+									/([!?;]{3,}|[.|]{4,}|={6,}|([a-z0-9])\2{6,})/ig
+	);
+ 
+	for (var i = 0; i < profanity.length; i++) {
+		html = html.replace(profanity[i], '<span style="background-color: #ff99ff; font-weight: bold; text-decoration: underline;">$1</span>');
+	}
+ 
+	return html;
+};
+
+//Class iglooKeys- manages most key actions
+function iglooKeys () {
+	this.mode = 'default';
+	this.keys = {
+		'default' : {},
+		'search': {}
+	};
+}
+
+iglooKeys.prototype.begin = function () {
+	var me = this;
+
+	$(document).keydown(function(e) {
+		me.killKeys(e);
+	});
+
+	$(document).keyup(function(e) {
+		me.handleKeys(e);
+	});
+};
+		
+iglooKeys.prototype.handleKeys = function ( e ) {
+	var keyPress, use;
+
+	if (!e) e = window.event;
+	if (e.keyCode) {
+		keyPress = e.keyCode;
+		use = 'keyCode';
+	} else {
+		keyPress = e.charCode;
+		use = 'charCode';
+	}
+			
+	var result = this.manageKeys(keyPress, use, false);
+	if (result === true) return true;
+			
+	if (e.preventDefault) {
+		e.preventDefault();
+	} else {
+		return false;
+	}
+	return true;
+};
+		
+iglooKeys.prototype.killKeys = function ( e ) {
+	var keyPress, use;
+
+	// check whether to prevent the default action
+	if (iglooUserSettings.blockKeys === false) return true;
+			
+	if (!e) e = window.event;
+
+	if (e.keyCode) {
+		keyPress = e.keyCode;
+		use = 'keyCode';
+	} else {
+		keyPress = e.charCode;
+		use = 'charCode';
+	}
+			
+	var result = this.manageKeys(keyPress, use, true);
+	if (result === true) return true;
+
+	if (e.preventDefault) {
+		e.preventDefault();
+	} else {
+		return false;
+	}
+	return true;
+};
+		
+iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
+	var keyMode = this.keys[this.mode], isRegisteredKey = false;
+			
+	if (killcheck === true) {
+		for (var i in keyMode) {
+			if (keyMode[i][use] === code) { 
+				return false;
+			} // if exists, block
+		}
+		return true; // otherwise, don't
+	}
+
+	for (var i in keyMode) {
+		if (keyMode[i][use] === code) {
+			isRegisteredKey = true;
+			keyMode[i].cb();
+			break;
+		}
+	}
+
+	if (isRegisteredKey === true) {
+		return true;
+	}
+
+	return false;
+};
+
+iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
+	var me = this;
+	if (mode in this.keys) {
+		me.keys[mode][key] = {
+			keyCode: kCode,
+			charCode: cCode,
+			cb: func
+		}
+		return true;
+	} else {
+		return false;
+	}
+};
+
 //Class iglooActions- misc actions
 function iglooActions () {
 	//Placeholder
@@ -1019,8 +1241,8 @@ function iglooArchive () {
 			forwardButton = document.createElement('div'),
 			me = this;
 
-		backButton.innerHTML = '<img id="igloo-buttons-back-b" src="' + iglooUserSettings.serverLoc + 'images/igloo-back-grey.png" />';
-		forwardButton.innerHTML = '<img id="igloo-buttons-forward-b" src="' + iglooUserSettings.serverLoc + 'images/igloo-forward-grey.png" />'
+		backButton.innerHTML = '<img id="igloo-buttons-back-b" src="' + iglooConfiguration.serverLoc + 'images/igloo-back-grey.png" />';
+		forwardButton.innerHTML = '<img id="igloo-buttons-forward-b" src="' + iglooConfiguration.serverLoc + 'images/igloo-forward-grey.png" />'
 		
 		$(backButton).click(function () {
 			me.goBack(1);
@@ -1084,8 +1306,8 @@ function iglooArchive () {
 		// handle greying of invalid options
 		var backButton 	= document.getElementById('igloo-buttons-back-b');
 		var forwardButton = document.getElementById('igloo-buttons-forward-b');
-		var backUrl	= '' + iglooUserSettings.serverLoc + 'images/igloo-back';
-		var forwardUrl = '' + iglooUserSettings.serverLoc + 'images/igloo-forward';
+		var backUrl	= '' + iglooConfiguration.serverLoc + 'images/igloo-back';
+		var forwardUrl = '' + iglooConfiguration.serverLoc + 'images/igloo-forward';
 		var grey = '-grey';
 		var filetype = '.png';
  
@@ -1147,45 +1369,75 @@ function iglooArchive () {
 
 //Class iglooSearch- brings up a requested, specific page
 function iglooSearch () {
-	//Placeholder
+	igloo.piano.register('enter', 'search', 13, 0, function () {
+		igloo.detective.search();
+	});
+
+	igloo.piano.register('f5', 'search', 116, 0, function () {
+		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+		if (keyCheck === true) {
+			window.location.reload();
+		}
+	});
 }
 
 iglooSearch.prototype.buildInterface = function () {
-	var search = document.createElement('div'), me = this, browsePos = ( 62 * 2 ) - 15;
+	var search = document.createElement('div'), 
+		me = this, 
+		browsePos = ( 62 * 2 ) - 15,
+		error = document.createElement('div');
 
-	search.innerHTML = '<input id="igloo-search-to" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooUserSettings.serverLoc + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
+	search.innerHTML = '<input placeholder="Search" id="igloo-search-to" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.serverLoc + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
+	error.innerHTML = '';
+
+	error.id = 'igloo-search-error';
 
 	$(search).css({
 		'position': 'relative',
 		'float': 'left',
-		'width': '230px',
+		'width': '330px',
 		'height': '20px',
 		'left': '-' + browsePos + 'px',
-		'margin-top': '65px',
+		'margin-top': '60px',
 		'margin-left': '5px',
 		'cursor': 'pointer',
 	});
 
-	igloo.toolPane.panel.appendChild(search);
-
-	$('#igloo-search-to').keypress(function(e) {
-	    if(e.which == 13) {
-	        me.search();
-	    }
+	$(error).css({
+		'font-size': '14px',
+		'color': 'red',
+		'cursor': 'auto'
 	});
 
+	igloo.toolPane.panel.appendChild(search);
+	search.appendChild(error);
+
+	$('#igloo-search-to').focus(function(){
+		igloo.piano.mode = 'search';
+	});
+
+	$('#igloo-search-to').blur(function(){
+		igloo.piano.mode = 'default';
+	});
 };
 
 iglooSearch.prototype.search = function () {
 	var browseTo = $('#igloo-search-to').val();
-	igloo.justice.reversionEnabled = 'pause';
-	
+
 	$('#igloo-search-to').val('');
+	$('#igloo-search-error').html('');
 
 	var search = new iglooRequest({
 		module: 'getPage',
 		params: { targ: browseTo, revisions: 1, properties: 'ids|user' },
-		callback: function ( data ) {  igloo.actions.loadPage(browseTo, data[0].ids.revid); }
+		callback: function (data) {
+			if (data !== false) {
+				igloo.justice.reversionEnabled = 'pause';
+				igloo.actions.loadPage(browseTo, data[0].ids.revid);
+			} else {
+				$('#igloo-search-error').html('Error: '+ browseTo + ' doesn\'t exist');
+			}
+		}
 	}, 0, true, true);
 	search.run();
 };
@@ -1210,7 +1462,7 @@ iglooPast.prototype.buildInterface = function () {
 	var histButton = document.createElement('div'), me = this;
 
 	histButton.id = "igloo-hist"
-	histButton.innerHTML = '<img src= "' + iglooUserSettings.serverLoc + 'images/igloo-hist.png">';
+	histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.serverLoc + 'images/igloo-hist.png">';
 
 	this.histDisplay = document.createElement('div');
 	this.histCont = document.createElement('ul');
@@ -1278,7 +1530,7 @@ iglooPast.prototype.buildInterface = function () {
 			me.hist.timer = setTimeout(function() {
 				me.hist.end();
 				me.hist.timer = false; 
-			}, iglooUserSettings.histWinTimeout * 1000);
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
 		}
 	});
 };
@@ -1303,7 +1555,7 @@ iglooPast.prototype.loadModule = function () {
 			me.hist.timer = setTimeout(function() {
 				me.hist.end();
 				me.hist.timer = false; 
-			}, iglooUserSettings.histWinTimeout * 1000);
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
 		}
 	});
 
@@ -1367,6 +1619,7 @@ function iglooReversion () {
 	this.revId = -1;
 	this.user = '';
 	this.rollback;
+	this.timer = null;
 	this.reversionEnabled = 'yes';
 
 	//Receives info for new diff
@@ -1381,10 +1634,21 @@ function iglooReversion () {
 }
 
 iglooReversion.prototype.buildInterface = function () {
-	var revertButton = document.createElement('div'), me = this;
+	var revertButton = document.createElement('div'),
+		me = this,
+		summaries = ['Vandalism', 'Spam', 'Removal of Content', 'Personal Attacks', 'Factual Errors', 'AGF', 'Custom Summary'],
+		summaryids = ['vandalism', 'spam', 'rmcontent', 'attacks', 'errors', 'agf', 'custom'];
 
-	revertButton.innerHTML = '<img src= "' + iglooUserSettings.serverLoc + 'images/igloo-revert.png">';
 
+	revertButton.id = 'igloo-revert';
+	revertButton.innerHTML = '<img title="Revert Edit" src= "' + iglooConfiguration.serverLoc + 'images/igloo-revert.png">';
+
+	this.revertDisplay = document.createElement('div');
+	this.revertCont = document.createElement('ul');
+
+	this.revertDisplay.id = "igloo-revert-display";
+	this.revertCont.id = "igloo-revert-cont";
+	
 	$(revertButton).click(function () {
 		if (me.pageTitle !== '') {
 			me.rollback.go();
@@ -1401,7 +1665,122 @@ iglooReversion.prototype.buildInterface = function () {
 		'cursor': 'pointer',
 	});
 
+	$(this.revertDisplay).css({
+		top: '103px',
+		width: '170px',
+		backgroundColor: '' +jin.Colour.GREY,
+		border: '1px solid '+ jin.Colour.BLACK,
+		padding: '2px',
+		'font-size': '10px',
+		cursor: 'pointer',
+		display: 'none',
+		'float':'left',
+		'position':'fixed',
+		'z-index': 999999999999,
+		'left': '27%'
+	});
+
+	$(this.revertCont).css({
+		top: '9px',
+		width: '100%',
+		height: '100%',
+		margin: '0px',
+		padding: '0px',
+		'overflow-x': 'hidden',
+		'overflow-y': 'auto',
+		display: 'none',
+		'float':'left'
+	});
+
 	igloo.toolPane.panel.appendChild(revertButton);
+
+	$('#igloo-revert').mouseover(function () {
+		if (me.pageTitle !== '') {
+			if ( !!me.timer === true ) { 
+				clearTimeout ( me.timer ); 
+				me.timer = false; 
+			} else {
+				document.getElementById('igloo-revert-cont').style.display = 'block'
+				document.getElementById('igloo-revert-display').style.display = 'block';
+			}
+		}
+	});
+
+	$('#igloo-revert').mouseout(function () {
+		if (me.pageTitle !== '') {
+			me.timer = setTimeout(function() {
+				document.getElementById('igloo-revert-display').style.display = 'none';
+				me.timer = false; 
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
+		}
+	});
+};
+
+iglooReversion.prototype.loadModule = function () {
+	var me = this,
+		summaries = ['Vandalism', 'Spam', 'Removal of Content', 'Personal Attacks', 'Factual Errors', 'AGF', 'Custom Summary'],
+		summaryids = ['vandalism', 'spam', 'rmcontent', 'attacks', 'errors', 'agf', 'custom'],
+		revertHtml = '';
+
+	for (var x = 0; x < summaries.length; x++) {
+		revertHtml += '<li id="igRevert_'+summaryids[x]+'" class="igDropdownLink" onclick="igloo.justice.go(\''+summaryids[x]+'\');">'+ summaries[x] + '</li>';
+	}
+
+	$(me.revertCont).append(revertHtml);
+	this.revertDisplay.innerHTML = '';
+
+	$(this.revertDisplay).mouseover(function () {
+		if (me.pageTitle !== '') {
+			if ( !!me.timer === true ) { 
+				clearTimeout ( me.timer ); 
+				me.timer = false; 
+			} else {
+				document.getElementById('igloo-revert-cont').style.display = 'block'
+				document.getElementById('igloo-revert-display').style.display = 'block';
+			}
+		}
+	});
+
+	$(this.revertDisplay).mouseout(function () {
+		if (me.pageTitle !== '') {
+			me.timer = setTimeout(function() {
+				document.getElementById('igloo-revert-display').style.display = 'none';
+				me.timer = false; 
+			}, iglooUserSettings.dropdownWinTimeout * 1000);
+		}
+	});
+
+	$(this.revertDisplay).append(this.revertCont);
+	igloo.diffContainer.panel.appendChild(this.revertDisplay);
+
+	$('.igDropdownLink').mouseover(function () {
+		$(this).css({backgroundColor: jin.Colour.LIGHT_GREY});
+	}).mouseout(function () {
+		$(this).css({backgroundColor: jin.Colour.WHITE});
+	});
+
+	$('.igDropdownLink').css({
+		cursor: 'pointer',
+		width: '186px',
+		padding: '2px',
+		'border-bottom': '1px solid #000000',
+		'list-style-type': 'none',
+		'marker-offset': '0px',
+		'background-color': jin.Colour.WHITE
+	});
+};
+
+iglooReversion.prototype.go = function (summary) {
+	var me = this;
+
+	if (me.pageTitle !== '') {
+		if (summary === 'custom') {
+			var customSummary = prompt('What\'s your custom sumary?');
+			me.rollback.go(customSummary.toLowerCase(), true);
+		} else {
+			me.rollback.go('' + summary.toLowerCase(), false);
+		}
+	}
 };
 
 //class iglooRollback - does Rollback
@@ -1410,6 +1789,8 @@ function iglooRollback (page, user, revId) {
 	this.revId = revId;
 	this.revertUser = user;
 	this.isIp;
+	this.revType = '';
+	this.isCustom = false;
 
 	this.lastRevertedRevision = false;
 	this.revertedPage = false;
@@ -1426,14 +1807,19 @@ function iglooRollback (page, user, revId) {
 	}
 }
 
-iglooRollback.prototype.go = function () {
+iglooRollback.prototype.go = function (type, isCustom) {
+	this.revType = type || 'vandalism';
+	this.isCustom = isCustom;
+
 	// checks
-	if ( this.revertUser === wgUserName ) {
+	if (this.pageTitle === '') {
+		return;
+	} else if ( this.revertUser === wgUserName ) {
 		//igloo.iglooControls.getPermission ( 'You are attempting to revert yourself. Ensure you wish to perform this action. igloo will not warn or report users who are reverting themselves.', function ( thisRevert ) { thisRevert.performRollback ( 0, 'cont' ); } ); 
 	} else if ( igloo.currentView.changedSinceDisplay === true ) {
 		//igloo.iglooControls.getPermission ( 'The page you are viewing has changed since it was first loaded. Ensure that the change you were reverting has not already been fixed.', function ( page, user ) { thisRevert.performRollback ( page, user ); } ); 
 	} else { 
-		this.performRollback ( this.pageTitle, this.revertUser ); 
+		this.performRollback(); 
 	}
 };
 
@@ -1462,7 +1848,12 @@ iglooRollback.prototype.performRollback = function ( callback, details ) {
 			document.getElementById ( 'iglooPageTitle' ).innerHTML = document.getElementById ( 'iglooPageTitle' ).innerHTML + ' - reverting edit...';
 
 			// build the reversion summary
-			var summary = iglooUserSettings.rollbackSummary;
+			var summary = ''; 
+			if (thisRevert.isCustom === true) {
+				summary = thisRevert.revType + ' ' + iglooConfiguration.sig;
+			} else {
+				summary = iglooConfiguration.rollbackSummary[thisRevert.revType];
+			}
 					
 			// attempt the actual rollback
 			var thisReversion = new iglooRequest({
@@ -1504,7 +1895,7 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 	switch ( callback ) {
 		default: case 0:
 			// don't warn self
-			if ( thisRevert.revertUser === wgUserName ) {
+			if ( thisRevert.revertUser === wgUserName || thisRevert.revType === 'agf') {
 				document.getElementById ( 'iglooPageTitle' ).innerHTML = thisRevert.pageTitle;
 				break;
 			}
@@ -1512,7 +1903,8 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			document.getElementById ( 'iglooPageTitle' ).innerHTML = thisRevert.pageTitle + ' - warning user';
 
 			// notify user
-			igloo.statusLog.addStatus( 'Attempting to warn <strong>' + thisRevert.revertUser + '</strong> for vandalism on <strong>' + thisRevert.pageTitle + '</strong>...' );
+			var warnReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];					
+			igloo.statusLog.addStatus( 'Attempting to warn <strong>' + thisRevert.revertUser + '</strong> for ' + warnReason + ' on <strong>' + thisRevert.pageTitle + '</strong>...' );
 
 			// get the user talk page
 			var getUserPage = new iglooRequest({
@@ -1589,7 +1981,7 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 						
 				// check if it is old enough to ignore for the purposes of incremental warnings
 				var timeDiff = ( currentTime + ( currentDate.getTimezoneOffset () * 60 * 1000 ) ) - compareTime;
-				if ( timeDiff > ( iglooUserSettings.warningsOldAfter * 24 * 60 * 60 * 1000 ) ) { 
+				if ( timeDiff > ( iglooConfiguration.warningsOldAfter * 24 * 60 * 60 * 1000 ) ) { 
 					warnings[useWarning][1] = 0; 
 				}
 					
@@ -1626,23 +2018,36 @@ iglooRollback.prototype.warnUser = function( callback, details ) {
 			if (this.warningLevel === false) return false;
 					
 			var userPage = 'User_talk:' + this.revertUser;
-			var message = iglooUserSettings.warningMessage;
+			var message = '\n\n' + iglooConfiguration.warningMessage;
 				message = message.replace ( /%LEVEL%/g, this.warningLevel );
 				message = message.replace ( /%PAGE%/g, this.pageTitle );
 				message = message.replace ( /%DIFF%/g, wgServer + wgScript + '?diff=' + this.revId + '' );
-				message = message.replace ( /%MESSAGE%/g, iglooUserSettings.vandalTemplate );
-			var summary = iglooUserSettings.warningSummary;
-				summary = summary.replace ( /%LEVEL%/g, this.warningLevel );
-				summary = summary.replace ( /%PAGE%/g, this.pageTitle );
+
+			if (thisRevert.isCustom === true) {
+				message = message.replace ( /%MESSAGE%/g, iglooConfiguration.vandalTemplate.custom );
+			} else {
+				message = message.replace ( /%MESSAGE%/g, iglooConfiguration.vandalTemplate[thisRevert.revType] );
+			}
+
+			var summary;
+			if (thisRevert.isCustom === true) {
+				summary = iglooConfiguration.warningSummary.custom;
+			} else {
+				summary = iglooConfiguration.warningSummary[thisRevert.revType]
+			}
+			summary = summary.replace ( /%LEVEL%/g, this.warningLevel );
+			summary = summary.replace ( /%PAGE%/g, this.pageTitle );
 				
-			if ( header !== false ) message = '\n' + header + '\n' + message;
+			if ( header !== false ) message = '\n\n' + header + message;
 
 			var userReport = new iglooRequest({
 				module: 'edit',
 				params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
 				callback: function ( data ) {
-					if ( iglooUserSettings.notifyWarningDone === true )
-						igloo.statusLog.addStatus( 'Successfully issued a level <strong>' + thisRevert.warningLevel + '</strong> warning to <strong>' + thisRevert.revertUser + '</strong> for vandalism on <strong>' + thisRevert.pageTitle + '</strong>!' ); 
+					if ( iglooUserSettings.notifyWarningDone === true ) {
+						var revertReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];
+						igloo.statusLog.addStatus( 'Successfully issued a level <strong>' + thisRevert.warningLevel + '</strong> warning to <strong>' + thisRevert.revertUser + '</strong> for ' + revertReason + ' on <strong>' + thisRevert.pageTitle + '</strong>!' ); 
+					}
 				}
 			}, 0, true, true);
 			userReport.run();
@@ -1661,12 +2066,12 @@ iglooRollback.prototype.reportUser = function( callback, details ) {
 			document.getElementById ( 'iglooPageTitle' ).innerHTML = thisRevert.pageTitle + ' - warning user';
 
 			// notify user
-			igloo.statusLog.addStatus ( 'Attempting to report <strong>' + thisRevert.revertUser + '</strong> to <strong>' + iglooUserSettings.aiv + '</strong> for vandalism after final warning...' );
+			igloo.statusLog.addStatus ( 'Attempting to report <strong>' + thisRevert.revertUser + '</strong> to <strong>' + iglooConfiguration.aiv + '</strong> for vandalism after final warning...' );
 		
 			// get the aiv page
 			var getAivPage = new iglooRequest({
 				module: 'getPage',
-				params: { targ: iglooUserSettings.aiv.replace ( / /g, '_' ), revisions: 1, properties: 'content' },
+				params: { targ: iglooConfiguration.aiv.replace ( / /g, '_' ), revisions: 1, properties: 'content' },
 				callback: function ( data ) { thisRevert.reportUser ( 1, data ); }
 			}, 0, true, true);
 			getAivPage.run();
@@ -1687,26 +2092,26 @@ iglooRollback.prototype.reportUser = function( callback, details ) {
 			}
 					
 			// build page link
-			var aivLink = iglooUserSettings.aiv.replace ( / /g, '_' );
+			var aivLink = iglooConfiguration.aiv.replace ( / /g, '_' );
 					
 			// build the report
-			var myReport = iglooUserSettings.aivMessage;
+			var myReport = iglooConfiguration.aivMessage;
 
 			if ( thisRevert.isIp === true ) { 
-				myReport = myReport.replace ( /%TEMPLATE%/g, iglooUserSettings.aivIp ); 
+				myReport = myReport.replace ( /%TEMPLATE%/g, iglooConfiguration.aivIp ); 
 			} else { 
-				myReport = myReport.replace ( /%TEMPLATE%/g, iglooUserSettings.aivUser ); 
+				myReport = myReport.replace ( /%TEMPLATE%/g, iglooConfiguration.aivUser ); 
 			}
 			myReport = myReport.replace ( /%USER%/g, thisRevert.revertUser );
 					
 			// build the summary
-			var mySummary = iglooUserSettings.aivSummary;
+			var mySummary = iglooConfiguration.aivSummary;
 			mySummary = mySummary.replace ( /%USER%/g, thisRevert.revertUser );
 					
 			// perform the edit
 			var userReport = new iglooRequest({
 				module: 'edit',
-				params: { targ: aivLink, isMinor: false, text: myReport, summary: mySummary, where: iglooUserSettings.aivWhere },
+				params: { targ: aivLink, isMinor: false, text: myReport, summary: mySummary, where: iglooConfiguration.aivWhere },
 				callback: function ( data ) { igloo.statusLog.addStatus ( 'Successfully reported <strong>' + thisRevert.revertUser + '</strong> to AIV!' ); }
 			}, 0, true, true);
 			userReport.run();
