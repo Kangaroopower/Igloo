@@ -1,11 +1,11 @@
-/*global mw:true, jin:true */
+/*global mw:true, jin:true, Flash:true */
 
 // INCLUDES
 function iglooViewable () {
 
 
 }
-_iglooViewable = new iglooViewable();
+var _iglooViewable = new iglooViewable();
 
 
 
@@ -29,7 +29,7 @@ _iglooViewable = new iglooViewable();
 	** it can be parsed as expected.
 	*/
 var iglooConfiguration = {
-	api: mw.config.get('wgServer') + mw.config.get('wgScriptPath') + '/api.php',
+	api: mw.util.wikiScript('api'),
 	defaultContentScore: 20,
 	sig: "([[Wikipedia:Igloo|GLOO]])",
 	serverLoc: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/',
@@ -114,7 +114,7 @@ var iglooUserSettings = {
 	// Modules
 
 	//Rollback Module
- 	notifyWarningDone: true,
+	notifyWarningDone: true,
 
 	//Dropdowns
 	dropdownWinTimeout: 0.8,
@@ -254,7 +254,7 @@ function iglooMain () {
 			this.content.setColour(jin.Colour.WHITE);
 
 			//Status bar
-			this.statusBar = new jin.Panel()
+			this.statusBar = new jin.Panel();
 			this.statusBar.setPosition(0, 0);
 			this.statusBar.setSize(0, 11);
 			this.statusBar.setColour(jin.Colour.GREY);
@@ -485,11 +485,7 @@ function iglooContentManager () {
 					}
 				}
 
-				if (this.content[i].score === 0 
-					&& this.content[i].isRecent === false 
-					&& Math.random() < gcVal
-					&& this.content[i].page.displaying === false) {
-
+				if (this.content[i].score === 0 && this.content[i].isRecent === false && Math.random() < gcVal && this.content[i].page.displaying === false) {
 					igloo.log("selected an item suitable for discard, discarding");
 					this.content[i] = undefined;
 					this.contentSize--;
@@ -716,8 +712,6 @@ iglooView.prototype.displayWelcome = function () {
 // Class iglooPage
 
 function iglooPage () {
-	var me = this;
-	
 	// Details
 	this.info = {
 		pageTitle: '',
@@ -799,8 +793,6 @@ iglooPage.prototype.display = function () {
 	** change, or it may represent the change in full.
 	*/
 function iglooRevision () {
-	var me = this;
-	
 	// Content detail
 	this.user = ''; // the user who made this revision
 	this.page = ''; // the page title that this revision belongs to
@@ -1187,7 +1179,7 @@ iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
 			keyCode: kCode,
 			charCode: cCode,
 			cb: func
-		}
+		};
 		return true;
 	} else {
 		return false;
@@ -1201,7 +1193,7 @@ function iglooActions () {
 
 iglooActions.prototype.getRevInfo = function (page, revId, cb) {
 	var me = this;
-	revId = parseInt(revId);
+	revId = parseInt(revId, 10);
 	var getRev = new iglooRequest({
 		url: iglooConfiguration.api,
 		data: { format: 'json', action: 'query', prop: 'revisions', revids: revId, indexpageids: 1},
@@ -1250,7 +1242,7 @@ function iglooArchive () {
 			me = this;
 
 		backButton.innerHTML = '<img id="igloo-buttons-back-b" src="' + iglooConfiguration.serverLoc + 'images/igloo-back-grey.png" />';
-		forwardButton.innerHTML = '<img id="igloo-buttons-forward-b" src="' + iglooConfiguration.serverLoc + 'images/igloo-forward-grey.png" />'
+		forwardButton.innerHTML = '<img id="igloo-buttons-forward-b" src="' + iglooConfiguration.serverLoc + 'images/igloo-forward-grey.png" />';
 		
 		$(backButton).click(function () {
 			me.goBack(1);
@@ -1267,7 +1259,7 @@ function iglooArchive () {
 			'height': '50px',
 			'margin-top': '7px',
 			'margin-left': '20px',
-			'cursor': 'pointer',
+			'cursor': 'pointer'
 		});
 
 		$(forwardButton).css({
@@ -1277,7 +1269,7 @@ function iglooArchive () {
 			'height': '50px',
 			'margin-top': '7px',
 			'margin-left': '10px',
-			'cursor': 'pointer',
+			'cursor': 'pointer'
 		});
 
 		igloo.toolPane.panel.appendChild(backButton);
@@ -1287,7 +1279,7 @@ function iglooArchive () {
 	this.manageHist = function (page, user, revID) {
 		// add the PREVIOUS page to the display history.
 		if (page && user && revID) {
-			if (this.canAddtoArchives == true) {
+			if (this.canAddtoArchives === true) {
 				// first, remove any history between the current position and 0.
 				if (this.archivePosition >= 0) {
 					this.archives = this.archives.slice(0, (this.archivePosition + 1));
@@ -1335,7 +1327,7 @@ function iglooArchive () {
 	};
  
 	this.goBack = function (count) {
-		count = parseInt(count);
+		count = parseInt(count, 10);
 
 		if (this.archives.length <= 0) return false;
 		if (!count) count = 1;
@@ -1355,7 +1347,7 @@ function iglooArchive () {
 	};
  
 	this.goForward = function(count) {
-		count = parseInt(count);
+		count = parseInt(count, 10);
 
 		if (this.archivePosition < 0) return false;
 		if (!count) count = 1;
@@ -1391,7 +1383,6 @@ function iglooSearch () {
 
 iglooSearch.prototype.buildInterface = function () {
 	var search = document.createElement('div'), 
-		me = this, 
 		browsePos = (62 * 2) - 15,
 		error = document.createElement('div');
 
@@ -1408,7 +1399,7 @@ iglooSearch.prototype.buildInterface = function () {
 		'left': '-' + browsePos + 'px',
 		'margin-top': '60px',
 		'margin-left': '5px',
-		'cursor': 'pointer',
+		'cursor': 'pointer'
 	});
 
 	$(error).css({
@@ -1469,7 +1460,7 @@ function iglooPast () {
 iglooPast.prototype.buildInterface = function () {
 	var histButton = document.createElement('div'), me = this;
 
-	histButton.id = "igloo-hist"
+	histButton.id = "igloo-hist";
 	histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.serverLoc + 'images/igloo-hist.png">';
 
 	this.histDisplay = document.createElement('div');
@@ -1588,7 +1579,7 @@ iglooHist.prototype.getHistory = function (callback, data) {
 
 			document.getElementById('igloo-hist-display').style.display = 'block';
 
- 			// get the page history
+			// get the page history
 			var pageHist = new iglooRequest({
 				module: 'getPage',
 				params: { targ: me.pageTitle, revisions: 15, properties: 'ids|user' },
@@ -1609,7 +1600,7 @@ iglooHist.prototype.getHistory = function (callback, data) {
 				pageHistory += '<li id="iglooHist_'+rev.ids.revid+'" onclick="igloo.actions.loadPage(\''+me.pageTitle.replace('\'', '\\\'')+'\',  \''+rev.ids.revid+'\');" onmouseover="this.style.backgroundColor = \''+jin.Colour.LIGHT_GREY+'\';" onmouseout="this.style.backgroundColor = \''+jin.Colour.WHITE+'\';" style="cursor: pointer; width: 186px; padding: 2px; border-bottom: 1px solid #000000; list-style-type: none; list-style-image: none; marker-offset: 0px; background-color: '+jin.Colour.WHITE+';">'+rev.user+'</li>';
 			}
 			
-			pageHistory += '<li style="width: 100%; list-style-type: none; list-style-image: none; text-align: center;"><a target="_blank" href="'+ wgServer + wgScript + '?title=' + me.pageTitle + '&action=history">- full history -</a></li>';
+			pageHistory += '<li style="width: 100%; list-style-type: none; list-style-image: none; text-align: center;"><a target="_blank" href="'+ mw.util.wikiScript('index') +'?title=' + me.pageTitle + '&action=history">- full history -</a></li>';
 			$(igloo.past.histCont).html(pageHistory);
  
 			break;
@@ -1626,7 +1617,7 @@ function iglooReversion () {
 	this.pageTitle = '';
 	this.revId = -1;
 	this.user = '';
-	this.rollback;
+	this.rollback = null;
 	this.timer = null;
 	this.reversionEnabled = 'yes';
 
@@ -1643,9 +1634,7 @@ function iglooReversion () {
 
 iglooReversion.prototype.buildInterface = function () {
 	var revertButton = document.createElement('div'),
-		me = this,
-		summaries = ['Vandalism', 'Spam', 'Removal of Content', 'Personal Attacks', 'Factual Errors', 'AGF', 'Custom Summary'],
-		summaryids = ['vandalism', 'spam', 'rmcontent', 'attacks', 'errors', 'agf', 'custom'];
+		me = this;
 
 
 	revertButton.id = 'igloo-revert';
@@ -1670,7 +1659,7 @@ iglooReversion.prototype.buildInterface = function () {
 		'height': '73px',
 		'margin-top': '17px',
 		'margin-left': '5px',
-		'cursor': 'pointer',
+		'cursor': 'pointer'
 	});
 
 	$(this.revertDisplay).css({
@@ -1708,7 +1697,7 @@ iglooReversion.prototype.buildInterface = function () {
 				clearTimeout (me.timer); 
 				me.timer = false; 
 			} else {
-				document.getElementById('igloo-revert-cont').style.display = 'block'
+				document.getElementById('igloo-revert-cont').style.display = 'block';
 				document.getElementById('igloo-revert-display').style.display = 'block';
 			}
 		}
@@ -1822,7 +1811,7 @@ iglooRollback.prototype.go = function (type, isCustom) {
 	// checks
 	if (this.pageTitle === '') {
 		return;
-	} else if (this.revertUser === wgUserName) {
+	} else if (this.revertUser === mw.config.get('wgUserName')) {
 		var sameUserCheck = confirm('You are attempting to revert yourself. Ensure you wish to perform this action. igloo will not warn or report users who are reverting themselves.');
 		if (sameUserCheck === true) {
 			me.warnUser = false;
@@ -1907,7 +1896,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 	switch (callback) {
 		default: case 0:
 			// don't warn self
-			if (thisRevert.revertUser === wgUserName || thisRevert.revType === 'agf') {
+			if (thisRevert.revertUser === mw.config.get('wgUserName') || thisRevert.revType === 'agf') {
 				document.getElementById ('iglooPageTitle').innerHTML = thisRevert.pageTitle;
 				break;
 			}
@@ -1985,9 +1974,9 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 				}
 						
 				var compareDate = new Date ();
-					compareDate.setFullYear (parseInt (warnings[useWarning][6]), compareMonth, parseInt (warnings[useWarning][4]));
-					compareDate.setHours (parseInt (warnings[useWarning][2]));
-					compareDate.setMinutes (parseInt (warnings[useWarning][3]));
+					compareDate.setFullYear (parseInt(warnings[useWarning][6], 10), compareMonth, parseInt(warnings[useWarning][4], 10));
+					compareDate.setHours (parseInt(warnings[useWarning][2], 10));
+					compareDate.setMinutes (parseInt(warnings[useWarning][3], 10));
 						
 				var compareTime = compareDate.getTime ();
 						
@@ -1999,7 +1988,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 					
 				// check whether a header already exists for the current month. if not, create one
 				var currentHeader = new RegExp ('={2,4} *' + months[currentMonth] + ' *' + currentYear + ' *={2,4}', 'gi');
-				if (currentHeader.test (pageData) != true) { 
+				if (currentHeader.test (pageData) !== true) { 
 					header = '== '+months[currentMonth]+' '+currentYear+' =='; 
 				} else { 
 					header = false; 
@@ -2015,15 +2004,15 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 			}
 					
 			// decide upon which warning level to issue
-			var currentWarning = parseInt(warnings[useWarning][1])
+			var currentWarning = parseInt(warnings[useWarning][1], 10);
 			if (currentWarning === 4) {
 				igloo.statusLog.addStatus ('Will not warn <strong>' + thisRevert.revertUser + '</strong> because they have already recieved a final warning.');
 				this.reportUser ();
-				this.warningLevel = false
+				this.warningLevel = false;
 			} else if (currentWarning < 4 && currentWarning > 0) {
 				this.warningLevel = currentWarning + 1;
 			} else {
-				this.warningLevel = 1
+				this.warningLevel = 1;
 			}
 					
 			// add the message to their talk page
@@ -2033,7 +2022,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 			var message = '\n\n' + iglooConfiguration.warningMessage;
 				message = message.replace (/%LEVEL%/g, this.warningLevel);
 				message = message.replace (/%PAGE%/g, this.pageTitle);
-				message = message.replace (/%DIFF%/g, wgServer + wgScript + '?diff=' + this.revId + '');
+				message = message.replace (/%DIFF%/g, mw.util.wikiScript('index') + '?diff=' + this.revId + '');
 
 			if (thisRevert.isCustom === true) {
 				message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate.custom);
@@ -2045,7 +2034,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 			if (thisRevert.isCustom === true) {
 				summary = iglooConfiguration.warningSummary.custom;
 			} else {
-				summary = iglooConfiguration.warningSummary[thisRevert.revType]
+				summary = iglooConfiguration.warningSummary[thisRevert.revType];
 			}
 			summary = summary.replace (/%LEVEL%/g, this.warningLevel);
 			summary = summary.replace (/%PAGE%/g, this.pageTitle);
@@ -2169,10 +2158,10 @@ function iglooPopup (content) {
 }
 
 iglooPopup.prototype.center = function () {
-	var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width);
-	var screenHeight = parseInt(igloo.canvas.canvasBase.children[0].style.height);
-	var myWidth = parseInt($(this.popupMenuContent).css('width'));
-	var myHeight = parseInt($(this.popupMenuContent).css('height'));
+	var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width, 10);
+	var screenHeight = parseInt(igloo.canvas.canvasBase.children[0].style.height, 10);
+	var myWidth = parseInt($(this.popupMenuContent).css('width'), 10);
+	var myHeight = parseInt($(this.popupMenuContent).css('height'), 10);
  
 	var leftPos	= ((screenWidth / 2) - (myWidth / 2));
 	var topPos	= ((screenHeight / 2) - (myHeight / 2));
@@ -2215,7 +2204,7 @@ function iglooStatus () {
 
 		$(this.display).css({
 			'left': '0px',
-			'top': (parseInt(igloo.canvas.canvasBase.children[0].style.height) - 252) + 'px',	
+			'top': (parseInt(igloo.canvas.canvasBase.children[0].style.height, 10) - 252) + 'px',	
 			'width': '100%',
 			'height': '140px',
 			'background-color': jin.Colour.LIGHT_GREY,
@@ -2227,8 +2216,8 @@ function iglooStatus () {
 			'position': 'absolute'
 		});
 
- 		igloo.content.panel.appendChild(this.display);
-	}
+		igloo.content.panel.appendChild(this.display);
+	};
 
 	this.addStatus = function(message) {
 		var curDate = new Date(),
@@ -2263,9 +2252,7 @@ function iglooStatus () {
 }
 
 //Class iglooRequest- sends a request to API
-function iglooRequest (request, priority, important, flash) {
-	var me = this;
-	
+function iglooRequest (request, priority, important, flash) {	
 	// Statics
 	getp(this).requests = [];
 	getp(this).queuedRequests = 0;
@@ -2277,7 +2264,7 @@ function iglooRequest (request, priority, important, flash) {
 	this.important = important;
 	this.requestItem = null;
 
-	if (typeof flash != "undefined" && flash == true) {
+	if (typeof flash != "undefined" && flash === true) {
 		this.flash = flash;
 	} else {
 		this.flash = false;
