@@ -1,5 +1,7 @@
 /* ======================================================== *\
 ** 			igloo frontend manager - init
+** 			@author Kangaroopower
+**			igloo concept and initial code by Alex Barley (User:Ale_jrb on Wikipedia)
 \* ======================================================== */
 
 function iglooInitControl() {

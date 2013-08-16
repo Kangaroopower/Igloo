@@ -5,6 +5,9 @@
 // The igloo interface hook is aware of where a user is, and will
 // start igloo and perform the required functions on the correct 
 // pages. It also powers the 'Start igloo' button functionality.
+// @author Kangaroopower
+// igloo concept and initial code by Alex Barley (User:Ale_jrb on Wikipedia)
+
 
 function iglooHookInterface() {
 	this.run = function() {
