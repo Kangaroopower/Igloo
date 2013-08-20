@@ -51,5 +51,16 @@ function iglooHookInterface() {
 		
 	this.run();
 }
-	
-hookEvent('load', iglooHookInterface);
+
+if (typeof jin === 'undefined' || typeof Flash === 'undefined') {
+	tIgLa = function () {
+		if (typeof jin === 'undefined' || typeof Flash === 'undefined') {
+			setTimeout(tIgLa, 1000);
+		} else {
+			iglooHookInterface();
+		}
+	};
+	setTimeout(tIgLa, 1000);
+} else {
+	iglooHookInterface();
+}
