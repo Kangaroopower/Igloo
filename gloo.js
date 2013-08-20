@@ -28,27 +28,29 @@
 //branch all the time. Instead, go to http://en.wikipedia.org/wiki/WP:Igloo and follow the instructions
 //there. Once this gets to a general release (1.0), this will no longer be a problem as I'll have deleted the
 //dev branch, moved all the code to Wikipedia, and retained this Github repo for development, not production
+
 var iglooBranch = window.iglooBranch || 'dev';
 
-function iglooImport( page, remote ) {
-	var c = new Date ();
-	var cachebypass = '&killcache=' + c.getDate () + c.getSeconds () + c.getMilliseconds ();
+function iglooImport (page, remote) {
+	var c = new Date (),
+		cachebypass = '&killcache=' + c.getDate() + c.getSeconds() + c.getMilliseconds(),
+		url;
 			
-	if ( ( remote == null ) || ( remote == false ) ) {
-		var url = wgScript + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent( page.replace( / /g,'_' ) );
+	if ((typeof remote === "undefined") || (remote == null ) || (remote == false)) {
+		url = mw.config.get('wgScript') + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent(page.replace( / /g,'_' ));
 	} else {
-		var url = page;
+		url = page;
 	}
 			
-	var script = document.createElement ( 'script' );
-	script.setAttribute ( 'src', url );
-	script.setAttribute ( 'type', 'text/javascript' );
-	document.getElementsByTagName ( 'head' )[0].appendChild ( script );
-			
+	var script = document.createElement('script');
+	script.setAttribute('src', url);
+	script.setAttribute('type', 'text/javascript');
+	document.getElementsByTagName('head')[0].appendChild(script);
+
 	return script;
 }
 
-iglooImport ('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/flash.js', true);
-iglooImport ('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/jin.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooMeta.branch+'/lib/flash.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooMeta.branch+'/lib/jin.js', true);
 
-iglooImport ('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooMeta.branch+'/src/glooInterfaceHook.js', true);
