@@ -1,4 +1,4 @@
-/*global mw:true, jin:true, Flash:true */
+/*global mw:true, jin:true, Flash:true, iglooImport:true */
 
 // INCLUDES
 function iglooViewable () {
@@ -36,8 +36,9 @@ var iglooConfiguration = {
 	defaultContentScore: 20,
 	fileHost: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/', //Holds resources
 	remoteHost: '', //Actual remote server
-	version: "0.8 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
-
+	version: "0.8 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Alpha") : "Alpha"),
+	limitRequests: 5,
+	
 	// Modules
 
 	//Rollback Module
@@ -110,17 +111,13 @@ var iglooConfiguration = {
 	** it can be parsed as expected.
 	*/
 var iglooUserSettings = {
-	//Server
-	connectToServer: false, //false till proven true
 
 	// Ticker
 	updateTime: 3,
 	hideOwn: false,
 	flagColours: ['#ff8888', '#ffbbbb', '#ffffff', '#bbffbb', '#88ff88'],
 	enableFeedColour: true,
-	
-	// Requests
-	limitRequests: 5,
+	updateQuantity: 10,
 
 	// Misc
 	maxContentSize: 50,
@@ -145,7 +142,7 @@ var iglooUserSettings = {
 	maxArchives: 20,
 
 	//CSD Module
-	logCSD: true
+	logCSD: false
 };
 
 function getp (obj) {
@@ -184,7 +181,7 @@ function iglooMain () {
 		return window.console.log.apply(window.console, args);
 	}) || $.noop;
 
-	this.load = function () {
+	this.load = function (initData) {
 		var groups = mw.config.get('wgUserGroups');
 
 		document.title = 'igloo - ' + iglooConfiguration.version;
@@ -195,6 +192,16 @@ function iglooMain () {
 			}
 		}
 
+		this.remoteConnect = initData.doRemoteConnect;
+		this.firstRun = initData.isFirstRun;
+		this.sessionKey = initData.sessionId;
+		this.connectLocal = initData.isDown;
+
+		//Settings
+		this.cogs = new iglooSettings();
+		this.cogs.retrieve();
+
+		//Launch
 		this.launch();
 	};
 
@@ -384,6 +391,10 @@ function iglooMain () {
 		this.past = new iglooPast();
 		this.past.buildInterface();
 		this.announce('hist');
+
+		//settings isn't technically a modules, but we need to build its interface
+		//after iglooPast
+		this.cogs.buildInterface();
 
 		this.bindKeys();
 		this.fireEvent('core', 'modules-loaded', true);
@@ -583,15 +594,17 @@ function iglooRecentChanges () {
 
 iglooRecentChanges.prototype.update = function () {
 	var me = this;
-	(new iglooRequest({
+	
+	var rcFetch = new iglooRequest({
 		url: me.loadUrl,
-		data: { format: 'json', action: 'query', list: 'recentchanges', rcprop: 'title|user|ids|comment|timestamp|' },
+		data: { format: 'json', action: 'query', list: 'recentchanges', rcprop: 'title|user|ids|comment|timestamp|', rclimit: iglooUserSettings.updateQuantity },
 		dataType: 'json',
 		context: me,
 		success: function (data) {
 			me.loadChanges.apply(me, [data]);
 		}
-	}, 0, false)).run();
+	}, 0, false);
+	rcFetch.run();
 };
 
 iglooRecentChanges.prototype.loadChanges = function (changeSet) {
@@ -773,15 +786,25 @@ iglooView.prototype.displayWelcome = function () {
 		params: { targ: glooLocalBase + '/config', revisions: 1, properties: 'content' },
 		callback: function (data) {
 			//Perform regex
-			var regTest = /welcome:(.+?);;/i, o, regResult;
+			var regTest, o, regResult;
+
+			if (igloo.firstRun === true) {
+				regTest = /firstrun:(.+?);;/i;
+			} else {
+				regTest = /welcome:(.+?);;/i;
+			}
+
+			//get Regex
 			regResult = regTest.exec(data[0].content);
-			o = regResult[1].replace ('%CURRENTVERSION%', iglooConfiguration.version);
+			o = regResult[1].replace('%CURRENTVERSION%', iglooConfiguration.version);
+			o = regResult[1].replace('%CURRENTUSER%', mw.config.get('wgUserName'));
 
 			// Clear current display.
 			$(igloo.diffContainer.panel).find('*').remove();
 				
 			// Append new content.
 			$(igloo.diffContainer.panel).append(o);
+
 		}
 	}, 0, true, true);
 	welcomeRequest.run();
@@ -1283,6 +1306,331 @@ iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
 	}
 };
 
+//Class iglooSettings- builds settings interface and manages settings storage/handling
+function iglooSettings () {
+	this.popup = null;
+	this.settingsEnabled = true;
+
+	igloo.piano.register('f5', 'settings', 116, 0, function () {
+		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+		if (keyCheck === true) {
+			window.location.reload();
+		}
+	});
+}
+
+iglooSettings.prototype.retrieve = function () {
+	if (igloo.remoteConnect && !igloo.connectLocal) {
+		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=get&session=' + igloo.sessionKey, true);
+		if (typeof iglooNetSettings !== "undefined") {
+			iglooUserSettings.firstRun = false;
+			$.extend(iglooUserSettings, iglooNetSettings);
+		} else {
+			if (mw.user.options.get('userjs-igloo') !== null) {
+				var localSettings = JSON.parse(mw.user.options.get('userjs-igloo'));
+				for (var setting in localSettings) {
+					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(localSettings[setting]) + '&session=' + igloo.sessionKey, true);
+				}
+			} else {
+				for (var defaultSetting in iglooUserSettings) {
+					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(defaultSetting) + '&value=' + encodeURIComponent(iglooUserSettings[defaultSetting]) + '&session=' + igloo.sessionKey, true);
+				}
+			}
+		}
+	} else {
+		if (mw.user.options.get('userjs-igloo') === null) {
+			var setIglooPrefs = new iglooRequest({
+				module: 'preferences',
+				params: { key: 'userjs-igloo', value: JSON.stringify(iglooUserSettings) },
+				callback: function (data) {
+					igloo.launch();
+				}
+			}, 0, true, true);
+			setIglooPrefs.run();
+		} else {
+			igloo.firstRun = false;
+			$.extend(iglooUserSettings, JSON.parse(mw.user.options.get('userjs-igloo')));
+		}
+	}
+	igloo.launch();
+};
+
+iglooSettings.prototype.set = function (setting, value, cb) {
+	var me = this;
+
+	cb = (typeof cb !== "undefined" || typeof cb === "function") ? cb : function () {};
+
+	if (this.settingsEnabled !== true) return false;
+	this.settingsEnabled = false;
+
+	if (igloo.remoteConnect && setting !== "remoteConnect" && !igloo.connectLocal) { //It'd be useless to query remotely to see if we're allowed to connect remotely
+		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(value) + '&session=' + igloo.sessionKey, true);
+	}
+	
+	var storedSettings = JSON.parse(mw.user.options.get('userjs-igloo')),
+		key = (setting === "remoteConnect") ? 'userjs-iglooRemoteConnect' : 'userjs-igloo';
+
+	storedSettings[setting] = value;
+
+	var setIglooSetting = new iglooRequest({
+		module: 'preferences',
+		params: { key: key, value: JSON.stringify(storedSettings) },
+		callback: function (data) {
+			cb(data);
+			me.settingsEnabled = true;
+		}
+	}, 0, true, true);
+	setIglooSetting.run();
+};
+
+iglooSettings.prototype.buildInterface = function () {
+	var settingsButton = document.createElement('div'),
+		me = this;
+
+	settingsButton.id = 'igloo-settings';
+	settingsButton.innerHTML = '<img title="Modify Igloo Settings" src= "' + iglooConfiguration.fileHost + 'images/igloo-settings.png">';
+	
+	$(settingsButton).click(function () {
+		me.show();
+	});
+
+	$(settingsButton).css({
+		'position': 'relative',
+		'float': 'right',
+		'width': '73px',
+		'height': '73px',
+		'margin-top': '12px',
+		'margin-left': '5px',
+		'margin-right': '5px',
+		'cursor': 'pointer'
+	});
+
+	this.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+				
+	// add tabs
+	this.addtab('info', 'user info');
+	this.addtab('general', 'general');
+	this.addtab('interface', 'interface');
+	this.addtab('close', 'close');
+
+	igloo.toolPane.panel.appendChild(settingsButton);
+	
+	igloo.log('igloo: prepped settings main');
+};
+		
+iglooSettings.prototype.show = function () {
+	this.popup.show();
+
+	//Set key mode
+	igloo.piano.mode = 'settings';
+ 
+	// default tab
+	this.switchtab('info');
+};
+		
+iglooSettings.prototype.hidedisplay = function () {
+	this.popup.hide ();
+	igloo.piano.mode = 'default';
+};
+		
+iglooSettings.prototype.addtab = function ( tabid, tabtext ) {
+	if (!tabid || !tabtext) return false;
+	var tabscont = document.getElementById ( 'igloo-settings-tabs' );
+			
+	tabscont.innerHTML += '<div id="igloo-settings-tab-' + tabid + '" style="float: left; position: relative; top: 1px; font-size: 10px; height: 12px; width: 50px; border: 1px solid #000; text-align: center; cursor: pointer; margin-right: 10px;" onclick="igloo.cogs.switchtab (\'' + tabid + '\');"> ' + tabtext + '</div>';
+		
+	return tabscont;
+};
+		
+iglooSettings.prototype.switchtab = function ( tabid ) {
+	if (!tabid) {
+		igloo.log('igloo: unexpected settings call, tab is missing');
+		return false;
+	}
+	var tabcont = document.getElementById('igloo-settings-content'), 
+		me = this;
+					
+	switch ( tabid ) {
+		case 'info':
+			tabcont.innerHTML = ''; // blank
+			tabcont.innerHTML += '<div style="padding: 10px;">Welcome to the igloo settings panel. From here, you can update your igloo settings - there is no need to save your changes or restart igloo as any alterations will take place immediately. igloo currently has the following data regarding your account:<br /><br />- username: ' + mw.config.get('wgUserName') + '<br />- is an admin: ' + iglooUserSettings.mesysop + '<br /></div>';
+			break;
+
+		case 'general':
+			tabcont.innerHTML = ''; // blank
+			var cont = '';
+
+			cont += '<div style="padding: 10px;">Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
+				cont.appendChild('<b>Connect to Remote Server (igloo only stores settings and a session key- No IP adresses/personal info)</b>', me.createOption({
+					type: "checkbox",
+					checked: igloo.remoteConnect ? true : false,
+					onchange: function () {
+						if (typeof igloo.cogs.set('remoteConnect', $(this).checked) !== "undefined" && igloo.cogs.set('remoteConnect', $(this).checked) === false) {
+							$(this).attr('checked', !$(this).checked);
+							alert('It seems like igloo is still processing your last settings change. Please wait a moment and then try again.');
+						}
+					}
+				}));
+
+				cont.appendChild('RC Ticker Update Time', me.createOption({
+					type: "text",
+					value: iglooUserSettings.updateTime,
+					onchange: function () {
+						if (isNaN(parseInt($(this).val(), 10))) {
+							$(this).val(iglooUserSettings.updateTime);
+						}
+					},
+					onblur: function () {
+						if (typeof igloo.cogs.set('updateTime', $(this).val()) !== "undefined" && typeof igloo.cogs.set('updateTime', $(this).val())) {
+							$(this).val(iglooUserSettings.updateTime);
+						} else {
+							iglooUserSettings.updateTime = parseInt ($(this).val(), 10);
+						}
+					}
+				}));
+
+				cont.appendChild('Update Quantity', me.createOption({
+					type: "text",
+					value: iglooUserSettings.updateQuantity,
+					onchange: function () {
+						if (isNaN(parseInt($(this).val(), 10))) {
+							$(this).val(iglooUserSettings.updateQuantity);
+						}
+					},
+					onblur: function () {
+						if (typeof igloo.cogs.set('updateQuantity', $(this).val()) !== "undefined" && typeof igloo.cogs.set('updateQuantity', $(this).val())) {
+							$(this).val(iglooUserSettings.updateQuantity);
+						} else {
+							iglooUserSettings.updateQuantity = parseInt ($(this).val(), 10);
+						}
+					}
+				}));
+
+
+				cont.appendChild('Prompt on self revert', me.createOption({
+					type: "checkbox",
+					checked: iglooUserSettings.promptRevertSelf ? true : false,
+					onchange: function () {
+						if (typeof igloo.cogs.set('promptRevertSelf', $(this).checked) !== "undefined" && igloo.cogs.set('promptRevertSelf', $(this).checked) === false) {
+							$(this).attr('checked', !$(this).checked);
+						}
+					}
+				}));
+
+				cont.appendChild('Enable profanity highlighting', me.createOption({
+					type: "checkbox",
+					checked: iglooUserSettings.profFilter ? true : false,
+					onchange: function () {
+						if (typeof igloo.cogs.set('profFilter', $(this).checked) !== "undefined" && igloo.cogs.set('profFilter', $(this).checked) === false) {
+							$(this).attr('checked', !$(this).checked);
+						}
+					}
+				}));
+
+				cont.appendChild('Block keyboard shortcuts', me.createOption({
+					type: "checkbox",
+					checked: iglooUserSettings.blockKeys ? true : false,
+					onchange: function () {
+						if (typeof igloo.cogs.set('blockKeys', $(this).checked) !== "undefined" && igloo.cogs.set('blockKeys', $(this).checked) === false) {
+							$(this).attr('checked', !$(this).checked);
+						}
+					}
+				}));
+
+				cont.appendChild('Hide Own edits from the RC Feed', me.createOption({
+					type: "checkbox",
+					checked: iglooUserSettings.hideOwn ? true : false,
+					onchange: function () {
+						if (typeof igloo.cogs.set('hideOwn', $(this).checked) !== "undefined" && igloo.cogs.set('hideOwn', $(this).checked) === false) {
+							$(this).attr('checked', !$(this).checked);
+						}
+					}
+				}));
+
+				cont.appendChild('Log CSD tags (not deletes)', me.createOption({
+					type: "checkbox",
+					checked: iglooUserSettings.logCSD ? true : false,
+					onchange: function () {
+						if (typeof igloo.cogs.set('logCSD', $(this).checked) !== "undefined" && igloo.cogs.set('logCSD', $(this).checked) === false) {
+							$(this).attr('checked', !$(this).checked);
+						}
+					}
+				}));
+			cont += '</table></div>';
+			
+			tabcont.innerHTML = cont;
+			break;
+					
+		case 'interface':
+			var cont = document.createElement('div'), me = this;
+			tabcont.innerHTML = null; // blank
+				
+			cont.style.padding = '10px';
+			cont.innerHTML = '';
+			cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
+			cont.innerHTML += '<div style="padding: 10px;">'
+
+				cont.appendChild('Diff font size (px)', me.createOption({
+					type: "text",
+					value: iglooUserSettings.diffFontSize,
+					onchange: function () {
+						if (isNaN(parseInt($(this).val(), 10))) {
+							$(this).val(iglooUserSettings.diffFontSize);
+						}
+					},
+					onblur: function () {
+						if (typeof igloo.cogs.set('diffFontSize', $(this).val()) !== "undefined" && igloo.cogs.set('diffFontSize', $(this).val()) === false ) {
+							$(this).val(iglooUserSettings.diffFontSize);
+						} else {
+							iglooUserSettings.diffFontSize = parseInt($(this).val(), 10);
+						}
+					}
+				}));
+
+				cont.appendChild('Diff font size (px)', me.createOption({
+					type: "text",
+					value: iglooUserSettings.dropdownWinTimeout,
+					onblur: function () {
+						if (typeof igloo.cogs.set('Dropdown window timeout', $(this).val()) !== "undefined" && igloo.cogs.set('dropdownWinTimeout', $(this).val()) === false ) {
+							$(this).val(iglooUserSettings.dropdownWinTimeout);
+						} else {
+							iglooUserSettings.dropdownWinTimeout = parseFloat(this.value);
+						}
+					}
+				}));
+			cont += '</table></div>';
+			
+			tabcont.innerHTML = cont;
+			break;
+					
+		case 'close':
+			me.hidedisplay();
+			break;
+				
+		default:
+			igloo.log('igloo: unexpected settings call, tab content undefined');
+			break;
+	}
+};
+
+iglooSettings.prototype.createOption = function (description, properties) {
+	var opt = document.createElement('tr'),
+		main = document.createElement('td'),
+		change = document.createElement('input');
+	
+	opt.style.marginLeft = '15px';
+	opt.innerHTML = '';
+	opt.innerHTML += '<td>'+ description + '</td>';
+
+	for (var i in properties) {
+		change[i] = properties[i];
+	}
+
+	main.appendChild(change);
+	opt.appendChild(main);
+	return opt;
+};
+
 //Class iglooActions- misc actions
 function iglooActions () {
 	//we should have things like pageTitle, user and revid
@@ -1572,7 +1920,6 @@ function iglooDelete () {
 
 iglooDelete.prototype.buildInterface = function () {
 	var deleteButton = document.createElement('div'),
-		me = this,
 		reasons = {
 			"g1": "Patent Nonsense",
 			"g2": "Test Page",
@@ -1749,7 +2096,7 @@ iglooCSD.prototype.saveLog = function(csduser) {
 						module: 'edit',
 						params: { targ: iglooConfiguration.csdLogPage, isMinor: false, text: text, summary: csdlogSummary, where: 'appendtext' },
 						callback: function (data) {
-							igloo.statusLog.addStatus('Successfully logged csd tagging on <strong>' + me.pageTitle + '</strong>!')
+							igloo.statusLog.addStatus('Successfully logged csd tagging on <strong>' + me.pageTitle + '</strong>!');
 						}
 					}, 0, true, true);
 					logCSD.run();
@@ -2186,7 +2533,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 
 				while (true) {
 					var t = regTest.exec (pageData);
-					if (t == null) break;
+					if (t === null) break;
 					warnings[i] = [];
 					warnings[i][0] = t[1]; // template
 					warnings[i][1] = t[2]; // level
@@ -2636,7 +2983,7 @@ function iglooRequest (request, priority, important, flash) {
 	this.requestItem = null;
 
 	if (typeof flash != "undefined" && flash === true) {
-		this.flash = flash;
+		this.flash = true;
 	} else {
 		this.flash = false;
 	}
@@ -2662,7 +3009,7 @@ iglooRequest.prototype.run = function () {
 		}
 		
 		// If we have enough requests, just run, otherwise hold.
-		if (getp(this).runningRequests >= iglooUserSettings.limitRequests) {
+		if (getp(this).runningRequests >= iglooConfiguration.limitRequests) {
 			igloo.log('queuing a request because ' + getp(this).runningRequests + '/' + iglooUserSettings.limitRequests + ' are running');
 			
 			getp(this).requests.push(this.request);
@@ -2704,7 +3051,7 @@ iglooRequest.prototype.callback = function () {
 			getp(this).queuedRequests--;
 		}
 
-		if (request !== undefined) {
+		if (typeof request !== "undefined") {
 			getp(this).runningRequests++;
 			$.ajax(request);
 		}
