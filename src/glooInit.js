@@ -69,8 +69,7 @@ function iglooInitControl() {
 				}, 500);
 
 				break;
-			case '4:'
-
+			case '4:':
 				igLauncher.runIglooInterface.addStatus('');
 				igLauncher.runIglooInterface.addStatus('- Retrieving settings...');
 				
