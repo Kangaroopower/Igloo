@@ -50,7 +50,7 @@ function iglooImport (page, remote) {
 	return script;
 }
 
-iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooMeta.branch+'/lib/flash.js', true);
-iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooMeta.branch+'/lib/jin.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/flash.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/jin.js', true);
 
-iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooMeta.branch+'/src/glooInterfaceHook.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);

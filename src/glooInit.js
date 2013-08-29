@@ -5,22 +5,26 @@
 \* ======================================================== */
 
 function iglooInitControl() {
-	var iglooInit = this;
+	var iglooInit = this,
+		remoteConnect = false,
+		firstRun = false,
+		connectLocal = false, //this is never used except when iglooNet is down
+		sessionKey;
 		
 	// initialisation sequence
 	this.init = function(callback) {
 		switch (callback) {
 			default:
 				document.title = 'igloo is loading - please wait';
-				launcher.runIglooInterface.startInterface();
+				igLauncher.runIglooInterface.startInterface();
 				break;
 			case '1':
-				launcher.runIglooInterface.addStatus('- Checking for usergroups...');
+				igLauncher.runIglooInterface.addStatus('- Checking for usergroups...');
 				var groups = mw.config.get('wgUserGroups');
 
 				for ( var i = 0; i < groups.length; i ++ ) {
 					if ( (groups[i] === 'rollbacker') || (groups[i] === 'sysop') || (groups[i] === 'steward') ) { 
-						launcher.runIglooInterface.addStatus('- Usergroup OK!'); 
+						igLauncher.runIglooInterface.addStatus('- Usergroup OK!'); 
 						setTimeout(function() { 
 							iglooInit.init('2'); 
 						}, 500); 
@@ -28,24 +32,24 @@ function iglooInitControl() {
 					}
 				}
 
-				launcher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: rollback rights are required to use igloo. Loading stopped.</div>', true);
+				igLauncher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: rollback rights are required to use igloo. Loading stopped.</div>', true);
 				break;
 			case '2':
-				launcher.runIglooInterface.addStatus('- Checking read API...');
+				igLauncher.runIglooInterface.addStatus('- Checking read API...');
 
 				if (wgEnableAPI === true) { 
-					launcher.runIglooInterface.addStatus('- Read API OK!'); 
+					igLauncher.runIglooInterface.addStatus('- Read API OK!'); 
 				} else { 
-					launcher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: read API access is requried for igloo for run. Loading stopped.</div>', true); 
+					igLauncher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: read API access is requried for igloo for run. Loading stopped.</div>', true); 
 					return false; 
 				}
 
-				launcher.runIglooInterface.addStatus('- Checking write API...');
+				igLauncher.runIglooInterface.addStatus('- Checking write API...');
 					
 				if (wgEnableWriteAPI === true) { 
-					launcher.runIglooInterface.addStatus('- Write API OK!'); 
+					igLauncher.runIglooInterface.addStatus('- Write API OK!'); 
 				} else { 
-					launcher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: write API access is requried for igloo for run. Loading stopped.</div>', true); 
+					igLauncher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: write API access is requried for igloo for run. Loading stopped.</div>', true); 
 					return false; 
 				}
 
@@ -54,13 +58,127 @@ function iglooInitControl() {
 				}, 500);
 				break;
 			case '3':
-				launcher.runIglooInterface.addStatus('');
-				launcher.runIglooInterface.addStatus('Loading complete! igloo will launch in a few seconds...');
-				var timer = setTimeout(function() { 
-					iglooImport ( 'https://raw.github.com/Kangaroopower/Igloo/'+ iglooBranch +'/src/glooMain.js', true);
-					timer = false;
-				}, 2000);
+				igLauncher.runIglooInterface.addStatus('');
+				igLauncher.runIglooInterface.addStatus('- Retrieving resources...');
+				
+				iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+ iglooBranch +'/src/glooMain.js', true);
+
+				igLauncher.runIglooInterface.addStatus('Retrieved Resources!');
+				setTimeout(function() {
+					iglooInit.init('4'); 
+				}, 500);
+
 				break;
+			case '4:'
+
+				igLauncher.runIglooInterface.addStatus('');
+				igLauncher.runIglooInterface.addStatus('- Retrieving settings...');
+				
+				if (mw.config('userjs-iglooFirstRun') === null) {
+					firstRun = true;
+					Flash('preferences').load({key: 'userjs-iglooFirstRun', value: 'false'}).wait(function (data) {
+						setTimeout(function() {
+							iglooInit.init('5'); 
+						}, 500);
+					});
+				} else {
+					setTimeout(function() {
+						iglooInit.init('5'); 
+					}, 500);
+				}
+
+				break;
+			case '5':
+				if (mw.user.options.get('userjs-iglooRemoteConnect') === null || firstRun === true) {
+					firstRun = true;
+
+					var count = 10;
+
+					igLauncher.runIglooInterface.addStatus('Note: This appears to be your first time connecting to igloo');
+					igLauncher.runIglooInterface.addStatus('<span style="font-color:red">You should no that there are two ways to store data in igloo- iglooNet and locally</span>');
+					igLauncher.runIglooInterface.addStatus('');
+					igLauncher.runIglooInterface.addStatus('iglooNet is a remote server hosted on Wikimedia Labs, but run by igloo developers.');
+					igLauncher.runIglooInterface.addStatus('<span style="color:red">We don\'t collect IP adresses or any other personal info, just user defined settings and a session key tied to your account</span>'); 
+					igLauncher.runIglooInterface.addStatus('');
+					igLauncher.runIglooInterface.addStatus('Connecting locally means that your settings are stored on Wikipedia.');
+					igLauncher.runIglooInterface.addStatus('<span style="font-color:red">This is less reliable, and settings may vanish, but it also means that nobody else (except the WMF) can see your settings.</span>');
+					igLauncher.runIglooInterface.addStatus('');
+					igLauncher.runIglooInterface.addStatus('Before we proceed further, igloo will require you to choose a method of connection');
+					igLauncher.runIglooInterface.addStatus('You will always be allowed to reset your method of storage later through the settings module in igloo.');
+					igLauncher.runIglooInterface.addStatus('');
+					igLauncher.runIglooInterface.addStatus('One last note: If you choose to connect to iglooNet, igloo still stores settings locally as a backup in case iglooNet is down.');
+					igLauncher.runIglooInterface.addStatus('However, if you store settings only locally and they are lost, there is no way to retrieve them.');
+					igLauncher.runIglooInterface.addStatus('');
+					igLauncher.runIglooInterface.addStatus('<center><span id="ig-remoteConnect" style="margin:auto; width: 170px; border: 1px solid rgb(68, 68, 68); background-color: rgb(241, 241, 241); color: #0b0080; font-size: 1.35em; font-weight: bold; text-align: center; cursor: pointer;">Connect Remotely</span>&nbsp;<span id="ig-localConnect" style="margin:auto; width: 170px; border: 1px solid rgb(68, 68, 68); background-color: rgb(241, 241, 241); color: #0b0080; font-size: 1.35em; font-weight: bold; text-align: center; cursor: pointer;">Connect Locally</span></center>');
+					igLauncher.runIglooInterface.addStatus('');
+
+					$('#ig-remoteConnect').click(function () {
+						Flash('preferences').load({key: 'userjs-iglooRemoteConnect', value: 'true'}).wait(function (data) {
+							igLauncher.runIglooInterface.addStatus('You have decided to store settings remotely. You can change this later in igloo settings.');
+							remoteConnect = true;
+
+							//connect to server here and retrieve session key
+
+							setTimeout(function() {
+								iglooInit.init('6'); 
+							}, 500);
+						});
+					});
+
+					$('#ig-localConnect').click(function () {
+						Flash('preferences').load({key: 'userjs-iglooRemoteConnect', value: 'false'}).wait(function (data) {
+							igLauncher.runIglooInterface.addStatus('You have decided to store settings locally. You can change this later in igloo settings.');
+							remoteConnect = false;
+							sessionKey = null;
+
+							setTimeout(function() {
+								iglooInit.init('6'); 
+							}, 500);
+						});
+					});
+
+				} else if (mw.user.options.get('userjs-iglooRemoteConnect') === "true" && connectLocal !== true) {
+					firstRun = false;
+					remoteConnect = true;
+
+				 	igLauncher.runIglooInterface.addStatus('<span style="font-color:red">At some time in the past, you decided to connect to iglooNet.</span>'); 
+				 	laucher.runIglooInterface.addStatus('If you wish to connect locally instead, please change this in your igloo settings.');
+					igLauncher.runIglooInterface.addStatus('Remember, igloo only stores settings and a session id- no IP adresses or personal info.')
+					igLauncher.runIglooInterface.addStatus('');
+
+					//Connect to server here
+					//include way to see if server is online, and if not, redo iglooInit step 5
+					//except with the way to connect locally instead
+
+					setTimeout(function() {
+						iglooInit.init('6'); 
+					}, 500);
+				} else {
+					remoteConnect = false;
+					firstRun = false;
+					sessionKey = null;
+
+				 	igLauncher.runIglooInterface.addStatus('You have decided to connect locally, hosting your settings on Wikipedia servers'); 
+				 	laucher.runIglooInterface.addStatus('This means igloo does not host any info on you, but your info can also be lost more easily.');
+					igLauncher.runIglooInterface.addStatus('If you wish to change and connect to iglooNet, you may do so in iglooSettings');
+					igLauncher.runIglooInterface.addStatus('');
+
+					setTimeout(function() {
+						iglooInit.init('6'); 
+					}, 500);
+				}
+
+				break;
+			case '6':
+				igLauncher.runIglooInterface.addStatus('Loading complete! igloo will launch in a few seconds...');
+				setTimeout(function() {
+					iglooHandleLaunch({
+						isFirstRun: firstRun,
+						doRemoteConnect: remoteConnect,
+						sessionId: sessionKey,
+						isDown: connectLocal
+					});
+				}, 1000);
 		}
 	};
 }
@@ -83,13 +201,13 @@ function iglooInitInterface() {
 		//Secondary Background
 		this.initInterface = new jin.Panel();
 		this.initInterface.setPosition(0, 0);
-		this.initInterface.setSize(650, 350);
+		this.initInterface.setSize(650, 400);
 		this.initInterface.setColour(jin.Colour.LIGHT_GREY);
 			
 		//Status Window	
 		this.initInterfaceStatus = new jin.Panel();
 		this.initInterfaceStatus.setPosition(100, 17);
-		this.initInterfaceStatus.setSize(450, 300);
+		this.initInterfaceStatus.setSize(450, 350);
 		this.initInterfaceStatus.setColour(jin.Colour.WHITE);
 			
 		// Combine interface elements.
@@ -113,15 +231,17 @@ function iglooInitInterface() {
 			
 			
 		setTimeout(function() { 
-			launcher.runIglooInit.init('1'); 
+			igLauncher.runIglooInit.init('1'); 
 		}, 500);
 	};
 		
 	this.addStatus = function(message, noEndline) {
 		// add a message to the status output, and display it.
-		if (this.iglooStatus.length > 15) this.iglooStatus.splice(0, 1);
+		if (this.iglooStatus.length > 20) this.iglooStatus.splice(0, 1);
 			
-		if ( (noEndline == null) || (noEndline === false) ) { message += '<br />'; }
+		if (noEndline == null || (noEndline === false) {
+			message += '<br />';
+		}
 			
 		this.iglooStatus.push(message);			
 			
@@ -188,5 +308,5 @@ function iglooInit () {
 	};
 }
 
-var launcher = new iglooInit();
-launcher.launch();
+var igLauncher = new iglooInit();
+igLauncher.launch();
