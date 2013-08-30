@@ -427,7 +427,7 @@ function iglooMain () {
 		this.piano.register('f5', 'default', 116, 0, function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
-				window.location.reload();
+				window.location.reload(true);
 			}
 		});
 	};
@@ -1314,7 +1314,7 @@ function iglooSettings () {
 	igloo.piano.register('f5', 'settings', 116, 0, function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
-			window.location.reload();
+			window.location.reload(true);
 		}
 	});
 }
@@ -1835,7 +1835,7 @@ function iglooSearch () {
 	igloo.piano.register('f5', 'search', 116, 0, function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
-			window.location.reload();
+			window.location.reload(true);
 		}
 	});
 }

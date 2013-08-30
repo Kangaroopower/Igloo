@@ -26,7 +26,7 @@ function iglooInitControl() {
 					if ( (groups[i] === 'rollbacker') || (groups[i] === 'sysop') || (groups[i] === 'steward') ) { 
 						igLauncher.runIglooInterface.addStatus('- Usergroup OK!'); 
 						setTimeout(function() { 
-							iglooInit.init('2'); 
+							igLauncher.runIglooInit.init('2'); 
 						}, 500); 
 						return true; 
 					}
@@ -54,7 +54,7 @@ function iglooInitControl() {
 				}
 
 				setTimeout(function() { 
-					iglooInit.init('3'); 
+					igLauncher.runIglooInit.init('3'); 
 				}, 500);
 				break;
 			case '3':
@@ -63,26 +63,26 @@ function iglooInitControl() {
 				
 				iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+ iglooBranch +'/src/glooMain.js', true);
 
-				igLauncher.runIglooInterface.addStatus('Retrieved Resources!');
+				igLauncher.runIglooInterface.addStatus('- Retrieved Resources!');
 				setTimeout(function() {
-					iglooInit.init('4'); 
+					igLauncher.runIglooInit.init('4'); 
 				}, 500);
 
 				break;
-			case '4:':
+			case '4':
 				igLauncher.runIglooInterface.addStatus('');
 				igLauncher.runIglooInterface.addStatus('- Retrieving settings...');
 				
-				if (mw.config('userjs-iglooFirstRun') === null) {
+				if (mw.user.options.get('userjs-iglooFirstRun') === null) {
 					firstRun = true;
 					Flash('preferences').load({key: 'userjs-iglooFirstRun', value: 'false'}).wait(function (data) {
 						setTimeout(function() {
-							iglooInit.init('5'); 
+							igLauncher.runIglooInit.init('5'); 
 						}, 500);
-					});
+					}).run();
 				} else {
 					setTimeout(function() {
-						iglooInit.init('5'); 
+						igLauncher.runIglooInit.init('5'); 
 					}, 500);
 				}
 
@@ -90,8 +90,6 @@ function iglooInitControl() {
 			case '5':
 				if (mw.user.options.get('userjs-iglooRemoteConnect') === null || firstRun === true) {
 					firstRun = true;
-
-					var count = 10;
 
 					igLauncher.runIglooInterface.addStatus('Note: This appears to be your first time connecting to igloo');
 					igLauncher.runIglooInterface.addStatus('<span style="font-color:red">You should no that there are two ways to store data in igloo- iglooNet and locally</span>');
@@ -119,9 +117,9 @@ function iglooInitControl() {
 							//connect to server here and retrieve session key
 
 							setTimeout(function() {
-								iglooInit.init('6'); 
+								igLauncher.runIglooInit.init('6'); 
 							}, 500);
-						});
+						}).run();
 					});
 
 					$('#ig-localConnect').click(function () {
@@ -131,9 +129,9 @@ function iglooInitControl() {
 							sessionKey = null;
 
 							setTimeout(function() {
-								iglooInit.init('6'); 
+								igLauncher.runIglooInit.init('6'); 
 							}, 500);
-						});
+						}).run();
 					});
 
 				} else if (mw.user.options.get('userjs-iglooRemoteConnect') === "true" && connectLocal !== true) {
@@ -141,7 +139,7 @@ function iglooInitControl() {
 					remoteConnect = true;
 
 				 	igLauncher.runIglooInterface.addStatus('<span style="font-color:red">At some time in the past, you decided to connect to iglooNet.</span>'); 
-				 	laucher.runIglooInterface.addStatus('If you wish to connect locally instead, please change this in your igloo settings.');
+				 	igLauncher.runIglooInterface.addStatus('If you wish to connect locally instead, please change this in your igloo settings.');
 					igLauncher.runIglooInterface.addStatus('Remember, igloo only stores settings and a session id- no IP adresses or personal info.')
 					igLauncher.runIglooInterface.addStatus('');
 
@@ -150,7 +148,7 @@ function iglooInitControl() {
 					//except with the way to connect locally instead
 
 					setTimeout(function() {
-						iglooInit.init('6'); 
+						igLauncher.runIglooInit.init('6'); 
 					}, 500);
 				} else {
 					remoteConnect = false;
@@ -158,12 +156,12 @@ function iglooInitControl() {
 					sessionKey = null;
 
 				 	igLauncher.runIglooInterface.addStatus('You have decided to connect locally, hosting your settings on Wikipedia servers'); 
-				 	laucher.runIglooInterface.addStatus('This means igloo does not host any info on you, but your info can also be lost more easily.');
+				 	igLauncher.runIglooInterface.addStatus('This means igloo does not host any info on you, but your info can also be lost more easily.');
 					igLauncher.runIglooInterface.addStatus('If you wish to change and connect to iglooNet, you may do so in iglooSettings');
 					igLauncher.runIglooInterface.addStatus('');
 
 					setTimeout(function() {
-						iglooInit.init('6'); 
+						igLauncher.runIglooInit.init('6'); 
 					}, 500);
 				}
 
@@ -178,6 +176,8 @@ function iglooInitControl() {
 						isDown: connectLocal
 					});
 				}, 1000);
+
+				break;
 		}
 	};
 }
@@ -238,7 +238,7 @@ function iglooInitInterface() {
 		// add a message to the status output, and display it.
 		if (this.iglooStatus.length > 20) this.iglooStatus.splice(0, 1);
 			
-		if (noEndline == null || (noEndline === false) {
+		if (noEndline == null || noEndline === false) {
 			message += '<br />';
 		}
 			
