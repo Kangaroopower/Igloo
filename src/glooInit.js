@@ -61,12 +61,12 @@ function iglooInitControl() {
 				igLauncher.runIglooInterface.addStatus('');
 				igLauncher.runIglooInterface.addStatus('- Retrieving resources...');
 				
-				iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+ iglooBranch +'/src/glooMain.js', true);
-
-				igLauncher.runIglooInterface.addStatus('- Retrieved Resources!');
-				setTimeout(function() {
-					igLauncher.runIglooInit.init('4'); 
-				}, 500);
+				iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+ iglooBranch +'/src/glooMain.js', true).onload = function () {
+					igLauncher.runIglooInterface.addStatus('- Retrieved Resources!');
+					setTimeout(function() {
+						igLauncher.runIglooInit.init('4'); 
+					}, 500);
+				}
 
 				break;
 			case '4':
