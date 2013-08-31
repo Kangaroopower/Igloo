@@ -1429,7 +1429,7 @@ iglooSettings.prototype.show = function () {
 };
 		
 iglooSettings.prototype.hidedisplay = function () {
-	this.popup.hide ();
+	this.popup.hide();
 	igloo.piano.mode = 'default';
 };
 		
@@ -1493,6 +1493,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
+				cont.innerHTML += "<br/>";
+
 				cont.appendChild(me.createOption('Update Quantity', {
 					type: "text",
 					value: iglooUserSettings.updateQuantity,
@@ -1510,6 +1512,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
+				cont.innerHTML += "<br/>";
 
 				cont.appendChild(me.createOption('Prompt on self revert', {
 					type: "checkbox",
@@ -1521,6 +1524,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
+				cont.innerHTML += "<br/>";
+
 				cont.appendChild(me.createOption('Enable profanity highlighting', {
 					type: "checkbox",
 					checked: iglooUserSettings.profFilter ? true : false,
@@ -1530,6 +1535,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					}
 				}));
+
+				cont.innerHTML += "<br/>";
 
 				cont.appendChild(me.createOption('Block keyboard shortcuts', {
 					type: "checkbox",
@@ -1541,6 +1548,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
+				cont.innerHTML += "<br/>";
+
 				cont.appendChild(me.createOption('Hide Own edits from the RC Feed', {
 					type: "checkbox",
 					checked: iglooUserSettings.hideOwn ? true : false,
@@ -1550,6 +1559,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					}
 				}));
+
+				cont.innerHTML += "<br/>";
 
 				cont.appendChild(me.createOption('Log CSD tags (not deletes)', {
 					type: "checkbox",
@@ -1590,6 +1601,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					}
 				}));
+
+				cont.innerHTML += "<br/>";
 
 				cont.appendChild(me.createOption('Diff font size (px)', {
 					type: "text",
@@ -2969,8 +2982,8 @@ iglooPopup.prototype.show = function () {
 };
 
 iglooPopup.prototype.hide = function () {
-	$(this.popupMenu).remove();
-	$(this.popupMenuContent).remove();
+	$(this.popupMenu).hide();
+	$(this.popupMenuContent).hide();
 };
 
 //Class iglooRequest- sends a request to API
