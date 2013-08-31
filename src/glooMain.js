@@ -1353,7 +1353,8 @@ iglooSettings.prototype.set = function (setting, value, cb) {
 
 	cb = (typeof cb !== "undefined" || typeof cb === "function") ? cb : function () {};
 
-	if (this.settingsEnabled !== true) return false;
+	if (this.settingsEnabled !== true) cb(false);
+	
 	this.settingsEnabled = false;
 
 	if (igloo.remoteConnect && setting !== "remoteConnect" && !igloo.connectLocal) { //It'd be useless to query remotely to see if we're allowed to connect remotely
@@ -1369,7 +1370,8 @@ iglooSettings.prototype.set = function (setting, value, cb) {
 		module: 'preferences',
 		params: { key: key, value: JSON.stringify(storedSettings) },
 		callback: function (data) {
-			cb(data);
+			var success = data.options === "success";
+			cb(success);
 			me.settingsEnabled = true;
 		}
 	}, 0, true, true);
@@ -1474,8 +1476,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
-						if (typeof igloo.cogs.set('remoteConnect', $(this).checked) !== "undefined" && igloo.cogs.set('remoteConnect', $(this).checked) === false) {
-							$(this).attr('checked', !$(this).checked);
+						if (typeof igloo.cogs.set('remoteConnect', $(this).prop('checked')) !== "undefined" && igloo.cogs.set('remoteConnect', $(this).prop('checked')) === false) {
+							$(this).attr('checked', !$(this).prop('checked'));
 							alert('It seems like igloo is still processing your last settings change. Please wait a moment and then try again.');
 						}
 					}
@@ -1490,11 +1492,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					},
 					onblur: function () {
-						if (typeof igloo.cogs.set('updateTime', $(this).val()) !== "undefined" && typeof igloo.cogs.set('updateTime', $(this).val())) {
-							$(this).val(iglooUserSettings.updateTime);
-						} else {
-							iglooUserSettings.updateTime = parseInt ($(this).val(), 10);
-						}
+						igloo.cogs.set('updateTime', $(this).val(), function (res) {
+							if (res) {
+								iglooUserSettings.updateTime = parseInt ($(this).val(), 10);
+							} else {
+								$(this).val(iglooUserSettings.updateTime);
+							}
+						});
 					}
 				}));
 
@@ -1509,11 +1513,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					},
 					onblur: function () {
-						if (typeof igloo.cogs.set('updateQuantity', $(this).val()) !== "undefined" && typeof igloo.cogs.set('updateQuantity', $(this).val())) {
-							$(this).val(iglooUserSettings.updateQuantity);
-						} else {
-							iglooUserSettings.updateQuantity = parseInt ($(this).val(), 10);
-						}
+						igloo.cogs.set('updateQuantity', $(this).val(), function (res) {
+							if (res) {
+								iglooUserSettings.updateQuantity = parseInt ($(this).val(), 10);
+							} else {
+								$(this).val(iglooUserSettings.updateQuantity);
+							}
+						});
 					}
 				}));
 
@@ -1523,9 +1529,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "checkbox",
 					checked: iglooUserSettings.promptRevertSelf ? true : false,
 					onchange: function () {
-						if (typeof igloo.cogs.set('promptRevertSelf', $(this).checked) !== "undefined" && igloo.cogs.set('promptRevertSelf', $(this).checked) === false) {
-							$(this).attr('checked', !$(this).checked);
-						}
+						igloo.cogs.set('promptRevertSelf', $(this).prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.promptRevertSelf = $(this).prop('checked');
+							} else {
+								$(this).attr('checked', !$(this).prop('checked'));
+							}
+						});
 					}
 				}));
 
@@ -1535,9 +1545,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "checkbox",
 					checked: iglooUserSettings.profFilter ? true : false,
 					onchange: function () {
-						if (typeof igloo.cogs.set('profFilter', $(this).checked) !== "undefined" && igloo.cogs.set('profFilter', $(this).checked) === false) {
-							$(this).attr('checked', !$(this).checked);
-						}
+						igloo.cogs.set('profFilter', $(this).prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.profFilter = $(this).prop('checked');
+							} else {
+								$(this).attr('checked', !$(this).prop('checked'));
+							}
+						});
 					}
 				}));
 
@@ -1547,9 +1561,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "checkbox",
 					checked: iglooUserSettings.blockKeys ? true : false,
 					onchange: function () {
-						if (typeof igloo.cogs.set('blockKeys', $(this).checked) !== "undefined" && igloo.cogs.set('blockKeys', $(this).checked) === false) {
-							$(this).attr('checked', !$(this).checked);
-						}
+						igloo.cogs.set('blockKeys', $(this).prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.blockKeys = $(this).prop('checked');
+							} else {
+								$(this).attr('checked', !$(this).prop('checked'));
+							}
+						});
 					}
 				}));
 
@@ -1559,9 +1577,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "checkbox",
 					checked: iglooUserSettings.hideOwn ? true : false,
 					onchange: function () {
-						if (typeof igloo.cogs.set('hideOwn', $(this).checked) !== "undefined" && igloo.cogs.set('hideOwn', $(this).checked) === false) {
-							$(this).attr('checked', !$(this).checked);
-						}
+						igloo.cogs.set('hideOwn', $(this).prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.hideOwn = $(this).prop('checked');
+							} else {
+								$(this).attr('checked', !$(this).prop('checked'));
+							}
+						});
 					}
 				}));
 
@@ -1571,9 +1593,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "checkbox",
 					checked: iglooUserSettings.logCSD ? true : false,
 					onchange: function () {
-						if (typeof igloo.cogs.set('logCSD', $(this).checked) !== "undefined" && igloo.cogs.set('logCSD', $(this).checked) === false) {
-							$(this).attr('checked', !$(this).checked);
-						}
+						igloo.cogs.set('logCSD', $(this).prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.logCSD = $(this).prop('checked');
+							} else {
+								$(this).attr('checked', !$(this).prop('checked'));
+							}
+						});
 					}
 				}));
 			cont.innerHTML += '</table></div>';
@@ -1599,11 +1625,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					},
 					onblur: function () {
-						if (typeof igloo.cogs.set('diffFontSize', $(this).val()) !== "undefined" && igloo.cogs.set('diffFontSize', $(this).val()) === false ) {
-							$(this).val(iglooUserSettings.diffFontSize);
-						} else {
-							iglooUserSettings.diffFontSize = parseInt($(this).val(), 10);
-						}
+						igloo.cogs.set('diffFontSize', $(this).val(), function (res) {
+							if (res) {
+								iglooUserSettings.diffFontSize = parseInt ($(this).val(), 10);
+							} else {
+								$(this).val(iglooUserSettings.diffFontSize);
+							}
+						});
 					}
 				}));
 
@@ -1613,11 +1641,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
 					onblur: function () {
-						if (typeof igloo.cogs.set('Dropdown window timeout', $(this).val()) !== "undefined" && igloo.cogs.set('dropdownWinTimeout', $(this).val()) === false ) {
-							$(this).val(iglooUserSettings.dropdownWinTimeout);
-						} else {
-							iglooUserSettings.dropdownWinTimeout = parseFloat(this.value);
-						}
+						igloo.cogs.set('dropdownWinTimeout', $(this).val(), function (res) {
+							if (res) {
+								iglooUserSettings.diffFontSize = parseInt ($(this).val(), 10);
+							} else {
+								$(this).val(iglooUserSettings.dropdownWinTimeout);
+							}
+						});
+
 					}
 				}));
 			cont.innerHTML += '</table></div>';
