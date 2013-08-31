@@ -1623,6 +1623,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "text",
 					value: iglooUserSettings.diffFontSize,
 					onchange: function () {
+						alert('test');
 						if (isNaN(parseInt($(this).val(), 10))) {
 							$(this).val(iglooUserSettings.diffFontSize);
 						} else {
