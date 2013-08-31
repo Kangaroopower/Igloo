@@ -1465,7 +1465,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				cont.appendChild('<b>Connect to Remote Server (igloo only stores settings and a session key- No IP adresses/personal info)</b>', me.createOption({
+				cont.appendChild(me.createOption('<b>Connect to Remote Server (igloo only stores settings and a session key- No IP adresses/personal info)</b>', {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
@@ -1476,7 +1476,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild('RC Ticker Update Time', me.createOption({
+				cont.appendChild(me.createOption('RC Ticker Update Time', {
 					type: "text",
 					value: iglooUserSettings.updateTime,
 					onchange: function () {
@@ -1493,7 +1493,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild('Update Quantity', me.createOption({
+				cont.appendChild(me.createOption('Update Quantity', {
 					type: "text",
 					value: iglooUserSettings.updateQuantity,
 					onchange: function () {
@@ -1511,7 +1511,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 				}));
 
 
-				cont.appendChild('Prompt on self revert', me.createOption({
+				cont.appendChild(me.createOption('Prompt on self revert', {
 					type: "checkbox",
 					checked: iglooUserSettings.promptRevertSelf ? true : false,
 					onchange: function () {
@@ -1521,7 +1521,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild('Enable profanity highlighting', me.createOption({
+				cont.appendChild(me.createOption('Enable profanity highlighting', {
 					type: "checkbox",
 					checked: iglooUserSettings.profFilter ? true : false,
 					onchange: function () {
@@ -1531,7 +1531,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild('Block keyboard shortcuts', me.createOption({
+				cont.appendChild(me.createOption('Block keyboard shortcuts', {
 					type: "checkbox",
 					checked: iglooUserSettings.blockKeys ? true : false,
 					onchange: function () {
@@ -1541,7 +1541,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild('Hide Own edits from the RC Feed', me.createOption({
+				cont.appendChild(me.createOption('Hide Own edits from the RC Feed', {
 					type: "checkbox",
 					checked: iglooUserSettings.hideOwn ? true : false,
 					onchange: function () {
@@ -1551,7 +1551,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild('Log CSD tags (not deletes)', me.createOption({
+				cont.appendChild(me.createOption('Log CSD tags (not deletes)', {
 					type: "checkbox",
 					checked: iglooUserSettings.logCSD ? true : false,
 					onchange: function () {
@@ -1574,7 +1574,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				cont.appendChild('Diff font size (px)', me.createOption({
+				cont.appendChild(me.createOption('Diff font size (px)', {
 					type: "text",
 					value: iglooUserSettings.diffFontSize,
 					onchange: function () {
@@ -1591,7 +1591,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild('Diff font size (px)', me.createOption({
+				cont.appendChild(me.createOption('Diff font size (px)', {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
 					onblur: function () {
