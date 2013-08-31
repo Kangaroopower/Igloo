@@ -1683,7 +1683,7 @@ iglooSettings.prototype.createOption = function (description, properties) {
 
 	for (var i in properties) {
 		if (i === "onchange") {
-			console.warn('test');
+			console.error('test');
 			change.addEventListener('change', properties[i], false);
 		} else {
 			change.setAttribute(i, properties[i]);
