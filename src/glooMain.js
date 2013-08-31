@@ -1354,7 +1354,7 @@ iglooSettings.prototype.set = function (setting, value, cb) {
 	cb = (typeof cb !== "undefined" || typeof cb === "function") ? cb : function () {};
 
 	if (this.settingsEnabled !== true) cb(false);
-	
+
 	this.settingsEnabled = false;
 
 	if (igloo.remoteConnect && setting !== "remoteConnect" && !igloo.connectLocal) { //It'd be useless to query remotely to see if we're allowed to connect remotely
@@ -1489,16 +1489,15 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					onchange: function () {
 						if (isNaN(parseInt($(this).val(), 10))) {
 							$(this).val(iglooUserSettings.updateTime);
+						} else {
+							igloo.cogs.set('updateTime', $(this).val(), function (res) {
+								if (res) {
+									iglooUserSettings.updateTime = parseInt ($(this).val(), 10);
+								} else {
+									$(this).val(iglooUserSettings.updateTime);
+								}
+							});
 						}
-					},
-					onblur: function () {
-						igloo.cogs.set('updateTime', $(this).val(), function (res) {
-							if (res) {
-								iglooUserSettings.updateTime = parseInt ($(this).val(), 10);
-							} else {
-								$(this).val(iglooUserSettings.updateTime);
-							}
-						});
 					}
 				}));
 
@@ -1510,16 +1509,15 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					onchange: function () {
 						if (isNaN(parseInt($(this).val(), 10))) {
 							$(this).val(iglooUserSettings.updateQuantity);
+						} else {
+							igloo.cogs.set('updateQuantity', $(this).val(), function (res) {
+								if (res) {
+									iglooUserSettings.updateQuantity = parseInt ($(this).val(), 10);
+								} else {
+									$(this).val(iglooUserSettings.updateQuantity);
+								}
+							});
 						}
-					},
-					onblur: function () {
-						igloo.cogs.set('updateQuantity', $(this).val(), function (res) {
-							if (res) {
-								iglooUserSettings.updateQuantity = parseInt ($(this).val(), 10);
-							} else {
-								$(this).val(iglooUserSettings.updateQuantity);
-							}
-						});
 					}
 				}));
 
@@ -1620,19 +1618,20 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "text",
 					value: iglooUserSettings.diffFontSize,
 					onchange: function () {
+						alert('test');
 						if (isNaN(parseInt($(this).val(), 10))) {
 							$(this).val(iglooUserSettings.diffFontSize);
+						} else {
+							igloo.cogs.set('diffFontSize', $(this).val(), function (res) {
+								if (res) {
+									iglooUserSettings.diffFontSize = parseInt ($(this).val(), 10);
+								} else {
+									$(this).val(iglooUserSettings.diffFontSize);
+								}
+							});
 						}
-					},
-					onblur: function () {
-						igloo.cogs.set('diffFontSize', $(this).val(), function (res) {
-							if (res) {
-								iglooUserSettings.diffFontSize = parseInt ($(this).val(), 10);
-							} else {
-								$(this).val(iglooUserSettings.diffFontSize);
-							}
-						});
 					}
+	
 				}));
 
 				cont.innerHTML += "<br/>";
@@ -1640,15 +1639,18 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 				cont.appendChild(me.createOption('Dropdown window timeout (seconds)', {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
-					onblur: function () {
-						igloo.cogs.set('dropdownWinTimeout', $(this).val(), function (res) {
-							if (res) {
-								iglooUserSettings.diffFontSize = parseInt ($(this).val(), 10);
-							} else {
-								$(this).val(iglooUserSettings.dropdownWinTimeout);
-							}
-						});
-
+					onchange: function () {
+						if (isNaN(parseInt($(this).val(), 10))) {
+							$(this).val(iglooUserSettings.dropdownWinTimeout);
+						} else {
+							igloo.cogs.set('dropdownWinTimeout', $(this).val(), function (res) {
+								if (res) {
+									iglooUserSettings.diffFontSize = parseInt ($(this).val(), 10);
+								} else {
+									$(this).val(iglooUserSettings.dropdownWinTimeout);
+								}
+							});
+						}
 					}
 				}));
 			cont.innerHTML += '</table></div>';
