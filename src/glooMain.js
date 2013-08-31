@@ -1609,7 +1609,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				cont.appendChild(me.createOption('Diff font size (px)', {
+				cont.appendChild(me.createOption('Dropdown window timeout (seconds)', {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
 					onblur: function () {
