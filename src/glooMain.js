@@ -1645,7 +1645,7 @@ iglooSettings.prototype.createOption = function (description, properties) {
 	opt.innerHTML += '<td>'+ description + '</td>';
 
 	for (var i in properties) {
-		change[i] = properties[i];
+		change.setAttribute(i, properties[i]);
 	}
 
 	main.appendChild(change);
