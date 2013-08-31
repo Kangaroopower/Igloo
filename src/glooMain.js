@@ -1682,7 +1682,11 @@ iglooSettings.prototype.createOption = function (description, properties) {
 	opt.innerHTML += '<td>'+ description + '</td>';
 
 	for (var i in properties) {
-		change.setAttribute(i, properties[i]);
+		if (i === "onchange") {
+			change.addEventListener('change', properties[i], false);
+		} else {
+			change.setAttribute(i, properties[i]);
+		}
 	}
 
 	main.appendChild(change);
