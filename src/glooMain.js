@@ -1454,6 +1454,11 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 	if (tabcont === null) {
 		me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+		// add tabs
+		me.addtab('info', 'user info');
+		me.addtab('general', 'general');
+		me.addtab('interface', 'interface');
+		me.addtab('close', 'close');
 		tabcont = document.getElementById('igloo-settings-content')
 	}
 					
@@ -1618,7 +1623,6 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "text",
 					value: iglooUserSettings.diffFontSize,
 					onchange: function () {
-						alert('test');
 						if (isNaN(parseInt($(this).val(), 10))) {
 							$(this).val(iglooUserSettings.diffFontSize);
 						} else {
