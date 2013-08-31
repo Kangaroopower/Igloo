@@ -1458,7 +1458,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 		case 'general':
 			var cont = document.createElement('div'), me = this;
-			tabcont.innerHTML = null; // blank
+			tabcont.innerHTML = ''; // blank
 				
 			cont.style.padding = '10px';
 			cont.innerHTML = '';
@@ -1562,12 +1562,12 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 				}));
 			cont.innerHTML += '</table></div>';
 			
-			tabcont.innerHTML = cont;
+			tabcont.appendChild(cont);
 			break;
 					
 		case 'interface':
 			var cont = document.createElement('div'), me = this;
-			tabcont.innerHTML = null; // blank
+			tabcont.innerHTML = ''; // blank
 				
 			cont.style.padding = '10px';
 			cont.innerHTML = '';
@@ -1604,7 +1604,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 				}));
 			cont.innerHTML += '</table></div>';
 			
-			tabcont.innerHTML = cont;
+			tabcont.appendChild(cont);
 			break;
 					
 		case 'close':
