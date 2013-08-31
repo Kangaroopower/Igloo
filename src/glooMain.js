@@ -1449,6 +1449,11 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 	}
 	var tabcont = document.getElementById('igloo-settings-content'), 
 		me = this;
+
+	if (tabcont === null) {
+		me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+		tabcont = document.getElementById('igloo-settings-content')
+	}
 					
 	switch ( tabid ) {
 		case 'info':
@@ -2982,8 +2987,8 @@ iglooPopup.prototype.show = function () {
 };
 
 iglooPopup.prototype.hide = function () {
-	$(this.popupMenu).hide();
-	$(this.popupMenuContent).hide();
+	$(this.popupMenu).remove();
+	$(this.popupMenuContent).remove();
 };
 
 //Class iglooRequest- sends a request to API
