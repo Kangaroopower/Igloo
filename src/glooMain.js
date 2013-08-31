@@ -189,7 +189,7 @@ function iglooMain () {
 		//Settings
 		this.cogs = new iglooSettings();
 		this.cogs.retrieve();
-		
+
 		for (var i = 0; i < groups.length; i++) {
 			if (groups[i] === 'steward' || groups[i] === 'sysop') { 
 				iglooUserSettings.mesysop = true;
@@ -1310,13 +1310,6 @@ iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
 function iglooSettings () {
 	this.popup = null;
 	this.settingsEnabled = true;
-
-	igloo.piano.register('f5', 'settings', 116, 0, function () {
-		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-		if (keyCheck === true) {
-			window.location.reload(true);
-		}
-	});
 }
 
 iglooSettings.prototype.retrieve = function () {
@@ -1414,7 +1407,14 @@ iglooSettings.prototype.buildInterface = function () {
 	this.addtab('close', 'close');
 
 	igloo.toolPane.panel.appendChild(settingsButton);
-	
+
+	igloo.piano.register('f5', 'settings', 116, 0, function () {
+		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+		if (keyCheck === true) {
+			window.location.reload(true);
+		}
+	});
+
 	igloo.log('igloo: prepped settings main');
 };
 		
