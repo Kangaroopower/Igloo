@@ -186,6 +186,10 @@ function iglooMain () {
 
 		document.title = 'igloo - ' + iglooConfiguration.version;
 
+		//Settings
+		this.cogs = new iglooSettings();
+		this.cogs.retrieve();
+		
 		for (var i = 0; i < groups.length; i++) {
 			if (groups[i] === 'steward' || groups[i] === 'sysop') { 
 				iglooUserSettings.mesysop = true;
@@ -196,10 +200,6 @@ function iglooMain () {
 		this.firstRun = initData.isFirstRun;
 		this.sessionKey = initData.sessionId;
 		this.connectLocal = initData.isDown;
-
-		//Settings
-		this.cogs = new iglooSettings();
-		this.cogs.retrieve();
 
 		//Launch
 		this.launch();
@@ -1193,7 +1193,7 @@ iglooRevision.prototype.flagProfanity = function(html) {
 function iglooKeys () {
 	this.mode = 'default';
 	this.keys = {
-		'default' : {},
+		'default': {},
 		'search': {},
 		'settings': {}
 	};
