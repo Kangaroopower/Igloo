@@ -1457,10 +1457,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			break;
 
 		case 'general':
-			tabcont.innerHTML = ''; // blank
-			var cont = '';
+			var cont = document.createElement('div'), me = this;
+			tabcont.innerHTML = null; // blank
+				
+			cont.style.padding = '10px';
+			cont.innerHTML = '';
+			cont.innerHTML += '<div style="padding: 10px;">';
+			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-			cont += '<div style="padding: 10px;">Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 				cont.appendChild('<b>Connect to Remote Server (igloo only stores settings and a session key- No IP adresses/personal info)</b>', me.createOption({
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
@@ -1556,7 +1560,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					}
 				}));
-			cont += '</table></div>';
+			cont.innerHTML += '</table></div>';
 			
 			tabcont.innerHTML = cont;
 			break;
@@ -1567,8 +1571,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 				
 			cont.style.padding = '10px';
 			cont.innerHTML = '';
+			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
-			cont.innerHTML += '<div style="padding: 10px;">'
 
 				cont.appendChild('Diff font size (px)', me.createOption({
 					type: "text",
@@ -1598,7 +1602,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					}
 				}));
-			cont += '</table></div>';
+			cont.innerHTML += '</table></div>';
 			
 			tabcont.innerHTML = cont;
 			break;
