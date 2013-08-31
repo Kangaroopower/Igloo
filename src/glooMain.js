@@ -1683,9 +1683,7 @@ iglooSettings.prototype.createOption = function (description, properties) {
 
 	for (var i in properties) {
 		if (i === "onchange") {
-			$(change).change(function () {
-				properties[i]();
-			});
+			change.onchange = properties[i];
 		} else {
 			change.setAttribute(i, properties[i]);
 		}
