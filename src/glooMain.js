@@ -38,6 +38,7 @@ var iglooConfiguration = {
 	remoteHost: '', //Actual remote server
 	version: "0.8 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Alpha") : "Alpha"),
 	limitRequests: 5,
+	flagColours: ['#ff8888', '#ffbbbb', '#ffffff', '#bbffbb', '#88ff88'],
 	
 	// Modules
 
@@ -115,7 +116,6 @@ var iglooUserSettings = {
 	// Ticker
 	updateTime: 3,
 	hideOwn: false,
-	flagColours: ['#ff8888', '#ffbbbb', '#ffffff', '#bbffbb', '#88ff88'],
 	enableFeedColour: true,
 	updateQuantity: 10,
 
@@ -1623,7 +1623,6 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "text",
 					value: iglooUserSettings.diffFontSize,
 					onchange: function () {
-						alert('test');
 						if (isNaN(parseInt($(this).val(), 10))) {
 							$(this).val(iglooUserSettings.diffFontSize);
 						} else {
