@@ -1479,7 +1479,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				cont.appendChild(me.createOption('<b>Connect to Remote Server (igloo only stores settings and a session key- No IP adresses/personal info)</b>', {
+				cont.appendChild(me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
@@ -1512,7 +1512,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/><br/>";
 
 				cont.appendChild(me.createOption('Update Quantity', {
 					type: "text",
@@ -1533,7 +1533,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/><br/>";
 
 				cont.appendChild(me.createOption('Prompt on self revert', {
 					type: "checkbox",
@@ -1550,7 +1550,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/><br/>";
 
 				cont.appendChild(me.createOption('Enable profanity highlighting', {
 					type: "checkbox",
@@ -1567,7 +1567,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/><br/>";
 
 				cont.appendChild(me.createOption('Block keyboard shortcuts', {
 					type: "checkbox",
@@ -1584,12 +1584,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/><br/>";
 
 				cont.appendChild(me.createOption('Hide Own edits from the RC Feed', {
 					type: "checkbox",
 					checked: iglooUserSettings.hideOwn ? true : false,
 					onchange: function () {
+						var el = $(this);
 						igloo.cogs.set('hideOwn', el.prop('checked'), function (res) {
 							if (res) {
 								iglooUserSettings.hideOwn = el.prop('checked');
@@ -1600,7 +1601,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/><br/>";
 
 				cont.appendChild(me.createOption('Log CSD tags (not deletes)', {
 					type: "checkbox",
@@ -1650,7 +1651,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 	
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/><br/>";
 
 				cont.appendChild(me.createOption('Dropdown window timeout (seconds)', {
 					type: "text",
