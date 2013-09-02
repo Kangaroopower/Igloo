@@ -1394,6 +1394,8 @@ iglooSettings.prototype.buildInterface = function () {
 		'float': 'right',
 		'width': '73px',
 		'height': '73px',
+		'padding-left': '-1px',
+		'padding-top': '-1px',
 		'margin-top': '12px',
 		'margin-left': '5px',
 		'margin-right': '5px',
@@ -2216,6 +2218,8 @@ iglooPast.prototype.buildInterface = function () {
 		'margin-top': '12px',
 		'margin-left': '5px',
 		'margin-right': '5px',
+		'padding-left': '-1px',
+		'padding-top': '-1px',
 		'cursor': 'pointer'
 	});
 
