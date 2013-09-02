@@ -1069,7 +1069,7 @@ iglooRevision.prototype.display = function () {
 
 			$(h2).css({'font-size' : '18px', 'margin-bottom': '5px', 'margin-top': '5px'});
 
-			$(table).css({ 'width': '100%', 'overflow': 'auto' 'font-size': iglooUserSettings.diffFontSize + 'px'});
+			$(table).css({ 'width': '100%', 'overflow': 'auto', 'font-size': iglooUserSettings.diffFontSize + 'px'});
 			$(table).find('#iglooDiffCol1').css({ 'width': '50%' });
 			$(table).find('#iglooDiffCol2').css({ 'width': '50%' });
 
