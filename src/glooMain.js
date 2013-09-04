@@ -401,30 +401,30 @@ function iglooMain () {
 	};
 
 	this.bindKeys = function () {
-		this.piano.register('up', 'default', 38, 0, function () {
+		this.piano.register('up', 'main', 38, 0, function () {
 			igloo.recentChanges.browseFeed(-1);
 		});
 
-		this.piano.register('down', 'default', 40, 0, function () {
+		this.piano.register('down', 'main', 40, 0, function () {
 			igloo.recentChanges.browseFeed(1);
 		});
 
-		this.piano.register('backspace', 'default', 8, 8, function () {
+		this.piano.register('backspace', 'main', 8, 8, function () {
 			igloo.archives.goBack(1);
 		});
 
-		this.piano.register('q', 'default', 81, 113, function () {
+		this.piano.register('q', 'main', 81, 113, function () {
 			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go();
 			}
 		});
 
-		this.piano.register('g', 'default', 103, 113, function () {
+		this.piano.register('g', 'main', 103, 113, function () {
 			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go('agf', false);
 			}
 		});
-		this.piano.register('f5', 'default', 116, 0, function () {
+		this.piano.register('f5', 'main', 116, 0, function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
 				window.location.reload(true);
@@ -1191,9 +1191,9 @@ iglooRevision.prototype.flagProfanity = function(html) {
 	** although they can't create modes of their own yet
 	*/
 function iglooKeys () {
-	this.mode = 'default';
+	this.mode = 'main';
 	this.keys = {
-		'default': {},
+		'main': {},
 		'search': {},
 		'settings': {}
 	};
@@ -1310,6 +1310,7 @@ iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
 function iglooSettings () {
 	this.popup = null;
 	this.settingsEnabled = true;
+	this.isOpen = true;
 }
 
 iglooSettings.prototype.retrieve = function () {
@@ -1423,7 +1424,22 @@ iglooSettings.prototype.buildInterface = function () {
 };
 		
 iglooSettings.prototype.show = function () {
+	var tabcont = document.getElementById('igloo-settings-content'), 
+		me = this;
+
+	if (tabcont === null) {
+		me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+		// add tabs
+		me.addtab('info', 'user info');
+		me.addtab('general', 'general');
+		me.addtab('interface', 'interface');
+		me.addtab('close', 'close');
+	}
+
 	this.popup.show();
+
+	//Set isOpen variable
+	this.isOpen = true;
 
 	//Set key mode
 	igloo.piano.mode = 'settings';
@@ -1434,7 +1450,8 @@ iglooSettings.prototype.show = function () {
 		
 iglooSettings.prototype.hidedisplay = function () {
 	this.popup.hide();
-	igloo.piano.mode = 'default';
+	this.isOpen = false;
+	igloo.piano.mode = 'main';
 };
 		
 iglooSettings.prototype.addtab = function ( tabid, tabtext ) {
@@ -1453,17 +1470,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 	}
 	var tabcont = document.getElementById('igloo-settings-content'), 
 		me = this;
-
-	if (tabcont === null) {
-		me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
-		// add tabs
-		me.addtab('info', 'user info');
-		me.addtab('general', 'general');
-		me.addtab('interface', 'interface');
-		me.addtab('close', 'close');
-		tabcont = document.getElementById('igloo-settings-content')
-	}
-					
+			
 	switch ( tabid ) {
 		case 'info':
 			tabcont.innerHTML = ''; // blank
@@ -1947,12 +1954,16 @@ iglooSearch.prototype.buildInterface = function () {
 	igloo.toolPane.panel.appendChild(search);
 	search.appendChild(error);
 
-	$('#igloo-search-to').focus(function(){
+	$('#igloo-search-to').focus(function() {
 		igloo.piano.mode = 'search';
 	});
 
-	$('#igloo-search-to').blur(function(){
-		igloo.piano.mode = 'default';
+	$('#igloo-search-to').blur(function() {
+		if (igloo.cogs.isOpen) {
+			igloo.piano.mode = 'settings';
+		} else {
+			igloo.piano.mode = 'main';
+		}
 	});
 };
 
