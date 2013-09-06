@@ -401,30 +401,30 @@ function iglooMain () {
 	};
 
 	this.bindKeys = function () {
-		this.piano.register('up', 'main', 38, 0, function () {
+		this.piano.register('up', 'default', 38, 0, function () {
 			igloo.recentChanges.browseFeed(-1);
 		});
 
-		this.piano.register('down', 'main', 40, 0, function () {
+		this.piano.register('down', 'default', 40, 0, function () {
 			igloo.recentChanges.browseFeed(1);
 		});
 
-		this.piano.register('backspace', 'main', 8, 8, function () {
+		this.piano.register('backspace', 'default', 8, 8, function () {
 			igloo.archives.goBack(1);
 		});
 
-		this.piano.register('q', 'main', 81, 113, function () {
+		this.piano.register('q', 'default', 81, 113, function () {
 			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go();
 			}
 		});
 
-		this.piano.register('g', 'main', 103, 113, function () {
+		this.piano.register('g', 'default', 103, 113, function () {
 			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go('agf', false);
 			}
 		});
-		this.piano.register('f5', 'main', 116, 0, function () {
+		this.piano.register('f5', 'default', 116, 0, function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
 				window.location.reload(true);
@@ -1191,9 +1191,9 @@ iglooRevision.prototype.flagProfanity = function(html) {
 	** although they can't create modes of their own yet
 	*/
 function iglooKeys () {
-	this.mode = 'main';
+	this.mode = 'default';
 	this.keys = {
-		'main': {},
+		'default': {},
 		'search': {},
 		'settings': {}
 	};
@@ -1451,7 +1451,7 @@ iglooSettings.prototype.show = function () {
 iglooSettings.prototype.hidedisplay = function () {
 	this.popup.hide();
 	this.isOpen = false;
-	igloo.piano.mode = 'main';
+	igloo.piano.mode = 'default';
 };
 		
 iglooSettings.prototype.addtab = function ( tabid, tabtext ) {
@@ -1486,7 +1486,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				cont.appendChild(me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', {
+				$(cont).append(me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
@@ -1500,7 +1500,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.appendChild(me.createOption('RC Ticker Update Time', {
+				$(cont).append(me.createOption('RC Ticker Update Time', {
 					type: "text",
 					value: iglooUserSettings.updateTime,
 					onchange: function () {
@@ -1521,7 +1521,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/><br/>";
 
-				cont.appendChild(me.createOption('Update Quantity', {
+				$(cont).append(me.createOption('Update Quantity', {
 					type: "text",
 					value: iglooUserSettings.updateQuantity,
 					onchange: function () {
@@ -1542,7 +1542,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/><br/>";
 
-				cont.appendChild(me.createOption('Prompt on self revert', {
+				$(cont).append(me.createOption('Prompt on self revert', {
 					type: "checkbox",
 					checked: iglooUserSettings.promptRevertSelf ? true : false,
 					onchange: function () {
@@ -1559,7 +1559,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/><br/>";
 
-				cont.appendChild(me.createOption('Enable profanity highlighting', {
+				$(cont).append(me.createOption('Enable profanity highlighting', {
 					type: "checkbox",
 					checked: iglooUserSettings.profFilter ? true : false,
 					onchange: function () {
@@ -1576,7 +1576,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/><br/>";
 
-				cont.appendChild(me.createOption('Block keyboard shortcuts', {
+				$(cont).append(me.createOption('Block keyboard shortcuts', {
 					type: "checkbox",
 					checked: iglooUserSettings.blockKeys ? true : false,
 					onchange: function () {
@@ -1593,7 +1593,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/><br/>";
 
-				cont.appendChild(me.createOption('Hide Own edits from the RC Feed', {
+				$(cont).append(me.createOption('Hide Own edits from the RC Feed', {
 					type: "checkbox",
 					checked: iglooUserSettings.hideOwn ? true : false,
 					onchange: function () {
@@ -1610,7 +1610,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/><br/>";
 
-				cont.appendChild(me.createOption('Log CSD tags (not deletes)', {
+				$(cont).append(me.createOption('Log CSD tags (not deletes)', {
 					type: "checkbox",
 					checked: iglooUserSettings.logCSD ? true : false,
 					onchange: function () {
@@ -1638,7 +1638,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				cont.appendChild(me.createOption('Diff font size (px)', {
+				$(cont).append(me.createOption('Diff font size (px)', {
 					type: "text",
 					value: iglooUserSettings.diffFontSize,
 					onchange: function () {
@@ -1660,7 +1660,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/><br/>";
 
-				cont.appendChild(me.createOption('Dropdown window timeout (seconds)', {
+				$(cont).append(me.createOption('Dropdown window timeout (seconds)', {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
 					onchange: function () {
@@ -1962,7 +1962,7 @@ iglooSearch.prototype.buildInterface = function () {
 		if (igloo.cogs.isOpen) {
 			igloo.piano.mode = 'settings';
 		} else {
-			igloo.piano.mode = 'main';
+			igloo.piano.mode = 'default';
 		}
 	});
 };
