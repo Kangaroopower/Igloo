@@ -1473,7 +1473,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					});
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1495,7 +1495,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1517,7 +1517,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1536,7 +1536,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					});
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1555,7 +1555,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					});
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1574,7 +1574,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					});
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1593,7 +1593,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					});
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1612,7 +1612,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						}
 					});
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 			cont.innerHTML += '</table></div>';
 			
@@ -1647,7 +1647,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				};
-				$(cont).append(current);
+				cont.appendChild(current);
 
 				cont.innerHTML += "<br/><br/>";
 
@@ -1670,8 +1670,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				};
-				$(cont).append(current);
-				
+				cont.appendChild(current);
+
 			cont.innerHTML += '</table></div>';
 			
 			tabcont.appendChild(cont);
