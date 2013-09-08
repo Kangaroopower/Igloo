@@ -1204,15 +1204,15 @@ iglooKeys.prototype.begin = function () {
 	var me = this;
 
 	$(document).keydown(function(e) {
-		me.killKeys(e);
+		me.handleKeys(e, true);
 	});
 
 	$(document).keyup(function(e) {
-		me.handleKeys(e);
+		me.handleKeys(e, false);
 	});
 };
 
-iglooKeys.prototype.handleKeys = function (e) {
+iglooKeys.prototype.handleKeys = function (e, killcheck) {
 	var keyPress, use;
 
 	if (!e) e = window.event;
@@ -1224,36 +1224,9 @@ iglooKeys.prototype.handleKeys = function (e) {
 		use = 'charCode';
 	}
 			
-	var result = this.manageKeys(keyPress, use, false);
+	var result = this.manageKeys(keyPress, use, killcheck);
 	if (result === true) return true;
 			
-	if (e.preventDefault) {
-		e.preventDefault();
-	} else {
-		return false;
-	}
-	return true;
-};
-		
-iglooKeys.prototype.killKeys = function (e) {
-	var keyPress, use;
-
-	// check whether to prevent the default action
-	if (iglooUserSettings.blockKeys === false) return true;
-			
-	if (!e) e = window.event;
-
-	if (e.keyCode) {
-		keyPress = e.keyCode;
-		use = 'keyCode';
-	} else {
-		keyPress = e.charCode;
-		use = 'charCode';
-	}
-			
-	var result = this.manageKeys(keyPress, use, true);
-	if (result === true) return true;
-
 	if (e.preventDefault) {
 		e.preventDefault();
 	} else {
@@ -1478,7 +1451,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			break;
 
 		case 'general':
-			var cont = document.createElement('div'), me = this;
+			var cont = document.createElement('div'), me = this, current;
 			tabcont.innerHTML = ''; // blank
 				
 			cont.style.padding = '10px';
@@ -1486,144 +1459,161 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				$(cont).append(me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', {
+				current = me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', {
 					type: "checkbox",
-					checked: igloo.remoteConnect ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set('remoteConnect', el.prop('checked'), function (res) {
-							if (!res) {
-								el.attr('checked', !el.prop('checked'));
-								alert('It seems like igloo is still processing your last settings change. Please wait a moment and then try again.');
-							}
-						});
-					}
-				}));
+					checked: igloo.remoteConnect ? true : false
+				});
 
-				$(cont).append(me.createOption('RC Ticker Update Time', {
-					type: "text",
-					value: iglooUserSettings.updateTime,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateTime);
-						} else {
-							igloo.cogs.set('updateTime', el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateTime = parseInt (el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.updateTime);
-								}
-							});
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					igloo.cogs.set('remoteConnect', el.prop('checked'), function (res) {
+						if (!res) {
+							el.attr('checked', !el.prop('checked'));
+							alert('It seems like igloo is still processing your last settings change. Please wait a moment and then try again.');
 						}
-					}
-				}));
+					});
+				};
+				$(cont).append(current);
 
 				cont.innerHTML += "<br/><br/>";
 
-				$(cont).append(me.createOption('Update Quantity', {
+				current = me.createOption('RC Ticker Update Time', {
 					type: "text",
-					value: iglooUserSettings.updateQuantity,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateQuantity);
+					value: iglooUserSettings.updateTime
+				});
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					if (isNaN(parseInt(el.val(), 10))) {
+						el.val(iglooUserSettings.updateTime);
+					} else {
+						igloo.cogs.set('updateTime', el.val(), function (res) {
+							if (res) {
+								iglooUserSettings.updateTime = parseInt (el.val(), 10);
+							} else {
+								el.val(iglooUserSettings.updateTime);
+							}
+						});
+					}
+				};
+				$(cont).append(current);
+
+				cont.innerHTML += "<br/><br/>";
+
+				current = me.createOption('Update Quantity', {
+					type: "text",
+					value: iglooUserSettings.updateQuantity
+				});
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					if (isNaN(parseInt(el.val(), 10))) {
+						el.val(iglooUserSettings.updateQuantity);
+					} else {
+						igloo.cogs.set('updateQuantity', el.val(), function (res) {
+							if (res) {
+								iglooUserSettings.updateQuantity = parseInt (el.val(), 10);
+							} else {
+								el.val(iglooUserSettings.updateQuantity);
+							}
+						});
+					}
+				};
+				$(cont).append(current);
+
+				cont.innerHTML += "<br/><br/>";
+
+				current = me.createOption('Prompt on self revert', {
+					type: "checkbox",
+					checked: iglooUserSettings.promptRevertSelf ? true : false
+				});
+
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					igloo.cogs.set('promptRevertSelf', el.prop('checked'), function (res) {
+						if (res) {
+							iglooUserSettings.promptRevertSelf = el.prop('checked');
 						} else {
-							igloo.cogs.set('updateQuantity', el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateQuantity = parseInt (el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.updateQuantity);
-								}
-							});
+							el.attr('checked', !el.prop('checked'));
 						}
-					}
-				}));
+					});
+				};
+				$(cont).append(current);
 
 				cont.innerHTML += "<br/><br/>";
 
-				$(cont).append(me.createOption('Prompt on self revert', {
+				current = me.createOption('Enable profanity highlighting', {
 					type: "checkbox",
-					checked: iglooUserSettings.promptRevertSelf ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set('promptRevertSelf', el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.promptRevertSelf = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
+					checked: iglooUserSettings.profFilter ? true : false
+				});
+
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					igloo.cogs.set('profFilter', el.prop('checked'), function (res) {
+						if (res) {
+							iglooUserSettings.profFilter = el.prop('checked');
+						} else {
+							el.attr('checked', !el.prop('checked'));
+						}
+					});
+				};
+				$(cont).append(current);
 
 				cont.innerHTML += "<br/><br/>";
 
-				$(cont).append(me.createOption('Enable profanity highlighting', {
+				current = me.createOption('Block keyboard shortcuts', {
 					type: "checkbox",
-					checked: iglooUserSettings.profFilter ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set('profFilter', el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.profFilter = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
+					checked: iglooUserSettings.blockKeys ? true : false
+				});
+
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					igloo.cogs.set('blockKeys', el.prop('checked'), function (res) {
+						if (res) {
+							iglooUserSettings.blockKeys = el.prop('checked');
+						} else {
+							el.attr('checked', !el.prop('checked'));
+						}
+					});
+				};
+				$(cont).append(current);
 
 				cont.innerHTML += "<br/><br/>";
 
-				$(cont).append(me.createOption('Block keyboard shortcuts', {
+				current = me.createOption('Hide Own edits from the RC Feed', {
 					type: "checkbox",
-					checked: iglooUserSettings.blockKeys ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set('blockKeys', el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.blockKeys = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
+					checked: iglooUserSettings.hideOwn ? true : false
+				});
+
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					igloo.cogs.set('hideOwn', el.prop('checked'), function (res) {
+						if (res) {
+							iglooUserSettings.hideOwn = el.prop('checked');
+						} else {
+							el.attr('checked', !el.prop('checked'));
+						}
+					});
+				};
+				$(cont).append(current);
 
 				cont.innerHTML += "<br/><br/>";
 
-				$(cont).append(me.createOption('Hide Own edits from the RC Feed', {
+				current = me.createOption('Log CSD tags (not deletes)', {
 					type: "checkbox",
-					checked: iglooUserSettings.hideOwn ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set('hideOwn', el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.hideOwn = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
+					checked: iglooUserSettings.logCSD ? true : false
+				});
 
-				cont.innerHTML += "<br/><br/>";
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					igloo.cogs.set('logCSD', el.prop('checked'), function (res) {
+						if (res) {
+							iglooUserSettings.logCSD = el.prop('checked');
+						} else {
+							el.attr('checked', !el.prop('checked'));
+						}
+					});
+				};
+				$(cont).append(current);
 
-				$(cont).append(me.createOption('Log CSD tags (not deletes)', {
-					type: "checkbox",
-					checked: iglooUserSettings.logCSD ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set('logCSD', el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.logCSD = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
 			cont.innerHTML += '</table></div>';
 			
 			tabcont.appendChild(cont);
@@ -1638,46 +1628,50 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				$(cont).append(me.createOption('Diff font size (px)', {
+				current = me.createOption('Diff font size (px)', {
 					type: "text",
-					value: iglooUserSettings.diffFontSize,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.diffFontSize);
-						} else {
-							igloo.cogs.set('diffFontSize', el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.diffFontSize = parseInt(el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.diffFontSize);
-								}
-							});
-						}
+					value: iglooUserSettings.diffFontSize
+				});
+
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					if (isNaN(parseInt(el.val(), 10))) {
+						el.val(iglooUserSettings.diffFontSize);
+					} else {
+						igloo.cogs.set('diffFontSize', el.val(), function (res) {
+							if (res) {
+								iglooUserSettings.diffFontSize = parseInt(el.val(), 10);
+							} else {
+								el.val(iglooUserSettings.diffFontSize);
+							}
+						});
 					}
-	
-				}));
+				};
+				$(cont).append(current);
 
 				cont.innerHTML += "<br/><br/>";
 
-				$(cont).append(me.createOption('Dropdown window timeout (seconds)', {
+				current = me.createOption('Dropdown window timeout (seconds)', {
 					type: "text",
-					value: iglooUserSettings.dropdownWinTimeout,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.dropdownWinTimeout);
-						} else {
-							igloo.cogs.set('dropdownWinTimeout', el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.dropdownWinTimeout = parseInt (el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.dropdownWinTimeout);
-								}
-							});
-						}
+					value: iglooUserSettings.dropdownWinTimeout
+				});
+
+				current.getElementsByTagName('td')[1].getElementsByTagName('input')[0].onchange = function () {
+					var el = $(this);
+					if (isNaN(parseInt(el.val(), 10))) {
+						el.val(iglooUserSettings.dropdownWinTimeout);
+					} else {
+						igloo.cogs.set('dropdownWinTimeout', el.val(), function (res) {
+							if (res) {
+								iglooUserSettings.dropdownWinTimeout = parseInt(el.val(), 10);
+							} else {
+								el.val(iglooUserSettings.dropdownWinTimeout);
+							}
+						});
 					}
-				}));
+				};
+				$(cont).append(current);
+				
 			cont.innerHTML += '</table></div>';
 			
 			tabcont.appendChild(cont);
