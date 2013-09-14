@@ -1252,7 +1252,7 @@ iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 	for (var i in keyMode) {
 		if (keyMode[i][use] === code) {
 			isRegisteredKey = true;
-			keyMode[i].cb();
+			//keyMode[i].cb();
 			break;
 		}
 	}
