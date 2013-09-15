@@ -1642,19 +1642,20 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						var el = this;
 						console.warn('me');
 						console.warn(el.value);
-						if (isNaN(parseInt(el.value, 10))) {
+						if (isNaN(parseFloat(el.value, 10))) {
 							console.warn('here');
 							el.value = iglooUserSettings.dropdownWinTimeout;
 						} else {
 							console.warn('there');
 							igloo.cogs.set("dropdownWinTimeout", el.value, function (res) {
 								if (res) {
-									iglooUserSettings.dropdownWinTimeout = parseInt(el.value, 10);
+									iglooUserSettings.dropdownWinTimeout = parseFloat(el.value, 10);
 								} else {
 									el.value = iglooUserSettings.dropdownWinTimeout;
 								}
 							});
 						}
+						console.warn(el.value);
 					}
 				}));
 			cont.innerHTML += '</table></div>';
