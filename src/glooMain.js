@@ -799,6 +799,7 @@ iglooView.prototype.displayWelcome = function () {
 			//get Regex
 			regResult = regTest.exec(data[0].content);
 			o = regResult[1].replace('%CURRENTVERSION%', iglooConfiguration.version);
+			console.warn(o);
 			o = regResult[1].replace('%CURRENTUSER%', mw.config.get('wgUserName'));
 
 			// Clear current display.
@@ -1651,7 +1652,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 								}
 							});
 						}*/
-						alert("a");
+						console.warn($(this));
 					}
 				}));
 			cont.innerHTML += '</table></div>';
