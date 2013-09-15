@@ -1641,7 +1641,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					onchange: function () {
 						var el = $(this);
 						console.warn('me');
-						console.warn(el.val());
+						console.warn(el);
 						if (isNaN(parseInt(el.val(), 10))) {
 							console.warn('here');
 							el.val(iglooUserSettings.dropdownWinTimeout);
