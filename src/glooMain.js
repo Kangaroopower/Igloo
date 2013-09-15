@@ -1640,10 +1640,12 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
 					onchange: function () {
-						/*var el = $(this);
+						var el = $(this);
 						if (isNaN(parseInt(el.val(), 10))) {
+							console.warn('here');
 							el.val(iglooUserSettings.dropdownWinTimeout);
 						} else {
+							console.warn('there');
 							igloo.cogs.set("dropdownWinTimeout", el.val(), function (res) {
 								if (res) {
 									iglooUserSettings.dropdownWinTimeout = parseInt (el.val(), 10);
@@ -1651,8 +1653,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 									el.val(iglooUserSettings.dropdownWinTimeout);
 								}
 							});
-						}*/
-						console.warn($(this));
+						}
 					}
 				}));
 			cont.innerHTML += '</table></div>';
