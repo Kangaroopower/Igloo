@@ -799,10 +799,8 @@ iglooView.prototype.displayWelcome = function () {
 			//get Regex
 			regResult = regTest.exec(data[0].content);
 			o = regResult[1].replace('%CURRENTVERSION%', iglooConfiguration.version);
-			console.warn(o);
-			o = regResult[1].replace('%CURRENTUSER%', mw.config.get('wgUserName'));
-			console.warn(o);
-			
+			o = o.replace('%CURRENTUSER%', mw.config.get('wgUserName'));
+
 			// Clear current display.
 			$(igloo.diffContainer.panel).find('*').remove();
 				
@@ -1643,6 +1641,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					onchange: function () {
 						var el = $(this);
 						console.warn('me');
+						console.warn(el.val());
 						if (isNaN(parseInt(el.val(), 10))) {
 							console.warn('here');
 							el.val(iglooUserSettings.dropdownWinTimeout);
