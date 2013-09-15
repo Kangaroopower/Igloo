@@ -1640,13 +1640,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					value: iglooUserSettings.dropdownWinTimeout,
 					onchange: function () {
 						var el = this;
-						console.warn('me');
-						console.warn(el.value);
+						console.warn("me");
+						console.warn("el", this.value);
+						console.warn("this", this.value);
 						if (isNaN(parseFloat(el.value, 10))) {
-							console.warn('here');
+							console.warn("there");
 							el.value = iglooUserSettings.dropdownWinTimeout;
 						} else {
-							console.warn('there');
+							console.warn("here");
 							igloo.cogs.set("dropdownWinTimeout", el.value, function (res) {
 								if (res) {
 									iglooUserSettings.dropdownWinTimeout = parseFloat(el.value, 10);
@@ -1655,7 +1656,6 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 								}
 							});
 						}
-						console.warn(el.value);
 					}
 				}));
 			cont.innerHTML += '</table></div>';
