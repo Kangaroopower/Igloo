@@ -1485,7 +1485,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						} else {
 							igloo.cogs.set("updateTime", el.val(), function (res) {
 								if (res) {
-									iglooUserSettings.updateTime = parseInt (el.val(), 10);
+									iglooUserSettings.updateTime = parseInt(el.val(), 10);
 								} else {
 									el.val(iglooUserSettings.updateTime);
 								}
@@ -1506,7 +1506,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						} else {
 							igloo.cogs.set("updateQuantity", el.val(), function (res) {
 								if (res) {
-									iglooUserSettings.updateQuantity = parseInt (el.val(), 10);
+									iglooUserSettings.updateQuantity = parseInt(el.val(), 10);
 								} else {
 									el.val(iglooUserSettings.updateQuantity);
 								}
@@ -1639,19 +1639,19 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
 					onchange: function () {
-						var el = $(this);
+						var el = this;
 						console.warn('me');
 						console.warn(el);
-						if (isNaN(parseInt(el.val(), 10))) {
+						if (isNaN(parseInt(el.value, 10))) {
 							console.warn('here');
 							el.val(iglooUserSettings.dropdownWinTimeout);
 						} else {
 							console.warn('there');
-							igloo.cogs.set("dropdownWinTimeout", el.val(), function (res) {
+							igloo.cogs.set("dropdownWinTimeout", el.value, function (res) {
 								if (res) {
-									iglooUserSettings.dropdownWinTimeout = parseInt (el.val(), 10);
+									iglooUserSettings.dropdownWinTimeout = parseInt(el.value, 10);
 								} else {
-									el.val(iglooUserSettings.dropdownWinTimeout);
+									el.value = iglooUserSettings.dropdownWinTimeout;
 								}
 							});
 						}
