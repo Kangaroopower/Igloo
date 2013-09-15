@@ -401,6 +401,7 @@ function iglooMain () {
 	};
 
 	this.bindKeys = function () {
+		/*
 		this.piano.register('up', 'default', 38, 0, function () {
 			igloo.recentChanges.browseFeed(-1);
 		});
@@ -430,6 +431,7 @@ function iglooMain () {
 				window.location.reload(true);
 			}
 		});
+		*/
 	};
 }
 
@@ -1252,7 +1254,7 @@ iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 	for (var i in keyMode) {
 		if (keyMode[i][use] === code) {
 			isRegisteredKey = true;
-			//keyMode[i].cb();
+			keyMode[i].cb();
 			break;
 		}
 	}
@@ -1464,7 +1466,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
 						var el = $(this);
-						igloo.cogs.set('remoteConnect', el.prop('checked'), function (res) {
+						igloo.cogs.set("remoteConnect", el.prop('checked'), function (res) {
 							if (!res) {
 								el.attr('checked', !el.prop('checked'));
 								alert('It seems like igloo is still processing your last settings change. Please wait a moment and then try again.');
@@ -1481,7 +1483,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						if (isNaN(parseInt(el.val(), 10))) {
 							el.val(iglooUserSettings.updateTime);
 						} else {
-							igloo.cogs.set('updateTime', el.val(), function (res) {
+							igloo.cogs.set("updateTime", el.val(), function (res) {
 								if (res) {
 									iglooUserSettings.updateTime = parseInt (el.val(), 10);
 								} else {
@@ -1492,7 +1494,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/><br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Update Quantity', {
 					type: "text",
@@ -1502,7 +1504,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						if (isNaN(parseInt(el.val(), 10))) {
 							el.val(iglooUserSettings.updateQuantity);
 						} else {
-							igloo.cogs.set('updateQuantity', el.val(), function (res) {
+							igloo.cogs.set("updateQuantity", el.val(), function (res) {
 								if (res) {
 									iglooUserSettings.updateQuantity = parseInt (el.val(), 10);
 								} else {
@@ -1513,14 +1515,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/><br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Prompt on self revert', {
 					type: "checkbox",
 					checked: iglooUserSettings.promptRevertSelf ? true : false,
 					onchange: function () {
 						var el = $(this);
-						igloo.cogs.set('promptRevertSelf', el.prop('checked'), function (res) {
+						igloo.cogs.set("promptRevertSelf", el.prop('checked'), function (res) {
 							if (res) {
 								iglooUserSettings.promptRevertSelf = el.prop('checked');
 							} else {
@@ -1530,14 +1532,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/><br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Enable profanity highlighting', {
 					type: "checkbox",
 					checked: iglooUserSettings.profFilter ? true : false,
 					onchange: function () {
 						var el = $(this);
-						igloo.cogs.set('profFilter', el.prop('checked'), function (res) {
+						igloo.cogs.set("profFilter", el.prop('checked'), function (res) {
 							if (res) {
 								iglooUserSettings.profFilter = el.prop('checked');
 							} else {
@@ -1547,14 +1549,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/><br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Block keyboard shortcuts', {
 					type: "checkbox",
 					checked: iglooUserSettings.blockKeys ? true : false,
 					onchange: function () {
 						var el = $(this);
-						igloo.cogs.set('blockKeys', el.prop('checked'), function (res) {
+						igloo.cogs.set("blockKeys", el.prop('checked'), function (res) {
 							if (res) {
 								iglooUserSettings.blockKeys = el.prop('checked');
 							} else {
@@ -1564,14 +1566,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/><br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Hide Own edits from the RC Feed', {
 					type: "checkbox",
 					checked: iglooUserSettings.hideOwn ? true : false,
 					onchange: function () {
 						var el = $(this);
-						igloo.cogs.set('hideOwn', el.prop('checked'), function (res) {
+						igloo.cogs.set("hideOwn", el.prop('checked'), function (res) {
 							if (res) {
 								iglooUserSettings.hideOwn = el.prop('checked');
 							} else {
@@ -1581,14 +1583,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/><br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Log CSD tags (not deletes)', {
 					type: "checkbox",
 					checked: iglooUserSettings.logCSD ? true : false,
 					onchange: function () {
 						var el = $(this);
-						igloo.cogs.set('logCSD', el.prop('checked'), function (res) {
+						igloo.cogs.set("logCSD", el.prop('checked'), function (res) {
 							if (res) {
 								iglooUserSettings.logCSD = el.prop('checked');
 							} else {
@@ -1619,7 +1621,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						if (isNaN(parseInt(el.val(), 10))) {
 							el.val(iglooUserSettings.diffFontSize);
 						} else {
-							igloo.cogs.set('diffFontSize', el.val(), function (res) {
+							igloo.cogs.set("diffFontSize", el.val(), function (res) {
 								if (res) {
 									iglooUserSettings.diffFontSize = parseInt(el.val(), 10);
 								} else {
@@ -1631,7 +1633,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 	
 				}));
 
-				cont.innerHTML += "<br/><br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Dropdown window timeout (seconds)', {
 					type: "text",
@@ -1641,7 +1643,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						if (isNaN(parseInt(el.val(), 10))) {
 							el.val(iglooUserSettings.dropdownWinTimeout);
 						} else {
-							igloo.cogs.set('dropdownWinTimeout', el.val(), function (res) {
+							igloo.cogs.set("dropdownWinTimeout", el.val(), function (res) {
 								if (res) {
 									iglooUserSettings.dropdownWinTimeout = parseInt (el.val(), 10);
 								} else {
@@ -1676,11 +1678,11 @@ iglooSettings.prototype.createOption = function (description, properties) {
 	opt.innerHTML += '<td>'+ description + '</td>';
 
 	for (var i in properties) {
-		/*if (i === "onchange") {
-			change.onchange = properties[i];
-		} else {*/
+		if (i === "onchange") {
+			$(change).attr(i, '(' + properties[i] + '())');
+		} else {
 			$(change).attr(i, properties[i]);
-		//}
+		}
 	}
 
 	main.appendChild(change);
