@@ -801,7 +801,8 @@ iglooView.prototype.displayWelcome = function () {
 			o = regResult[1].replace('%CURRENTVERSION%', iglooConfiguration.version);
 			console.warn(o);
 			o = regResult[1].replace('%CURRENTUSER%', mw.config.get('wgUserName'));
-
+			console.warn(o);
+			
 			// Clear current display.
 			$(igloo.diffContainer.panel).find('*').remove();
 				
@@ -1641,6 +1642,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					value: iglooUserSettings.dropdownWinTimeout,
 					onchange: function () {
 						var el = $(this);
+						console.warn('me');
 						if (isNaN(parseInt(el.val(), 10))) {
 							console.warn('here');
 							el.val(iglooUserSettings.dropdownWinTimeout);
