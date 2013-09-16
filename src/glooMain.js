@@ -401,37 +401,40 @@ function iglooMain () {
 	};
 
 	this.bindKeys = function () {
-		/*
 		this.piano.register('up', 'default', 38, 0, function () {
-			igloo.recentChanges.browseFeed(-1);
+			if (igloo.piano.mode === 'default')
+				igloo.recentChanges.browseFeed(-1);
 		});
 
 		this.piano.register('down', 'default', 40, 0, function () {
-			igloo.recentChanges.browseFeed(1);
+			if (igloo.piano.mode === 'default')
+				igloo.recentChanges.browseFeed(1);
 		});
 
 		this.piano.register('backspace', 'default', 8, 8, function () {
-			igloo.archives.goBack(1);
+			if (igloo.piano.mode === 'default')
+				igloo.archives.goBack(1);
 		});
 
 		this.piano.register('q', 'default', 81, 113, function () {
-			if (typeof me.justice.pageTitle !== '') {
+			if (igloo.piano.mode === 'default' && typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go();
 			}
 		});
 
 		this.piano.register('g', 'default', 103, 113, function () {
-			if (typeof me.justice.pageTitle !== '') {
+			if (igloo.piano.mode === 'default' && typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go('agf', false);
 			}
 		});
 		this.piano.register('f5', 'default', 116, 0, function () {
-			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-			if (keyCheck === true) {
-				window.location.reload(true);
+			if (igloo.piano.mode === 'default') {
+				var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+				if (keyCheck === true) {
+					window.location.reload(true);
+				}
 			}
 		});
-		*/
 	};
 }
 
@@ -1372,7 +1375,7 @@ iglooSettings.prototype.buildInterface = function () {
 		'height': '73px',
 		'padding-left': '-1px',
 		'padding-top': '-1px',
-		'margin-top': '12px',
+		'margin-top': '-73px',
 		'margin-left': '5px',
 		'margin-right': '5px',
 		'cursor': 'pointer'
@@ -2205,12 +2208,12 @@ iglooPast.prototype.buildInterface = function () {
 
 	$(histButton).css({
 		'position': 'relative',
-		'float': 'right',
+		'float': 'left',
 		'width': '73px',
 		'height': '73px',
 		'margin-top': '12px',
 		'margin-left': '5px',
-		'margin-right': '5px',
+		'right': '30px',
 		'padding-left': '-1px',
 		'padding-top': '-1px',
 		'cursor': 'pointer'
