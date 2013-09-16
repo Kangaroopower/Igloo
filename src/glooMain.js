@@ -1461,7 +1461,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				$(cont).append(me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', {
+				$(cont).append(me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', 'remoteConnect', {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
@@ -1475,7 +1475,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				$(cont).append(me.createOption('RC Ticker Update Time', {
+				$(cont).append(me.createOption('RC Ticker Update Time', 'updateTime', {
 					type: "text",
 					value: iglooUserSettings.updateTime,
 					onchange: function () {
@@ -1496,7 +1496,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Update Quantity', {
+				$(cont).append(me.createOption('Update Quantity', 'updateQuantity', {
 					type: "text",
 					value: iglooUserSettings.updateQuantity,
 					onchange: function () {
@@ -1517,7 +1517,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Prompt on self revert', {
+				$(cont).append(me.createOption('Prompt on self revert', 'promptRevertSelf', {
 					type: "checkbox",
 					checked: iglooUserSettings.promptRevertSelf ? true : false,
 					onchange: function () {
@@ -1534,7 +1534,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Enable profanity highlighting', {
+				$(cont).append(me.createOption('Enable profanity highlighting', 'profFilter', {
 					type: "checkbox",
 					checked: iglooUserSettings.profFilter ? true : false,
 					onchange: function () {
@@ -1551,7 +1551,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Block keyboard shortcuts', {
+				$(cont).append(me.createOption('Block keyboard shortcuts', 'blockKeys', {
 					type: "checkbox",
 					checked: iglooUserSettings.blockKeys ? true : false,
 					onchange: function () {
@@ -1568,7 +1568,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Hide Own edits from the RC Feed', {
+				$(cont).append(me.createOption('Hide Own edits from the RC Feed', 'hideOwn', {
 					type: "checkbox",
 					checked: iglooUserSettings.hideOwn ? true : false,
 					onchange: function () {
@@ -1585,7 +1585,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Log CSD tags (not deletes)', {
+				$(cont).append(me.createOption('Log CSD tags (not deletes)', 'logCSD', {
 					type: "checkbox",
 					checked: iglooUserSettings.logCSD ? true : false,
 					onchange: function () {
@@ -1613,7 +1613,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				$(cont).append(me.createOption('Diff font size (px)', {
+				$(cont).append(me.createOption('Diff font size (px)', 'diffFontSize', {
 					type: "text",
 					value: iglooUserSettings.diffFontSize,
 					onchange: function () {
@@ -1635,13 +1635,13 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Dropdown window timeout (seconds)', {
+				$(cont).append(me.createOption('Dropdown window timeout (seconds)', 'dropdownWinTimeout', {
 					type: "text",
 					value: iglooUserSettings.dropdownWinTimeout,
 					onchange: function () {
 						var el = this;
 						console.warn("me");
-						console.warn("el", this.value);
+						console.warn("el", el.value);
 						console.warn("this", this.value);
 						if (isNaN(parseFloat(el.value, 10))) {
 							console.warn("there");
@@ -1673,7 +1673,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 	}
 };
 
-iglooSettings.prototype.createOption = function (description, properties) {
+iglooSettings.prototype.createOption = function (description, id, properties) {
 	var opt = document.createElement('tr'),
 		main = document.createElement('td'),
 		change = document.createElement('input');
@@ -1684,7 +1684,8 @@ iglooSettings.prototype.createOption = function (description, properties) {
 
 	for (var i in properties) {
 		if (i === "onchange") {
-			$(change).attr(i, '(' + properties[i] + '())');
+			var strfunc = '' + properties[i];
+			$(change).attr(i,  strfunc.substring(12, strfunc.length - 1));
 		} else {
 			$(change).attr(i, properties[i]);
 		}
