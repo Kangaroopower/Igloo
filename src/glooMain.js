@@ -402,18 +402,21 @@ function iglooMain () {
 
 	this.bindKeys = function () {
 		this.piano.register('up', 'default', 38, 0, function () {
-			if (igloo.piano.mode === 'default')
+			if (igloo.piano.mode === 'default') {
 				igloo.recentChanges.browseFeed(-1);
+			}
 		});
 
 		this.piano.register('down', 'default', 40, 0, function () {
-			if (igloo.piano.mode === 'default')
+			if (igloo.piano.mode === 'default') {
 				igloo.recentChanges.browseFeed(1);
+			}
 		});
 
 		this.piano.register('backspace', 'default', 8, 8, function () {
-			if (igloo.piano.mode === 'default')
+			if (igloo.piano.mode === 'default') {
 				igloo.archives.goBack(1);
+			}
 		});
 
 		this.piano.register('q', 'default', 81, 113, function () {
@@ -1392,9 +1395,11 @@ iglooSettings.prototype.buildInterface = function () {
 	igloo.toolPane.panel.appendChild(settingsButton);
 
 	igloo.piano.register('f5', 'settings', 116, 0, function () {
-		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-		if (keyCheck === true) {
-			window.location.reload(true);
+		if (igloo.piano.mode === 'settings') {
+			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+			if (keyCheck === true) {
+				window.location.reload(true);
+			}
 		}
 	});
 
@@ -1901,9 +1906,11 @@ function iglooSearch () {
 	});
 
 	igloo.piano.register('f5', 'search', 116, 0, function () {
-		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-		if (keyCheck === true) {
-			window.location.reload(true);
+		if (igloo.piano.mode === 'settings') {
+			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+			if (keyCheck === true) {
+				window.location.reload(true);
+			}
 		}
 	});
 }
