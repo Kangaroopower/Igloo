@@ -1685,7 +1685,7 @@ iglooSettings.prototype.createOption = function (description, id, properties) {
 	for (var i in properties) {
 		if (i === "onchange") {
 			var strfunc = '' + properties[i];
-			$(change).attr(i,  strfunc.substring(12, strfunc.length - 1));
+			$(change).attr(i,  strfunc.substring(13, strfunc.length - 1));
 		} else {
 			$(change).attr(i, properties[i]);
 		}
