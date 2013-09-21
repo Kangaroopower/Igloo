@@ -674,7 +674,7 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 iglooRecentChanges.prototype.markViewed = function (pageTitle, revId) {
 	var me = this;
 	for (var change = 0; change < this.recentChanges.length; change++) {
-		if (me.recentChanges[change].revisions.iglast().revID === revId) {
+		if (me.recentChanges[change].revisions.iglast().revId === revId) {
 			me.recentChanges.splice(change, 1);
 			me.render();
 			me.viewed.push(revId);
