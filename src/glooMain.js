@@ -1238,7 +1238,7 @@ iglooKeys.prototype.handleKeys = function (e, killcheck) {
 //Accesses the keys, checks which mode their in, and runs the 
 //appropriate function
 iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
-	var keyMode = this.keys[this.mode], isRegisteredKey = false;
+	/*var keyMode = this.keys[this.mode], isRegisteredKey = false;
 			
 	if (killcheck === true) {
 		for (var i in keyMode) {
@@ -1261,7 +1261,7 @@ iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 		return true;
 	}
 
-	return false;
+	return false;*/
 };
 
 //This registers a new keybinding for use in igloo
