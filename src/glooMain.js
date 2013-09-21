@@ -1204,15 +1204,15 @@ iglooKeys.prototype.begin = function () {
 	var me = this;
 
 	$(document).keydown(function(e) {
-		me.handleKeys(e, true);
+		me.killKeys(e);
 	});
 
 	$(document).keyup(function(e) {
-		me.handleKeys(e, false);
+		me.handleKeys(e);
 	});
 };
 
-iglooKeys.prototype.handleKeys = function (e, killcheck) {
+iglooKeys.prototype.handleKeys = function ( e ) {
 	var keyPress, use;
 
 	if (!e) e = window.event;
@@ -1223,10 +1223,10 @@ iglooKeys.prototype.handleKeys = function (e, killcheck) {
 		keyPress = e.charCode;
 		use = 'charCode';
 	}
-			
-	var result = this.manageKeys(keyPress, use, killcheck);
+
+	var result = this.manageKeys(keyPress, use, false);
 	if (result === true) return true;
-			
+
 	if (e.preventDefault) {
 		e.preventDefault();
 	} else {
@@ -1235,10 +1235,36 @@ iglooKeys.prototype.handleKeys = function (e, killcheck) {
 	return true;
 };
 
+iglooKeys.prototype.killKeys = function ( e ) {
+	var keyPress, use;
+
+	// check whether to prevent the default action
+	if (iglooUserSettings.blockKeys === false) return true;
+
+	if (!e) e = window.event;
+
+	if (e.keyCode) {
+		keyPress = e.keyCode;
+		use = 'keyCode';
+	} else {
+		keyPress = e.charCode;
+		use = 'charCode';
+	}
+
+	var result = this.manageKeys(keyPress, use, true);
+	if (result === true) return true;
+
+	if (e.preventDefault) {
+		e.preventDefault();
+	} else {
+		return false;
+	}
+	return true;
+};
 //Accesses the keys, checks which mode their in, and runs the 
 //appropriate function
 iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
-	/*var keyMode = this.keys[this.mode], isRegisteredKey = false;
+	var keyMode = this.keys[this.mode], isRegisteredKey = false;
 			
 	if (killcheck === true) {
 		for (var i in keyMode) {
@@ -1261,7 +1287,7 @@ iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 		return true;
 	}
 
-	return false;*/
+	return false;
 };
 
 //This registers a new keybinding for use in igloo
