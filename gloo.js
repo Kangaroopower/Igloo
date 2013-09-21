@@ -36,13 +36,16 @@ function iglooImport (page, remote) {
 		cachebypass = '&killcache=' + c.getDate() + c.getSeconds() + c.getMilliseconds(),
 		url;
 			
-	if ((typeof remote === "undefined") || (remote == null ) || (remote === false)) {
-		url = mw.config.get('wgScript') + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent(page.replace( / /g,'_' ));
+	if ((typeof remote === "undefined") || (remote == null) || (remote === false)) {
+		url = mw.config.get('wgScript') + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent(page.replace(/ /g,'_'));
 	} else {
 		url = page;
 	}
 			
-	mw.loader.load(script);
+	var script = document.createElement('script');
+		script.setAttribute('src', url);
+		script.setAttribute('type', 'text/javascript');
+		document.getElementsByTagName('head')[0].appendChild(script);
 
 	return script;
 }
