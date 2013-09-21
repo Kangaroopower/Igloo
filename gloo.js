@@ -32,22 +32,25 @@
 var iglooBranch = window.iglooBranch || 'dev';
 
 function iglooImport (page, remote) {
-	var c = new Date(),
+	var c = new Date (),
 		cachebypass = '&killcache=' + c.getDate() + c.getSeconds() + c.getMilliseconds(),
 		url;
 			
-	if ((typeof remote === "undefined") || (remote == null) || (remote === false)) {
-		url = mw.config.get('wgScript') + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent(page.replace(/ /g,'_'));
+	if ((typeof remote === "undefined") || (remote == null ) || (remote == false)) {
+		url = mw.config.get('wgScript') + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent(page.replace( / /g,'_' ));
 	} else {
 		url = page;
 	}
 			
 	var script = document.createElement('script');
-		script.setAttribute('src', url);
-		script.setAttribute('type', 'text/javascript');
-		document.getElementsByTagName('head')[0].appendChild(script);
+	script.setAttribute('src', url);
+	script.setAttribute('type', 'text/javascript');
+	document.getElementsByTagName('head')[0].appendChild(script);
 
 	return script;
 }
+
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/flash.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/jin.js', true);
 
 iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);
