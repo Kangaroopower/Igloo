@@ -128,7 +128,7 @@ var iglooUserSettings = {
 	diffFontSize: 13,
 
 	//Keys
-	blockKeys: true,
+	useKeys: true,
 
 	// Modules
 
@@ -1239,7 +1239,7 @@ iglooKeys.prototype.killKeys = function ( e ) {
 	var keyPress, use;
 
 	// check whether to prevent the default action
-	if (iglooUserSettings.blockKeys === false) return true;
+	if (iglooUserSettings.useKeys === false) return true;
 
 	if (!e) e = window.event;
 
@@ -1575,14 +1575,14 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Block keyboard shortcuts', 'blockKeys', {
+				$(cont).append(me.createOption('Block keyboard shortcuts', 'useKeys', {
 					type: "checkbox",
-					checked: iglooUserSettings.blockKeys ? true : false,
+					checked: iglooUserSettings.useKeys ? true : false,
 					onchange: function () {
 						var el = $(this);
-						igloo.cogs.set("blockKeys", el.prop('checked'), function (res) {
+						igloo.cogs.set("useKeys", el.prop('checked'), function (res) {
 							if (res) {
-								iglooUserSettings.blockKeys = el.prop('checked');
+								iglooUserSettings.useKeys = el.prop('checked');
 							} else {
 								el.attr('checked', !el.prop('checked'));
 							}
