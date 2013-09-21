@@ -1266,7 +1266,7 @@ iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 
 //This registers a new keybinding for use in igloo
 iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
-	/*var me = this;
+	var me = this;
 	if (mode in this.keys) {
 		me.keys[mode][key] = {
 			keyCode: kCode,
@@ -1276,7 +1276,7 @@ iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
 		return true;
 	} else {
 		return false;
-	}*/
+	}
 };
 
 //Class iglooSettings- builds settings interface and manages settings storage/handling
