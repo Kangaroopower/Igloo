@@ -33,7 +33,7 @@
 		return ret;
 	})($, mw);
 
-	function iglooHookInterface() {
+	function iglooHookInterface () {
 		//Load stuff
 		this.load = function () {
 			if (!allowCheck.skin) return false;
@@ -70,6 +70,7 @@
 
 		this.colorify = function() {
 			var iglooDivs = document.getElementsByTagName('div'),
+				glooPage = 'Wikipedia:Igloo/run',
 				serverBase = mw.config.get('wgServer') + mw.config.get('wgArticlePath').substr(0,(mw.config.get('wgArticlePath').length - 2));
 					
 			// check for launch buttons
@@ -97,11 +98,10 @@
 					iglooDivs[i].innerHTML = '<a target="_blank" href="'+serverBase+glooPage+'">launch igloo</a>';
 				}
 			}
-		};
-			
-		this.load();
+		};			
 	}
 
-	iglooHookInterface();
+	var hook = new iglooHookInterface();
+	hook.load();
 
 })(jQuery, mediaWiki, this);
