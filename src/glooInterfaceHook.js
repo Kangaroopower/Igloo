@@ -57,9 +57,7 @@
 			//load scripts
 			for (var i = 0; i < toLoad.length; i++) {
 				//if (toLoad[i - 1].loaded = false)	
-				iglooImport(toLoad[i].s, true).onload = function () {
-					toLoad[i].loaded = true;
-				};
+				iglooImport(toLoad[i].s, true);
 			}
 
 			//Make some igloo related elements shine
