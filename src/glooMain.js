@@ -402,40 +402,32 @@ function iglooMain () {
 
 	this.bindKeys = function () {
 		this.piano.register('up', 'default', 38, 0, function () {
-			if (igloo.piano.mode === 'default') {
-				igloo.recentChanges.browseFeed(-1);
-			}
+			igloo.recentChanges.browseFeed(-1);
 		});
 
 		this.piano.register('down', 'default', 40, 0, function () {
-			if (igloo.piano.mode === 'default') {
-				igloo.recentChanges.browseFeed(1);
-			}
+			igloo.recentChanges.browseFeed(1);
 		});
 
 		this.piano.register('backspace', 'default', 8, 8, function () {
-			if (igloo.piano.mode === 'default') {
-				igloo.archives.goBack(1);
-			}
+			igloo.archives.goBack(1);
 		});
 
 		this.piano.register('q', 'default', 81, 113, function () {
-			if (igloo.piano.mode === 'default' && typeof me.justice.pageTitle !== '') {
+			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go();
 			}
 		});
 
 		this.piano.register('g', 'default', 103, 113, function () {
-			if (igloo.piano.mode === 'default' && typeof me.justice.pageTitle !== '') {
+			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go('agf', false);
 			}
 		});
 		this.piano.register('f5', 'default', 116, 0, function () {
-			if (igloo.piano.mode === 'default') {
-				var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-				if (keyCheck === true) {
-					window.location.reload(true);
-				}
+			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+			if (keyCheck === true) {
+				window.location.reload(true);
 			}
 		});
 	};
@@ -1274,7 +1266,7 @@ iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 
 //This registers a new keybinding for use in igloo
 iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
-	var me = this;
+	/*var me = this;
 	if (mode in this.keys) {
 		me.keys[mode][key] = {
 			keyCode: kCode,
@@ -1284,7 +1276,7 @@ iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
 		return true;
 	} else {
 		return false;
-	}
+	}*/
 };
 
 //Class iglooSettings- builds settings interface and manages settings storage/handling
@@ -1395,11 +1387,9 @@ iglooSettings.prototype.buildInterface = function () {
 	igloo.toolPane.panel.appendChild(settingsButton);
 
 	igloo.piano.register('f5', 'settings', 116, 0, function () {
-		if (igloo.piano.mode === 'settings') {
-			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-			if (keyCheck === true) {
-				window.location.reload(true);
-			}
+		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+		if (keyCheck === true) {
+			window.location.reload(true);
 		}
 	});
 
@@ -1906,11 +1896,9 @@ function iglooSearch () {
 	});
 
 	igloo.piano.register('f5', 'search', 116, 0, function () {
-		if (igloo.piano.mode === 'settings') {
-			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-			if (keyCheck === true) {
-				window.location.reload(true);
-			}
+		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+		if (keyCheck === true) {
+			window.location.reload(true);
 		}
 	});
 }
