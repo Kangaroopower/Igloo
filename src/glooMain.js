@@ -1261,11 +1261,12 @@ iglooKeys.prototype.killKeys = function ( e ) {
 	}
 	return true;
 };
+
 //Accesses the keys, checks which mode their in, and runs the 
 //appropriate function
 iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 	var keyMode = this.keys[this.mode], isRegisteredKey = false;
-			
+
 	if (killcheck === true) {
 		for (var i in keyMode) {
 			if (keyMode[i][use] === code) { 
@@ -1575,7 +1576,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('Block keyboard shortcuts', 'useKeys', {
+				$(cont).append(me.createOption('Use keyboard shortcuts', 'useKeys', {
 					type: "checkbox",
 					checked: iglooUserSettings.useKeys ? true : false,
 					onchange: function () {
