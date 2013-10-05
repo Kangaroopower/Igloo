@@ -369,7 +369,6 @@ function iglooMain () {
 
 	this.loadModules = function () {
 		this.piano = new iglooKeys();
-		this.piano.begin();
 		this.announce('keys');
 
 		this.justice = new iglooReversion();
