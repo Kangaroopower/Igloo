@@ -1487,7 +1487,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				$(cont).append(me.createOption('<b>Connect to Remote Server <a style="border-bottom: 1px dotted" title="igloo only stores settings and a session key- No IP adresses/personal info">?</a></b>', 'remoteConnect', {
+				$(cont).append(me.createOption('<b>Connect to Remote Server <span style="border-bottom: 1px dotted" title="igloo only stores settings and a session key- No IP adresses/personal info">?</a></b>', 'remoteConnect', {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
@@ -1500,6 +1500,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				}));
+
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('RC Ticker Update Time', 'updateTime', {
 					type: "text",
