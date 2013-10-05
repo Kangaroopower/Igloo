@@ -1293,6 +1293,7 @@ iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
 
 //This registers a new keybinding for use in igloo
 iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
+	/*
 	var me = this;
 	if (mode in this.keys) {
 		me.keys[mode][key] = {
@@ -1303,7 +1304,7 @@ iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
 		return true;
 	} else {
 		return false;
-	}
+	} */
 };
 
 //Class iglooSettings- builds settings interface and manages settings storage/handling
@@ -1486,7 +1487,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				$(cont).append(me.createOption('<b>Connect to Remote Server (igloo only stores settings & a session key- No IP adresses/personal info)</b>', 'remoteConnect', {
+				$(cont).append(me.createOption('<b>Connect to Remote Server <a style="border-bottom: 1px dotted" title="igloo only stores settings and a session key- No IP adresses/personal info">?</a></b>', 'remoteConnect', {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
