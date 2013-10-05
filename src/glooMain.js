@@ -1199,6 +1199,7 @@ function iglooKeys () {
 //And then executes the function under the right circumstances
 iglooKeys.prototype.register = function (combo, mode, func) {
 	var me = this;
+	igloo.log(combo, mode);
 	if ($.inArray(mode, this.keys) !== -1) {
 		Mousetrap.bind(combo, function(e) {
 			if (e.preventDefault) {
