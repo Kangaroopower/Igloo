@@ -1188,6 +1188,7 @@ iglooRevision.prototype.flagProfanity = function(html) {
 	** mode, there are different key shortcuts. Modules
 	** can register keystrokes to modes from their own classes,
 	** although they can't create modes of their own yet
+	** Creds to Mousetrap for being an awesome library
 	*/
 function iglooKeys () {
 	this.mode = 'default';
