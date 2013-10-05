@@ -423,7 +423,7 @@ function iglooMain () {
 				igloo.justice.rollback.go('agf', false);
 			}
 		});
-		this.piano.register(['f5', 'ctrl+f5'], 'default', function () {
+		this.piano.register('f5', 'default', function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
 				window.location.reload(true);
@@ -1199,7 +1199,6 @@ function iglooKeys () {
 //And then executes the function under the right circumstances
 iglooKeys.prototype.register = function (combo, mode, func) {
 	var me = this;
-	igloo.log(combo, mode);
 	if ($.inArray(mode, this.keys) !== -1) {
 		Mousetrap.bind(combo, function(e) {
 			if (e.preventDefault) {
@@ -1326,12 +1325,7 @@ iglooSettings.prototype.buildInterface = function () {
 
 	igloo.toolPane.panel.appendChild(settingsButton);
 
-	igloo.piano.register('a', 'settings', function () {
-		alert('test');
-	});
-
-
-	igloo.piano.register(['f5', 'ctrl+f5'], 'settings', function () {
+	igloo.piano.register('f5', 'settings', function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
 			window.location.reload(true);
@@ -1842,7 +1836,7 @@ function iglooSearch () {
 		igloo.detective.search();
 	});
 
-	igloo.piano.register(['f5', 'ctrl+f5'], 'search', function () {
+	igloo.piano.register('f5', 'search', function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
 			window.location.reload(true);
