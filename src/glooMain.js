@@ -1855,7 +1855,7 @@ iglooSearch.prototype.buildInterface = function () {
 		browsePos = (62 * 2) - 15,
 		error = document.createElement('div');
 
-	search.innerHTML = '<input placeholder="Search" id="igloo-search-to" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.fileHost + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
+	search.innerHTML = '<input placeholder="Search" id="igloo-search-to" class="mousetrap" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.fileHost + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
 	error.innerHTML = '';
 
 	error.id = 'igloo-search-error';
