@@ -1193,14 +1193,22 @@ iglooRevision.prototype.flagProfanity = function(html) {
 function iglooKeys () {
 	this.mode = 'default';
 	this.keys = ['default', 'search', 'settings'];
+	this.cbs = {
+		'default': {},
+		'search': {},
+		'settings': {}
+	}
 }
+
 
 //This registers a new keybinding for use in igloo
 //And then executes the function under the right circumstances
 iglooKeys.prototype.register = function (combo, mode, func) {
 	var me = this;
 	if ($.inArray(mode, this.keys) !== -1) {
-		Mousetrap.bind(combo, function(e) {
+		this.cbs[mode][combo] = func;
+
+		Mousetrap.bind(combo, function(e, input) {
 			if (e.preventDefault) {
 				e.preventDefault();
 			} else {
@@ -1208,9 +1216,7 @@ iglooKeys.prototype.register = function (combo, mode, func) {
 				e.returnValue = false;
 			}
 
-			if (igloo.piano.mode === (mode + '')) {
-				func();
-			}
+			me.cbs[igloo.piano.mode][input]();
 		});
 		return true
 	} else {
