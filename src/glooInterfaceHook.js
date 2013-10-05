@@ -52,9 +52,9 @@ function iglooHookInterface() {
 	this.run();
 }
 
-if (typeof jin === 'undefined' || typeof Flash === 'undefined') {
+if (typeof jin === 'undefined' || typeof Flash === 'undefined' || typeof Mousetrap === 'undefined') {
 	tIgLa = function () {
-		if (typeof jin === 'undefined' || typeof Flash === 'undefined') {
+		if (typeof jin === 'undefined' || typeof Flash === 'undefined'|| typeof Mousetrap === 'undefined') {
 			setTimeout(tIgLa, 1000);
 		} else {
 			iglooHookInterface();
