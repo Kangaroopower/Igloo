@@ -52,5 +52,7 @@ function iglooImport (page, remote) {
 
 iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/flash.js', true);
 iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/jin.js', true);
+iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/mousetrap.js', true);
+
 
 iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);

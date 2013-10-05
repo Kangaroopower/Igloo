@@ -401,30 +401,30 @@ function iglooMain () {
 	};
 
 	this.bindKeys = function () {
-		this.piano.register('up', 'default', 38, 0, function () {
+		this.piano.register('up', 'default', function () {
 			igloo.recentChanges.browseFeed(-1);
 		});
 
-		this.piano.register('down', 'default', 40, 0, function () {
+		this.piano.register('down', 'default', function () {
 			igloo.recentChanges.browseFeed(1);
 		});
 
-		this.piano.register('backspace', 'default', 8, 8, function () {
+		this.piano.register('backspace', 'default', function () {
 			igloo.archives.goBack(1);
 		});
 
-		this.piano.register('q', 'default', 81, 113, function () {
+		this.piano.register('q', 'default', function () {
 			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go();
 			}
 		});
 
-		this.piano.register('g', 'default', 103, 113, function () {
+		this.piano.register('g', 'default', function () {
 			if (typeof me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go('agf', false);
 			}
 		});
-		this.piano.register('f5', 'default', 116, 0, function () {
+		this.piano.register(['f5', 'ctrl+f5'], 'default', function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
 				window.location.reload(true);
@@ -1192,119 +1192,24 @@ iglooRevision.prototype.flagProfanity = function(html) {
 	*/
 function iglooKeys () {
 	this.mode = 'default';
-	this.keys = {
-		'default': {},
-		'search': {},
-		'settings': {}
-	};
+	this.keys = ['default', 'search', 'settings'];
 }
 
-//Sets up the keybinding interface
-iglooKeys.prototype.begin = function () {
-	var me = this;
-
-	$(document).keydown(function(e) {
-		me.killKeys(e);
-	});
-
-	$(document).keyup(function(e) {
-		me.handleKeys(e);
-	});
-};
-
-iglooKeys.prototype.handleKeys = function ( e ) {
-	var keyPress, use;
-
-	if (!e) e = window.event;
-	if (e.keyCode) {
-		keyPress = e.keyCode;
-		use = 'keyCode';
-	} else {
-		keyPress = e.charCode;
-		use = 'charCode';
-	}
-
-	var result = this.manageKeys(keyPress, use, false);
-	if (result === true) return true;
-
-	if (e.preventDefault) {
-		e.preventDefault();
-	} else {
-		return false;
-	}
-	return true;
-};
-
-iglooKeys.prototype.killKeys = function ( e ) {
-	var keyPress, use;
-
-	// check whether to prevent the default action
-	if (iglooUserSettings.useKeys === false) return true;
-
-	if (!e) e = window.event;
-
-	if (e.keyCode) {
-		keyPress = e.keyCode;
-		use = 'keyCode';
-	} else {
-		keyPress = e.charCode;
-		use = 'charCode';
-	}
-
-	var result = this.manageKeys(keyPress, use, true);
-	if (result === true) return true;
-
-	if (e.preventDefault) {
-		e.preventDefault();
-	} else {
-		return false;
-	}
-	return true;
-};
-
-//Accesses the keys, checks which mode their in, and runs the 
-//appropriate function
-iglooKeys.prototype.manageKeys = function (code, use, killcheck) {
-	var keyMode = this.keys[this.mode], isRegisteredKey = false;
-
-	if (killcheck === true) {
-		for (var i in keyMode) {
-			if (keyMode[i][use] === code) { 
-				return false;
-			} // if exists, block
-		}
-		return true; // otherwise, don't
-	}
-
-	for (var i in keyMode) {
-		if (keyMode[i][use] === code) {
-			isRegisteredKey = true;
-			keyMode[i].cb();
-			break;
-		}
-	}
-
-	if (isRegisteredKey === true) {
-		return true;
-	}
-
-	return false;
-};
-
 //This registers a new keybinding for use in igloo
-iglooKeys.prototype.register = function (key, mode, kCode, cCode, func) {
-	/*
+//And then executes the function under the right circumstances
+iglooKeys.prototype.register = function (combo, mode, func) {
 	var me = this;
-	if (mode in this.keys) {
-		me.keys[mode][key] = {
-			keyCode: kCode,
-			charCode: cCode,
-			cb: func
-		};
-		return true;
+	if ($.inArray(mode, this.keys)) {
+		Mousetrap.bind(combo, function(e) {
+			if (igloo.piano.mode === (mode + '')) {
+				func();
+			}
+			return false;
+		});
+		return true
 	} else {
 		return false;
-	} */
+	}
 };
 
 //Class iglooSettings- builds settings interface and manages settings storage/handling
@@ -1414,7 +1319,7 @@ iglooSettings.prototype.buildInterface = function () {
 
 	igloo.toolPane.panel.appendChild(settingsButton);
 
-	igloo.piano.register('f5', 'settings', 116, 0, function () {
+	igloo.piano.register(['f5', 'ctrl+f5'], 'settings', function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
 			window.location.reload(true);
@@ -1921,11 +1826,11 @@ function iglooArchive () {
 
 //Class iglooSearch- brings up a requested, specific page
 function iglooSearch () {
-	igloo.piano.register('enter', 'search', 13, 0, function () {
+	igloo.piano.register('enter', 'search', function () {
 		igloo.detective.search();
 	});
 
-	igloo.piano.register('f5', 'search', 116, 0, function () {
+	igloo.piano.register(['f5', 'ctrl+f5'], 'search', function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
 			window.location.reload(true);
