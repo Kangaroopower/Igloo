@@ -1221,7 +1221,7 @@ iglooKeys.prototype.register = function (combo, mode, func) {
 function iglooSettings () {
 	this.popup = null;
 	this.settingsEnabled = true;
-	this.isOpen = true;
+	this.isOpen = false;
 }
 
 iglooSettings.prototype.retrieve = function () {
