@@ -612,7 +612,7 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 	// For each change, add it to the changeset.
 	var l = data.length;
 	for (var i = 0; i < l; i++) {
-		var exclude = false;
+		var exclude = false, l2 = this.recentChanges.length, exists = false, p;
 
 		//Check if we've already seen this revision
 		for (var k = 0; k < this.viewed.length; k++) {
@@ -634,7 +634,6 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 		}
 
 		// Check if we already have information about this page.
-		var l2 = this.recentChanges.length, exists = false, p;
 		for (var j = 0; j < l2; j++) {
 			if (data[i].title === this.recentChanges[j].info.pageTitle) {
 				p = igloo.contentManager.getPage(data[i].title);
@@ -657,10 +656,10 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 	if (this.recentChanges.length > 30) {
 		// Objects that are being removed from the recent changes list are freed in the
 		// content manager for discard.
-		for (var i = 30; i < this.recentChanges.length; i++) {
-			igloo.log("Status change. " + this.recentChanges[i].info.pageTitle + " is no longer hold");
-			var p = igloo.contentManager.getPage(this.recentChanges[i].info.pageTitle);
-			p.hold = false;
+		for (var x = 30; i < this.recentChanges.length; x++) {
+			igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
+			var page = igloo.contentManager.getPage(this.recentChanges[x].info.pageTitle);
+			page.hold = false;
 		}
 		this.recentChanges = this.recentChanges.slice(0, 30);
 	}
@@ -670,7 +669,7 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 };
 
 //Don't show revisions that you've already seen in the feed any more
-iglooRecentChanges.prototype.markViewed = function (pageTitle, revId) {
+iglooRecentChanges.prototype.markViewed = function (revId) {
 	var me = this;
 	for (var change = 0; change < this.recentChanges.length; change++) {
 		if (me.recentChanges[change].revisions.iglast().revId === revId) {
@@ -698,7 +697,7 @@ iglooRecentChanges.prototype.show = function (elementId) {
 	this.recentChanges[elementId].display();
 	var pause = setTimeout(function () {
 		var page = me.recentChanges[elementId];
-		me.markViewed(page.info.pageTitle, page.revisions.iglast().revId);
+		me.markViewed(page.revisions.iglast().revId);
 		pause = false;
 	}, 500);
 
@@ -983,6 +982,7 @@ iglooRevision.prototype.display = function () {
 	// Determine what should be displayed.
 	var displayWhat,
 		me = this,
+		h2,
 		months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         
 	if (!arguments[0]) {
@@ -1011,8 +1011,9 @@ iglooRevision.prototype.display = function () {
 
 	// Create display element.
 	if (displayWhat === 'revision' || this.type === 'new') {
-		var div = document.createElement('div'), h2 = document.createElement('h2');
+		var div = document.createElement('div');
 
+		h2 = document.createElement('h2');
 		h2.id = 'iglooPageTitle';
 
 		// Append new content.
@@ -1047,7 +1048,6 @@ iglooRevision.prototype.display = function () {
 
 	} else if (displayWhat === 'diff') {
 		var table = document.createElement('table'), 
-			h2 = document.createElement('h2'),
 			same = document.createElement('div'),
 			ts = this.timestamp,
 			old = {},
@@ -1057,6 +1057,7 @@ iglooRevision.prototype.display = function () {
 			old = data;
 			ots = new Date(data.timestamp);
 		
+			h2 = document.createElement('h2');
 			h2.id = 'iglooPageTitle';
 
 			table.innerHTML = '<tr style="vertical-align: top;"><td colspan="2" style="text-align: center;"><div><strong>Revision as of ' + ots.getUTCHours() + ':' + ots.getUTCMinutes() + ', ' + ots.getUTCDate() + ' ' + months[ots.getUTCMonth()] + ' ' + ots.getFullYear() + '</strong></div><div>'+ old.user +'</div><div><strong title="This is a minor edit">'+ old.minor + '</strong>&nbsp;<span>('+ old.comment +')</span></div></td><td colspan="2" style="text-align: center;"><div><strong>Revision as of ' + ts.getUTCHours() + ':' + ts.getUTCMinutes() + ', ' + ts.getUTCDate() + ' ' + months[ts.getUTCMonth()] + ' ' + ts.getFullYear() + '</strong></div><div>' + me.user + '</div><div><strong title="This is a minor edit">'+ me.minor + '</strong>&nbsp;<span>('+ me.summary +')</span></div></td></tr><tr><td id="iglooDiffCol1" colspan="2"> </td><td id="iglooDiffCol2" colspan="2"> </td></tr>' + me.diffContent;
@@ -1249,7 +1250,7 @@ iglooSettings.prototype.retrieve = function () {
 					}
 				}
 			}
-		}
+		};
 	} else {
 		if (mw.user.options.get('userjs-igloo') === null) {
 			var setIglooPrefs = new iglooRequest({
@@ -1387,7 +1388,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 		igloo.log('igloo: unexpected settings call, tab is missing');
 		return false;
 	}
-	var tabcont = document.getElementById('igloo-settings-content'), 
+	var tabcont = document.getElementById('igloo-settings-content'),
+		cont,
 		me = this;
 			
 	switch ( tabid ) {
@@ -1397,7 +1399,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			break;
 
 		case 'general':
-			var cont = document.createElement('div'), me = this;
+			cont = document.createElement('div');
 			tabcont.innerHTML = ''; // blank
 				
 			cont.style.padding = '10px';
@@ -1551,7 +1553,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			break;
 					
 		case 'interface':
-			var cont = document.createElement('div'), me = this;
+			cont = document.createElement('div');
 			tabcont.innerHTML = ''; // blank
 				
 			cont.style.padding = '10px';
@@ -2010,10 +2012,10 @@ function iglooCSD (page, csdtype) {
 }
 
 iglooCSD.prototype.doCSD = function () {
-	var me = this;
+	var me = this, csdsummary;
 	if(iglooUserSettings.mesysop === true) {
-		var csdsummary = iglooConfiguration.csdSummary.admin;
-			csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
+		csdsummary = iglooConfiguration.csdSummary.admin;
+		csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
 
 		var deleteConfirm = confirm('Are you sure you wish to delete ' + me.pageTitle + ' ?');
 
@@ -2027,9 +2029,10 @@ iglooCSD.prototype.doCSD = function () {
 		}, 0, true, true);
 		deletePage.run();
 	} else {
-		var csdmessage = iglooConfiguration.csdTemplate.replace('%CSDTYPE%', me.csdtype) + '\n\n',
-			csdsummary = iglooConfiguration.csdSummary.user;
+		var csdmessage = iglooConfiguration.csdTemplate.replace('%CSDTYPE%', me.csdtype) + '\n\n';
 		
+		csdsummary = iglooConfiguration.csdSummary.user;
+
 		var tagCSD = new iglooRequest({
 			module: 'edit',
 			params: { targ: me.pageTitle, isMinor: false, text: csdmessage, summary: csdsummary, where: 'prependtext' },
@@ -2549,8 +2552,10 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 				var i = 0;
 
 				while (true) {
-					var t = regTest.exec (pageData);
+					var t = regTest.exec(pageData);
+					
 					if (t === null) break;
+					
 					warnings[i] = [];
 					warnings[i][0] = t[1]; // template
 					warnings[i][1] = t[2]; // level
@@ -2564,7 +2569,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 				}
 
 				// we are only interested in the latest one
-				if (typeof warnings[0] == 'undefined') { 
+				if (typeof warnings[0] === 'undefined') { 
 					warnings[0] = []; 
 					warnings[0][0] = false; 
 					warnings[0][1] = 0; 
@@ -2572,9 +2577,9 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 				useWarning = warnings.length-1;
 
 				if (typeof warnings[useWarning][0] === 'string') {
-					var t = warnings[useWarning][0];
-					if (t.indexOf ('block') > -1) { 
-						useWarning --; 
+					var tmplate = warnings[useWarning][0];
+					if (tmplate.indexOf('block') > -1) { 
+						useWarning--; 
 						warnings[useWarning][1] = 0; 
 					}
 				}
@@ -2583,7 +2588,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 				for (var compareMonth = 0; compareMonth < months.length; compareMonth ++) {
 					if (months[compareMonth] === warnings[useWarning][5]) break;
 				}
-						
+
 				var compareDate = new Date ();
 					compareDate.setFullYear (parseInt(warnings[useWarning][6], 10), compareMonth, parseInt(warnings[useWarning][4], 10));
 					compareDate.setHours (parseInt(warnings[useWarning][2], 10));
