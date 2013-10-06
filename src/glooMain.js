@@ -1,4 +1,4 @@
-/*global mw:true, jin:true, Flash:true, iglooImport:true */
+/*global mw:true, jin:true, Flash:true, iglooImport:true, Mousetrap:true */
 
 // INCLUDES
 function iglooViewable () {
@@ -11,7 +11,7 @@ var _iglooViewable = new iglooViewable();
 // iglooMain alpha copy by Kangaroopower
 // igloo concept and initial code by Alex Barley (User:Ale_jrb on Wikipedia)
 	
-// expected jQuery 1.7.*, jin 1.04a+, Flash 0.72+, Mediawiki 1.20+
+// expected jQuery 1.7.*, jin 1.04a+, Flash 0.86+, Mediawiki 1.20+
 
 /*
 	CLASSES ==========================
@@ -1197,7 +1197,7 @@ function iglooKeys () {
 		'default': {},
 		'search': {},
 		'settings': {}
-	}
+	};
 }
 
 
@@ -1218,7 +1218,7 @@ iglooKeys.prototype.register = function (combo, mode, func) {
 
 			me.cbs[igloo.piano.mode][input]();
 		});
-		return true
+		return true;
 	} else {
 		return false;
 	}
@@ -1233,19 +1233,20 @@ function iglooSettings () {
 
 iglooSettings.prototype.retrieve = function () {
 	if (igloo.remoteConnect && !igloo.connectLocal) {
-		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=get&session=' + igloo.sessionKey, true);
-		if (typeof iglooNetSettings !== "undefined") {
-			iglooUserSettings.firstRun = false;
-			$.extend(iglooUserSettings, iglooNetSettings);
-		} else {
-			if (mw.user.options.get('userjs-igloo') !== null) {
-				var localSettings = JSON.parse(mw.user.options.get('userjs-igloo'));
-				for (var setting in localSettings) {
-					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(localSettings[setting]) + '&session=' + igloo.sessionKey, true);
-				}
+		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=get&session=' + igloo.sessionKey, true).onload = function () {
+			if (typeof iglooNetSettings !== "undefined") {
+				iglooUserSettings.firstRun = false;
+				$.extend(iglooUserSettings, iglooNetSettings);
 			} else {
-				for (var defaultSetting in iglooUserSettings) {
-					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(defaultSetting) + '&value=' + encodeURIComponent(iglooUserSettings[defaultSetting]) + '&session=' + igloo.sessionKey, true);
+				if (mw.user.options.get('userjs-igloo') !== null) {
+					var localSettings = JSON.parse(mw.user.options.get('userjs-igloo'));
+					for (var setting in localSettings) {
+						iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(localSettings[setting]) + '&session=' + igloo.sessionKey, true);
+					}
+				} else {
+					for (var defaultSetting in iglooUserSettings) {
+						iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(defaultSetting) + '&value=' + encodeURIComponent(iglooUserSettings[defaultSetting]) + '&session=' + igloo.sessionKey, true);
+					}
 				}
 			}
 		}
@@ -2012,7 +2013,7 @@ iglooCSD.prototype.doCSD = function () {
 	var me = this;
 	if(iglooUserSettings.mesysop === true) {
 		var csdsummary = iglooConfiguration.csdSummary.admin;
-		csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype)
+			csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
 
 		var deleteConfirm = confirm('Are you sure you wish to delete ' + me.pageTitle + ' ?');
 
