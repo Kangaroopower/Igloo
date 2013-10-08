@@ -656,7 +656,7 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 	if (this.recentChanges.length > 30) {
 		// Objects that are being removed from the recent changes list are freed in the
 		// content manager for discard.
-		for (var x = 30; i < this.recentChanges.length; x++) {
+		for (var x = 30; x < this.recentChanges.length; x++) {
 			igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
 			var page = igloo.contentManager.getPage(this.recentChanges[x].info.pageTitle);
 			page.hold = false;
