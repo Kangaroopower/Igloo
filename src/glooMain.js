@@ -2532,16 +2532,15 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 
 		case 1:
 			// set up the time management systems
-			var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-			var currentDate = new Date ();
-			var currentMonth = currentDate.getMonth ();
-			var currentYear = currentDate.getFullYear ();
-			var currentTime = currentDate.getTime ();
-			var header;
+			var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+				currentDate = new Date(),
+				currentMonth = currentDate.getMonth(),
+				currentYear = currentDate.getFullYear(),
+				currentTime = currentDate.getTime(),
+				header;
 					
 			// check for warnings on the user's talk page
-			var warnings = [];
-			var useWarning;
+			var warnings = [], useWarning;
 
 			// if the page already exists, we must analyse it for warnings
 			if (details !== false) {
