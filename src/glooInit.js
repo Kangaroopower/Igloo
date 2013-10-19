@@ -37,7 +37,7 @@ function iglooInitControl() {
 			case '2':
 				igLauncher.runIglooInterface.addStatus('- Checking read API...');
 
-				if (wgEnableAPI === true) { 
+				if (mw.config.get('wgEnableAPI') === true) { 
 					igLauncher.runIglooInterface.addStatus('- Read API OK!'); 
 				} else { 
 					igLauncher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: read API access is requried for igloo for run. Loading stopped.</div>', true); 
@@ -46,7 +46,7 @@ function iglooInitControl() {
 
 				igLauncher.runIglooInterface.addStatus('- Checking write API...');
 					
-				if (wgEnableWriteAPI === true) { 
+				if (mw.config.get('wgEnableWriteAPI') === true) { 
 					igLauncher.runIglooInterface.addStatus('- Write API OK!'); 
 				} else { 
 					igLauncher.runIglooInterface.addStatus('<div style="color: #dd6666;">- Warning: write API access is requried for igloo for run. Loading stopped.</div>', true); 
