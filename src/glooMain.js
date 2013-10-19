@@ -118,6 +118,7 @@ var iglooUserSettings = {
 	hideOwn: false,
 	enableFeedColour: true,
 	updateQuantity: 10,
+	hideBot: false,
 
 	// Misc
 	maxContentSize: 50,
@@ -1206,7 +1207,7 @@ function iglooKeys () {
 //And then executes the function under the right circumstances
 iglooKeys.prototype.register = function (combo, mode, func) {
 	var me = this;
-	if ($.inArray(mode, this.keys) !== -1) {
+	if ($.inArray(mode, this.keys) !== -1 && iglooUserSettings.useKeys === true) {
 		this.cbs[mode][combo] = func;
 
 		Mousetrap.bind(combo, function(e, input) {
@@ -1547,6 +1548,23 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				}));
+
+				/*cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('Hide Bot edits', 'hideBot', {
+					type: "checkbox",
+					checked: iglooUserSettings.hideBot ? true : false,
+					onchange: function () {
+						var el = $(this);
+						igloo.cogs.set("hideBot", el.prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.hideBot = el.prop('checked');
+							} else {
+								el.attr('checked', !el.prop('checked'));
+							}
+						});
+					}
+				}));*/
 			cont.innerHTML += '</table></div>';
 			
 			tabcont.appendChild(cont);
@@ -2848,8 +2866,8 @@ iglooDropdown.prototype.buildInterface = function () {
 				clearTimeout (me.timer); 
 				me.timer = false; 
 			} else {
-				document.getElementById(me.name + '-cont').style.display = 'block';
-				document.getElementById(me.name + '-display').style.display = 'block';
+				$('#' + me.name + '-cont').css('display', 'block');
+				$('#' + me.name + '-display').css('display', 'block');
 			}
 		}
 	});
@@ -2857,7 +2875,7 @@ iglooDropdown.prototype.buildInterface = function () {
 	$('#' + me.name).mouseout(function () {
 		if (me.module.pageTitle !== '') {
 			me.timer = setTimeout(function() {
-				document.getElementById(me.name+'-display').style.display = 'none';
+				$('#' + me.name + '-display').css('display', 'none');
 				me.timer = false; 
 			}, iglooUserSettings.dropdownWinTimeout * 1000);
 		}
