@@ -414,13 +414,13 @@ function iglooMain () {
 		});
 
 		this.piano.register('q', 'default', function () {
-			if (typeof me.justice.pageTitle !== '') {
+			if (me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go();
 			}
 		});
 
 		this.piano.register('g', 'default', function () {
-			if (typeof me.justice.pageTitle !== '') {
+			if (me.justice.pageTitle !== '') {
 				igloo.justice.rollback.go('agf', false);
 			}
 		});
@@ -985,7 +985,7 @@ iglooRevision.prototype.display = function () {
 		me = this,
 		h2,
 		months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-        
+
 	if (!arguments[0]) {
 		displayWhat = 'diff';
 	} else {
@@ -1052,7 +1052,8 @@ iglooRevision.prototype.display = function () {
 			same = document.createElement('div'),
 			ts = this.timestamp,
 			old = {},
-			ots = null;
+			ots = null,
+			dispWhat;
 
 		igloo.actions.getRevInfo(this.pageTitle, this.oldId, function (data) {
 			old = data;
@@ -1065,9 +1066,7 @@ iglooRevision.prototype.display = function () {
 			h2.innerHTML = me.pageTitle;
 			same.innerHTML = '<br/><span style="text-align:center">(No Change)</span><br/>';
 
-			// Style display element.
-			// TODO
-
+			//Style stuff
 			$(h2).css({'font-size' : '18px', 'margin-bottom': '5px', 'margin-top': '5px'});
 
 			$(table).css({ 'width': '100%', 'overflow': 'auto', 'font-size': iglooUserSettings.diffFontSize + 'px'});
@@ -1082,6 +1081,7 @@ iglooRevision.prototype.display = function () {
 			$(table).find('.diff-context').css({ 'background-color': '#eeeeee' });
 			$(table).find('.diffchange').css({ 'color': 'red' });
 
+			//flag Profanity
 			table.innerHTML = me.flagProfanity(table.innerHTML);
 			
 			// Clear current display.
@@ -1097,12 +1097,10 @@ iglooRevision.prototype.display = function () {
 			igloo.past.loadModule();
 
 			// Append new content.
+			dispWhat = (this.diffContent === "") ? same : table;
+			
 			igloo.diffContainer.panel.appendChild(h2);
-			if (this.diffContent === "") {
-				igloo.diffContainer.panel.appendChild(same);
-			} else {
-				igloo.diffContainer.panel.appendChild(table);
-			}
+			igloo.diffContainer.panel.appendChild(dispWhat);
 
 			//Alert rollback as to page info
 			igloo.fireEvent('rollback','new-diff', {
@@ -1271,7 +1269,9 @@ iglooSettings.prototype.retrieve = function () {
 };
 
 iglooSettings.prototype.set = function (setting, value, cb) {
-	var me = this;
+	var me = this,
+		storedSettings = JSON.parse(mw.user.options.get('userjs-igloo')),
+		key = (setting === "remoteConnect") ? 'userjs-iglooRemoteConnect' : 'userjs-igloo';
 
 	cb = (typeof cb !== "undefined" || typeof cb === "function") ? cb : function () {};
 
@@ -1282,9 +1282,6 @@ iglooSettings.prototype.set = function (setting, value, cb) {
 	if (igloo.remoteConnect && setting !== "remoteConnect" && !igloo.connectLocal) { //It'd be useless to query remotely to see if we're allowed to connect remotely
 		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(value) + '&session=' + igloo.sessionKey, true);
 	}
-	
-	var storedSettings = JSON.parse(mw.user.options.get('userjs-igloo')),
-		key = (setting === "remoteConnect") ? 'userjs-iglooRemoteConnect' : 'userjs-igloo';
 
 	storedSettings[setting] = value;
 
@@ -1389,9 +1386,8 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 		igloo.log('igloo: unexpected settings call, tab is missing');
 		return false;
 	}
-	var tabcont = document.getElementById('igloo-settings-content'),
-		cont,
-		me = this;
+
+	var tabcont = document.getElementById('igloo-settings-content'), cont, me = this;
 			
 	switch ( tabid ) {
 		case 'info':
@@ -1606,14 +1602,9 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					value: iglooUserSettings.dropdownWinTimeout,
 					onchange: function () {
 						var el = this;
-						console.warn("me");
-						console.warn("el", el.value);
-						console.warn("this", this.value);
 						if (isNaN(parseFloat(el.value, 10))) {
-							console.warn("there");
 							el.value = iglooUserSettings.dropdownWinTimeout;
 						} else {
-							console.warn("here");
 							igloo.cogs.set("dropdownWinTimeout", el.value, function (res) {
 								if (res) {
 									iglooUserSettings.dropdownWinTimeout = parseFloat(el.value, 10);
@@ -1792,12 +1783,12 @@ function iglooArchive () {
 		this.canAddtoArchives = true;
  
 		// handle greying of invalid options
-		var backButton = document.getElementById('igloo-buttons-back-b');
-		var forwardButton = document.getElementById('igloo-buttons-forward-b');
-		var backUrl = '' + iglooConfiguration.fileHost + 'images/igloo-back';
-		var forwardUrl = '' + iglooConfiguration.fileHost + 'images/igloo-forward';
-		var grey = '-grey';
-		var filetype = '.png';
+		var backButton = document.getElementById('igloo-buttons-back-b'),
+			forwardButton = document.getElementById('igloo-buttons-forward-b'),
+			backUrl = iglooConfiguration.fileHost + 'images/igloo-back',
+			forwardUrl = iglooConfiguration.fileHost + 'images/igloo-forward',
+			grey = '-grey',
+			filetype = '.png';
  
 		if (this.archives.length <= 1) { 
 			backButton.src = backUrl + grey + filetype; 
@@ -1816,9 +1807,10 @@ function iglooArchive () {
 
 	//go back in history
 	this.goBack = function (count) {
-		count = parseInt(count, 10);
+		var doView;
 
 		if (this.archives.length <= 0) return false;
+
 		if (!count) count = 1;
 
 		if ((this.archivePosition - count) < 0) { 
@@ -1826,9 +1818,8 @@ function iglooArchive () {
 		} else {
 			this.archivePosition -= count; 
 		}
-
-		var doView = this.archives [this.archivePosition];
  
+		doView = this.archives[this.archivePosition];
 		this.canAddtoArchives = false;
 		igloo.actions.loadPage(doView.title, doView.revID);
 
@@ -1837,9 +1828,10 @@ function iglooArchive () {
  
 	//go forward in history
 	this.goForward = function(count) {
-		count = parseInt(count, 10);
+		var doView;
 
 		if (this.archivePosition < 0) return false;
+
 		if (!count) count = 1;
  
 		if ((this.archivePosition + count) > (this.archives.length - 1)) {
@@ -1848,7 +1840,7 @@ function iglooArchive () {
 			this.archivePosition += count;
 		}
 
-		var doView = this.archives[this.archivePosition];
+		doView = this.archives[this.archivePosition];
 
 		this.canAddtoArchives = false;
 		igloo.actions.loadPage(doView.title, doView.revID);
@@ -2801,12 +2793,12 @@ function iglooStatus () {
 		this.idCounter++;
  
 		var newStatus = document.createElement('div');
-		newStatus.id = 'statusObj_' + statusId;
-		newStatus.className = 'statusObj';
-		newStatus.innerHTML = '<span>' + dateString + ' - ' + message + '</span>';
+			newStatus.id = 'statusObj_' + statusId;
+			newStatus.className = 'statusObj';
+			newStatus.innerHTML = '<span>' + dateString + ' - ' + message + '</span>';
  
 		var statusObj = document.getElementById('iglooStatusDisplay');
-		statusObj.insertBefore(newStatus, statusObj.firstChild);
+			statusObj.insertBefore(newStatus, statusObj.firstChild);
  
 		return statusId;
 	};
@@ -2857,7 +2849,7 @@ iglooDropdown.prototype.buildInterface = function () {
 		'overflow-x': 'hidden',
 		'overflow-y': 'auto',
 		display: 'none',
-		'float':me.position.where
+		'float': me.position.where
 	});
 
 	$('#' + me.name).mouseover(function () {
@@ -2973,29 +2965,22 @@ function iglooPopup (content, width, height) {
 }
 
 iglooPopup.prototype.center = function () {
-	var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width, 10);
-	var screenHeight = parseInt(igloo.canvas.canvasBase.children[0].style.height, 10);
-	var myWidth = parseInt($(this.popupMenuContent).css('width'), 10);
-	var myHeight = parseInt($(this.popupMenuContent).css('height'), 10);
- 
-	var leftPos	= ((screenWidth / 2) - (myWidth / 2));
-	var topPos	= ((screenHeight / 2) - (myHeight / 2));
-	var me = this;
+	var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width, 10),
+		screenHeight = parseInt(igloo.canvas.canvasBase.children[0].style.height, 10),
+		myWidth = parseInt($(this.popupMenuContent).css('width'), 10),
+		myHeight = parseInt($(this.popupMenuContent).css('height'), 10),
+		leftPos	= ((screenWidth / 2) - (myWidth / 2)),
+		topPos = ((screenHeight / 2) - (myHeight / 2)),
+		me = this;
  
 	$(this.popupMenuContent).css({
 		'left': leftPos + 'px',
 		'top':  topPos + 'px'
 	});
  
-	if (window.addEventListener) {
-		window.addEventListener('resize', function() {  
-			me.center();
-		}, false);
-	} else {
-		window.attachEvent('onresize', function() {  
-			me.center();
-		});
-	}
+	$(window).resize(function() {
+		me.center();
+	});
 };
 
 iglooPopup.prototype.show = function () {
