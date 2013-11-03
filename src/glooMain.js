@@ -2626,7 +2626,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 			// add the message to their talk page
 			if (this.warningLevel === false) return false;
 					
-			var userPage = 'User_talk:' + this.revertUser;
+			var userPage = 'User_talk:' + this.revertUser, summary;
 			var message = '\n\n' + iglooConfiguration.warningMessage;
 				message = message.replace (/%LEVEL%/g, this.warningLevel);
 				message = message.replace (/%PAGE%/g, this.pageTitle);
@@ -2638,7 +2638,6 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 				message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate[thisRevert.revType]);
 			}
 
-			var summary;
 			if (thisRevert.isCustom === true) {
 				summary = iglooConfiguration.warningSummary.custom;
 			} else {
