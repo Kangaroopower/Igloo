@@ -2482,12 +2482,12 @@ iglooRollback.prototype.performRollback = function (callback, details) {
 		callback: function (data) {
 			if (data === false) {
 				igloo.statusLog.addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because another user has already done so.');
-				if (this.pageTitle === igloo.justice.pageTitle) {
+				if (thisRevert.pageTitle === igloo.justice.pageTitle) {
 					igloo.justice.reversionEnabled = 'no';
 				}
 			} else {
 				igloo.statusLog.addStatus('Successfully reverted the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>!');
-				this.warnUser();
+				thisRevert.warnUser();
 			}
 		}
 	}, 0, true, true);
