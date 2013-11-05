@@ -322,21 +322,29 @@ function iglooMain () {
 	};
 
 	this.hookEvent = function (moduleName, hookName, func) {
+		var me = this;
+
 		if (hookName === 'exists' || hookName === 'ready') return 1;
 
-		if (!this.modules[moduleName]) { 
-			this.modules[moduleName] = {};
-			this.modules[moduleName]['exists'] = true;
-			this.modules[moduleName]['ready'] = false; 
-		}
-
-		if (!this.modules[moduleName][hookName]) {
-			this.modules[moduleName][hookName] = [func];
+		if ($.isArray(hookName)) {
+			for (var hook = 0; hook < hookName.length; module++) {
+				me.hookEvent(moduleName, hookName[hook], data);
+			}
 		} else {
-			this.modules[moduleName][hookName].push(func);
-		}
+			if (!this.modules[moduleName]) { 
+				this.modules[moduleName] = {};
+				this.modules[moduleName]['exists'] = true;
+				this.modules[moduleName]['ready'] = false; 
+			}
 
-		return 0;
+			if (!this.modules[moduleName][hookName]) {
+				this.modules[moduleName][hookName] = [func];
+			} else {
+				this.modules[moduleName][hookName].push(func);
+			}
+
+			return 0;
+		}
 	};
 
 	this.unhookEvent = function (moduleName, hookName, func) {
@@ -361,7 +369,7 @@ function iglooMain () {
 				if (this.modules[moduleName][hookName]) {
 					for (var i = 0; i < this.modules[moduleName][hookName].length; i++) {
 						if (this.modules[moduleName][hookName][i] !== null)
-							this.modules[moduleName][hookName][i](data);
+							this.modules[moduleName][hookName][i](data, hookName);
 					}
 				}
 			}
