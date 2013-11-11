@@ -1,6 +1,6 @@
 /* ======================================================== *\
-** 			igloo frontend manager - init
-** 			@author Kangaroopower
+**			igloo frontend manager - init
+**			@author Kangaroopower
 **			igloo concept and initial code by Alex Barley (User:Ale_jrb on Wikipedia)
 \* ======================================================== */
 
@@ -66,7 +66,7 @@ function iglooInitControl() {
 					setTimeout(function() {
 						igLauncher.runIglooInit.init('4'); 
 					}, 500);
-				}
+				};
 
 				break;
 			case '4':
@@ -138,9 +138,9 @@ function iglooInitControl() {
 					firstRun = false;
 					remoteConnect = true;
 
-				 	igLauncher.runIglooInterface.addStatus('<span style="font-color:red">At some time in the past, you decided to connect to iglooNet.</span>'); 
-				 	igLauncher.runIglooInterface.addStatus('If you wish to connect locally instead, please change this in your igloo settings.');
-					igLauncher.runIglooInterface.addStatus('Remember, igloo only stores settings and a session id- no IP adresses or personal info.')
+					igLauncher.runIglooInterface.addStatus('<span style="font-color:red">At some time in the past, you decided to connect to iglooNet.</span>'); 
+					igLauncher.runIglooInterface.addStatus('If you wish to connect locally instead, please change this in your igloo settings.');
+					igLauncher.runIglooInterface.addStatus('Remember, igloo only stores settings and a session id- no IP adresses or personal info.');
 					igLauncher.runIglooInterface.addStatus('');
 
 					//Connect to server here
@@ -155,8 +155,8 @@ function iglooInitControl() {
 					firstRun = false;
 					sessionKey = null;
 
-				 	igLauncher.runIglooInterface.addStatus('You have decided to connect locally, hosting your settings on Wikipedia servers'); 
-				 	igLauncher.runIglooInterface.addStatus('This means igloo does not host any info on you, but your info can also be lost more easily.');
+					igLauncher.runIglooInterface.addStatus('You have decided to connect locally, hosting your settings on Wikipedia servers'); 
+					igLauncher.runIglooInterface.addStatus('This means igloo does not host any info on you, but your info can also be lost more easily.');
 					igLauncher.runIglooInterface.addStatus('If you wish to change and connect to iglooNet, you may do so in iglooSettings');
 					igLauncher.runIglooInterface.addStatus('');
 
@@ -261,13 +261,12 @@ function iglooInitInterface() {
 		// center - places the window in the centre of the user's screen. set maintainCenter to true and this position will be kept even if
 		// the window is resized.
 	 
-		var screenWidth = parseInt(this.canvas.canvasBase.children[0].style.width);
-		var screenHeight = parseInt(this.canvas.canvasBase.children[0].style.height);
-		var myWidth = el.offsetWidth;
-		var myHeight = el.offsetHeight;
-	 
-		var leftPos	= ((screenWidth / 2) - (myWidth / 2));
-		var topPos	= ((screenHeight / 2) - (myHeight / 2));
+		var screenWidth = parseInt(this.canvas.canvasBase.children[0].style.width, 10),
+			screenHeight = parseInt(this.canvas.canvasBase.children[0].style.height, 10),
+			myWidth = el.offsetWidth,
+			myHeight = el.offsetHeight,
+			leftPos	= ((screenWidth / 2) - (myWidth / 2)),
+			topPos	= ((screenHeight / 2) - (myHeight / 2));
 	 
 		if (typeof offset == 'object') {
 			leftPos += offset[0];
@@ -280,15 +279,10 @@ function iglooInitInterface() {
 		});
 	 
 		var me = this;
-		if (window.addEventListener) {
-			window.addEventListener('resize', function() {  
-				me.center(el, offset);
-			}, false);
-		} else {
-			window.attachEvent('onresize', function() {  
-				me.center(el, offset);
-			});
-		}
+
+		$(window).resize(function() {
+			me.center(el, offset);
+		});
 
 		return true;
 	};
