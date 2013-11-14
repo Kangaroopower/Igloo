@@ -48,5 +48,5 @@ function iglooHookInterface() {
 		
 	this.run();
 }
-	
-hookEvent('load', iglooHookInterface);
+
+$(iglooHookInterface);
