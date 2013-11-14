@@ -102,7 +102,7 @@ var iglooUserSettings = {
 
 	// Misc
 	maxContentSize: 50,
-	version: "0.7 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
+	version: "0.7.1 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
 	mesysop: false,
 
 	//Diffs
