@@ -89,6 +89,7 @@ function iglooInitControl() {
 				break;
 			case '5':
 				if (mw.user.options.get('userjs-iglooRemoteConnect') === null || firstRun === true) {
+					var remoteClick = false;
 					firstRun = true;
 
 					igLauncher.runIglooInterface.addStatus('Note: This appears to be your first time connecting to igloo');
@@ -110,6 +111,7 @@ function iglooInitControl() {
 					igLauncher.runIglooInterface.addStatus('');
 
 					$('#ig-remoteConnect').click(function () {
+						remoteClick = true;
 						Flash('preferences').load({key: 'userjs-iglooRemoteConnect', value: 'true'}).wait(function (data) {
 							igLauncher.runIglooInterface.addStatus('You have decided to store settings remotely. You can change this later in igloo settings.');
 							remoteConnect = true;
@@ -123,6 +125,8 @@ function iglooInitControl() {
 					});
 
 					$('#ig-localConnect').click(function () {
+						if (remoteClick) return;
+						
 						Flash('preferences').load({key: 'userjs-iglooRemoteConnect', value: 'false'}).wait(function (data) {
 							igLauncher.runIglooInterface.addStatus('You have decided to store settings locally. You can change this later in igloo settings.');
 							remoteConnect = false;

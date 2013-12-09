@@ -1645,7 +1645,6 @@ iglooSettings.prototype.createOption = function (description, id, properties) {
 	
 	opt.style.marginLeft = '15px';
 	opt.innerHTML = '';
-	opt.innerHTML += '<td>'+ description + '</td>';
 
 	for (var i in properties) {
 		if (i === "onchange") {
@@ -1657,7 +1656,9 @@ iglooSettings.prototype.createOption = function (description, id, properties) {
 	}
 
 	main.appendChild(change);
+	opt.innerHTML += '<td>'+ description + '</td>';
 	opt.appendChild(main);
+	
 	return opt;
 };
 
