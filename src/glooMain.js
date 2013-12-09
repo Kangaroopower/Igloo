@@ -1656,9 +1656,10 @@ iglooSettings.prototype.createOption = function (description, id, properties) {
 	}
 
 	main.appendChild(change);
-	opt.innerHTML += '<td>'+ description + '</td>';
 	opt.appendChild(main);
-	
+	opt.innerHTML += '<td>'+ description + '</td>';
+
+
 	return opt;
 };
 
