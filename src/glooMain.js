@@ -1428,48 +1428,6 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
-				$(cont).append(me.createOption('RC Ticker Update Time', 'updateTime', {
-					type: "text",
-					value: iglooUserSettings.updateTime,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateTime);
-						} else {
-							igloo.cogs.set("updateTime", el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateTime = parseInt(el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.updateTime);
-								}
-							});
-						}
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Update Quantity', 'updateQuantity', {
-					type: "text",
-					value: iglooUserSettings.updateQuantity,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateQuantity);
-						} else {
-							igloo.cogs.set("updateQuantity", el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateQuantity = parseInt(el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.updateQuantity);
-								}
-							});
-						}
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
 				$(cont).append(me.createOption('Prompt on self revert', 'promptRevertSelf', {
 					type: "checkbox",
 					checked: iglooUserSettings.promptRevertSelf ? true : false,
@@ -1569,6 +1527,49 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				}));*/
+
+				cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('RC Ticker Update Time  ', 'updateTime', {
+					type: "text",
+					value: iglooUserSettings.updateTime,
+					onchange: function () {
+						var el = $(this);
+						if (isNaN(parseInt(el.val(), 10))) {
+							el.val(iglooUserSettings.updateTime);
+						} else {
+							igloo.cogs.set("updateTime", el.val(), function (res) {
+								if (res) {
+									iglooUserSettings.updateTime = parseInt(el.val(), 10);
+								} else {
+									el.val(iglooUserSettings.updateTime);
+								}
+							});
+						}
+					}
+				}));
+
+				cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('Update Quantity  ', 'updateQuantity', {
+					type: "text",
+					value: iglooUserSettings.updateQuantity,
+					onchange: function () {
+						var el = $(this);
+						if (isNaN(parseInt(el.val(), 10))) {
+							el.val(iglooUserSettings.updateQuantity);
+						} else {
+							igloo.cogs.set("updateQuantity", el.val(), function (res) {
+								if (res) {
+									iglooUserSettings.updateQuantity = parseInt(el.val(), 10);
+								} else {
+									el.val(iglooUserSettings.updateQuantity);
+								}
+							});
+						}
+					}
+				}));
+
 			cont.innerHTML += '</table></div>';
 			
 			tabcont.appendChild(cont);
