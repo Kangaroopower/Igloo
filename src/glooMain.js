@@ -10,12 +10,13 @@ var _iglooViewable = new iglooViewable();
 
 // iglooMain alpha copy by Kangaroopower
 // igloo concept and initial code by Alex Barley (User:Ale_jrb on Wikipedia)
-	
-// expected jQuery 1.7.*, jin 1.04a+, Flash 0.86+, Mediawiki 1.20+
+// requires jQuery 1.7.*, jin 1.04a+, Flash 0.86+, Mediawiki 1.20+, Mousetrap 1.4.5+
 
-/*
-	CLASSES ==========================
-	*/
+/******
+	==========================
+	CLASSES
+	==========================
+******/
 
 //igloo meta variables used in many other places
 var glooLocalBase = 'Wikipedia:Igloo',
@@ -1428,6 +1429,48 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 
 				cont.innerHTML += "<br/>";
 
+				$(cont).append(me.createOption('RC Ticker Update Time', 'updateTime', {
+					type: "text",
+					value: iglooUserSettings.updateTime,
+					onchange: function () {
+						var el = $(this);
+						if (isNaN(parseInt(el.val(), 10))) {
+							el.val(iglooUserSettings.updateTime);
+						} else {
+							igloo.cogs.set("updateTime", el.val(), function (res) {
+								if (res) {
+									iglooUserSettings.updateTime = parseInt(el.val(), 10);
+								} else {
+									el.val(iglooUserSettings.updateTime);
+								}
+							});
+						}
+					}
+				}));
+
+				cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('Update Quantity', 'updateQuantity', {
+					type: "text",
+					value: iglooUserSettings.updateQuantity,
+					onchange: function () {
+						var el = $(this);
+						if (isNaN(parseInt(el.val(), 10))) {
+							el.val(iglooUserSettings.updateQuantity);
+						} else {
+							igloo.cogs.set("updateQuantity", el.val(), function (res) {
+								if (res) {
+									iglooUserSettings.updateQuantity = parseInt(el.val(), 10);
+								} else {
+									el.val(iglooUserSettings.updateQuantity);
+								}
+							});
+						}
+					}
+				}));
+
+				cont.innerHTML += "<br/>";
+
 				$(cont).append(me.createOption('Prompt on self revert', 'promptRevertSelf', {
 					type: "checkbox",
 					checked: iglooUserSettings.promptRevertSelf ? true : false,
@@ -1527,49 +1570,6 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						});
 					}
 				}));*/
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('RC Ticker Update Time  ', 'updateTime', {
-					type: "text",
-					value: iglooUserSettings.updateTime,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateTime);
-						} else {
-							igloo.cogs.set("updateTime", el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateTime = parseInt(el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.updateTime);
-								}
-							});
-						}
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Update Quantity  ', 'updateQuantity', {
-					type: "text",
-					value: iglooUserSettings.updateQuantity,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateQuantity);
-						} else {
-							igloo.cogs.set("updateQuantity", el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateQuantity = parseInt(el.val(), 10);
-								} else {
-									el.val(iglooUserSettings.updateQuantity);
-								}
-							});
-						}
-					}
-				}));
-
 			cont.innerHTML += '</table></div>';
 			
 			tabcont.appendChild(cont);
