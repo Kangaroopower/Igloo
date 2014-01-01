@@ -2221,7 +2221,7 @@ iglooPast.prototype.buildInterface = function () {
 
 	$('#igloo-hist').mouseover(function () {
 		if (me.pageTitle !== '') {
-			if (!!me.hist.timer === true) { 
+			if (Boolean(me.hist.timer) === true) { 
 				clearTimeout (me.hist.timer); 
 				me.hist.timer = false; 
 			} else {
@@ -2247,7 +2247,7 @@ iglooPast.prototype.loadModule = function () {
 
 	$(this.histDisplay).mouseover(function () {
 		if (me.pageTitle !== '') {
-			if (!!me.hist.timer === true) { 
+			if (Boolean(me.hist.timer) === true) { 
 				clearTimeout (me.hist.timer); 
 				me.hist.timer = false; 
 			} else {
@@ -2851,7 +2851,7 @@ iglooDropdown.prototype.buildInterface = function () {
 
 	$('#' + me.name).mouseover(function () {
 		if (me.module.pageTitle !== '') {
-			if (!!me.timer === true) { 
+			if (Boolean(me.timer)  === true) { 
 				clearTimeout (me.timer); 
 				me.timer = false; 
 			} else {
@@ -2884,7 +2884,7 @@ iglooDropdown.prototype.loadModule = function () {
 
 	$(this.dropDisplay).mouseover(function () {
 		if (me.module.pageTitle !== '') {
-			if (!!me.timer === true) { 
+			if (Boolean(me.timer)  === true) { 
 				clearTimeout (me.timer); 
 				me.timer = false; 
 			} else {
