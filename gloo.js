@@ -59,13 +59,13 @@ $(function () {
   
 	window.iglooImport = iglooImport;
 
-	mw.loader.implement('igloo.libs', [
+	mw.loader.implement('igloo.lib', [
 		getScriptURL(baseURL + 'flash.js', true),
 		getScriptURL(baseURL + 'jin.js', true),
 		getScriptURL(baseURL + 'mousetrap.js', true)
 	], {}, {});
 
-	mw.loader.using(['igloo.libs'], function () {
+	mw.loader.using(['igloo.lib'], function () {
 		iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);
 	});
 });
