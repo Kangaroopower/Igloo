@@ -4,9 +4,9 @@
 ** 	The igloo frontend manager handles the client system,
 ** displaying information to the user, as well as allowing
 ** the user to interact with the program, as well as 
-** handling connection and authentication with the server. 
-** (Server interaction not currently present and may not ever
-** be present)
+** handling connection and authentication with the server.
+** Note that igloo CAN be used without connection to a
+** remote server.
 **
 **  ======================================================  **
 **	igloo anti-vandalism tool for Wikipedia
@@ -31,28 +31,41 @@
 
 var iglooBranch = window.iglooBranch || 'dev';
 
-function iglooImport (page, remote) {
-	var c = new Date (),
-		cachebypass = '&killcache=' + c.getDate() + c.getSeconds() + c.getMilliseconds(),
-		url;
-			
-	if ((typeof remote === "undefined") || (remote == null ) || (remote == false)) {
-		url = mw.config.get('wgScript') + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent(page.replace( / /g,'_' ));
-	} else {
-		url = page;
+$(function () {
+  var baseURL = 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/lib/';
+
+	function getScriptURL (page, remote) {
+		var c = new Date (),
+			cachebypass = '&killcache=' + c.getDate() + c.getSeconds() + c.getMilliseconds(),
+			url;
+		
+		if (!remote) {
+			url = mw.config.get('wgScript') + '?action=raw&ctype=text/javascript' + cachebypass + '&title=' + encodeURIComponent(page.replace( / /g,'_' ));
+		} else {
+			url = page;
+		}
+
+		return url;
 	}
-			
-	var script = document.createElement('script');
-	script.setAttribute('src', url);
-	script.setAttribute('type', 'text/javascript');
-	document.getElementsByTagName('head')[0].appendChild(script);
 
-	return script;
-}
+	function iglooImport (page, remote) {
+		var script = document.createElement('script');
+			script.setAttribute('src', getScriptURL(page, remote));
+			script.setAttribute('type', 'text/javascript');
+		document.getElementsByTagName('head')[0].appendChild(script);
 
-iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/flash.js', true);
-iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/jin.js', true);
-iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/lib/mousetrap.js', true);
+		return script;
+	}
+  
+	window.iglooImport = iglooImport;
 
+	mw.loader.implement('igloo.libs', [
+		getScriptURL(baseURL + 'flash.js', true),
+		getScriptURL(baseURL + 'jin.js', true),
+		getScriptURL(baseURL + 'mousetrap.js', true)
+	], {}, {});
 
-iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);
+	mw.loader.using(['igloo.libs'], function () {
+		iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);
+	});
+});
