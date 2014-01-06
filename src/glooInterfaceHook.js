@@ -17,7 +17,7 @@ function iglooHookInterface() {
 		if (mw.config.get('wgPageName') === glooPage) {
 			// the init page handles starting the program and operating settings.
 			// call init.
-			iglooImport ('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInit.js', true);
+			iglooImport ('https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/src/glooInit.js', true);
 		} else {
 			var serverBase = mw.config.get('wgServer') + mw.config.get('wgArticlePath').substr(0,(mw.config.get('wgArticlePath').length - 2)),
 				iglooLink = document.createElement('li'),
@@ -54,17 +54,4 @@ function iglooHookInterface() {
 	};
 		
 	this.run();
-}
-
-if (typeof jin === 'undefined' || typeof Flash === 'undefined' || typeof Mousetrap === 'undefined') {
-	tIgLa = function () {
-		if (typeof jin === 'undefined' || typeof Flash === 'undefined'|| typeof Mousetrap === 'undefined') {
-			setTimeout(tIgLa, 1000);
-		} else {
-			iglooHookInterface();
-		}
-	};
-	setTimeout(tIgLa, 1000);
-} else {
-	iglooHookInterface();
 }

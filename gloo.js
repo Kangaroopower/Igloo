@@ -67,5 +67,6 @@ $(function () {
 
 	mw.loader.using(['igloo.lib'], function () {
 		iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true);
+		iglooHookInterface();
 	});
 });
