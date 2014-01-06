@@ -20,14 +20,15 @@ var _iglooViewable = new iglooViewable();
 
 //igloo meta variables used in many other places
 var glooLocalBase = 'Wikipedia:Igloo',
-	glooSig = '([['+ glooLocalBase +'|GLOO]])';
+	glooSig = '([['+ glooLocalBase +'|GLOO]])',
+	igloo; //instance of iglooMain that's actually used.
 
 // Class iglooConfiguration
 	/*
 	** iglooConfiguration exists to hold variables that are
 	** the same for all users and are subject to change 
 	** so that in the case that variable needs an update, 
-	** you only need to change, that variable in one spot
+	** you only need to change that variable in one spot
 	**
 	** It is written here in simplified object form to ensure
 	** it can be parsed as expected.
@@ -2011,11 +2012,13 @@ iglooDelete.prototype.go = function (csdtype) {
 			params: { targ: me.pageTitle, revisions: 10 },
 			callback: function (data) {
 				var revs = 1;
-				for (var i in data) revs++;
+				for (var key in data) {
+					if (data.hasOwnProperty(key)) revs++;
+    			}
 				
 				if (revs >= 9) {
 					//We shouldn't be tagging this for deletion
-					igloo.statusLog.addStatus('This page has atleast 10 revisions. Please consider submitting a PROD request instead outside of Igloo');
+					igloo.statusLog.addStatus('This page has at least 10 revisions. Please consider submitting a PROD request outside of igloo instead');
 				} else {
 					me.csd = new iglooCSD(me.pageTitle, csdtype);
 					me.csd.doCSD();
@@ -3089,7 +3092,6 @@ Array.prototype.iglast = function () {
 	COMPLETE ==========================
 	*/
 // MAIN
-var igloo;
 
 function iglooHandleLaunch (data) {
 	data = data || {};
