@@ -329,8 +329,8 @@ function iglooMain () {
 		if (hookName === 'exists' || hookName === 'ready') return 1;
 
 		if ($.isArray(hookName)) {
-			for (var hook = 0; hook < hookName.length; module++) {
-				me.hookEvent(moduleName, hookName[hook], data);
+			for (var hook = 0; hook < hookName.length; hook++) {
+				me.hookEvent(moduleName, hookName[hook], func);
 			}
 		} else {
 			if (!this.modules[moduleName]) { 
