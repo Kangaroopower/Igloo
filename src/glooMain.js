@@ -10,7 +10,7 @@ var _iglooViewable = new iglooViewable();
 
 // iglooMain alpha copy by Kangaroopower
 // igloo concept and initial code by Alex Barley (User:Ale_jrb on Wikipedia)
-// requires jQuery 1.7.*, jin 1.04a+, Flash 0.86+, Mediawiki 1.20+, Mousetrap 1.4.5+
+// requires jQuery 1.7.*, jin 1.04a+, Flash 0.93.4+, Mediawiki 1.20+, Mousetrap 1.4.5+
 
 /******
 	==========================
