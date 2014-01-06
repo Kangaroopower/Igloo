@@ -31,9 +31,9 @@ function iglooHookInterface() {
 				
 			// check for launch buttons
 			$('div').each(function(i) {
-				if ($(this).attr('class') === 'iglooNotInstalled') {
+				if ($(this).prop('class') === 'iglooNotInstalled') {
 					$(this).css('display', 'none');
-				} else if ($(this).attr('class') === 'iglooLaunch') {
+				} else if ($(this).prop('class') === 'iglooLaunch') {
 					// build button
 					$(this).css({
 						'margin': 'auto',
