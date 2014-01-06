@@ -32,7 +32,7 @@
 var iglooBranch = window.iglooBranch || 'dev';
 
 $(function () {
-  var baseURL = 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/lib/';
+	var baseURL = 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/lib/';
 
 	function getScriptURL (page, remote) {
 		var c = new Date (),
