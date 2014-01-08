@@ -181,7 +181,8 @@ function iglooMain () {
 	this.log = (window.console && function () {
 		var args = Array.prototype.slice.call(arguments);
 		args.unshift('Igloo:');
-		return window.console.log.apply(window.console, args);
+		//because apparently IE8 console functions don't extend Function
+		return Function.prototype.apply.call(console.log, console, args);
 	}) || $.noop;
 
 	this.load = function (initData) {
