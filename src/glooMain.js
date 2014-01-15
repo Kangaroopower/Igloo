@@ -1209,31 +1209,31 @@ function iglooKeys () {
 		'search': {},
 		'settings': {}
 	};
+
+	//This registers a new keybinding for use in igloo
+	//And then executes the function under the right circumstances
+	this.register = function (combo, mode, func) {
+		var me = this;
+		if ($.inArray(mode, this.keys) !== -1 && iglooUserSettings.useKeys === true) {
+			this.cbs[mode][combo] = func;
+
+			Mousetrap.bind(combo, function(e, input) {
+				if (e.preventDefault) {
+					e.preventDefault();
+				} else {
+					// internet explorer
+					e.returnValue = false;
+				}
+
+				me.cbs[igloo.piano.mode][input]();
+			});
+			return true;
+		} else {
+			return false;
+		}
+	};
 }
 
-
-//This registers a new keybinding for use in igloo
-//And then executes the function under the right circumstances
-iglooKeys.prototype.register = function (combo, mode, func) {
-	var me = this;
-	if ($.inArray(mode, this.keys) !== -1 && iglooUserSettings.useKeys === true) {
-		this.cbs[mode][combo] = func;
-
-		Mousetrap.bind(combo, function(e, input) {
-			if (e.preventDefault) {
-				e.preventDefault();
-			} else {
-				// internet explorer
-				e.returnValue = false;
-			}
-
-			me.cbs[igloo.piano.mode][input]();
-		});
-		return true;
-	} else {
-		return false;
-	}
-};
 
 //Class iglooSettings- builds settings interface and manages settings storage/handling
 function iglooSettings () {
@@ -2163,114 +2163,39 @@ function iglooPast () {
 		me.pageTitle = data.pageTitle;
 		me.hist = new iglooHist(data.pageTitle);
 	});
+
+	this.buildInterface = function () {
+		var histButton = document.createElement('div'), me = this;
+
+		histButton.id = "igloo-hist";
+		histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.fileHost + 'images/igloo-hist.png">';
+
+		this.dropdown = new iglooDropdown('igloo-hist', "igloo.past", {}, 'igPast',  {
+			top: 103,
+			left: 80,
+			where: 'right'
+		}, '', 'loading page history - wait...', true);
+
+		$(histButton).css({
+			'position': 'relative',
+			'float': 'left',
+			'width': '73px',
+			'height': '73px',
+			'margin-top': '12px',
+			'margin-left': '5px',
+			'right': '30px',
+			'padding-left': '-1px',
+			'padding-top': '-1px',
+			'cursor': 'pointer'
+		});
+
+		igloo.toolPane.panel.appendChild(histButton);
+	};
+
+	this.reloadData = function () {
+		this.hist.getHistory();
+	};
 }
-
-iglooPast.prototype.buildInterface = function () {
-	var histButton = document.createElement('div'), me = this;
-
-	histButton.id = "igloo-hist";
-	histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.fileHost + 'images/igloo-hist.png">';
-
-	this.histDisplay = document.createElement('div');
-	this.histCont = document.createElement('ul');
-
-	this.histDisplay.id = "igloo-hist-display";
-	this.histCont.id = "igloo-hist-cont";	
-
-	$(histButton).css({
-		'position': 'relative',
-		'float': 'left',
-		'width': '73px',
-		'height': '73px',
-		'margin-top': '12px',
-		'margin-left': '5px',
-		'right': '30px',
-		'padding-left': '-1px',
-		'padding-top': '-1px',
-		'cursor': 'pointer'
-	});
-
-	$(this.histDisplay).css({
-		top: '103px',
-		width: '170px',
-		backgroundColor: '' +jin.Colour.GREY,
-		border: '1px solid '+ jin.Colour.BLACK,
-		padding: '2px',
-		'font-size': '10px',
-		cursor: 'pointer',
-		display: 'none',
-		'float':'right',
-		'position':'fixed',
-		'z-index': 999999999999,
-		'left': '80%'
-	});
-
-	$(this.histCont).css({
-		top: '9px',
-		width: '100%',
-		height: '100%',
-		margin: '0px',
-		padding: '0px',
-		'overflow-x': 'hidden',
-		'overflow-y': 'auto',
-		display: 'none',
-		'float':'right'
-	});
-
-	this.histCont.innerHTML = '';
-	$(this.histDisplay).html('<div id="igloo-hist-note" style="width: 100%;">loading page history - wait...</div>');
-
-	$(this.histDisplay).append(this.histCont);
-	igloo.toolPane.panel.appendChild(histButton);
-
-	$('#igloo-hist').mouseover(function () {
-		if (me.pageTitle !== '') {
-			if (Boolean(me.hist.timer) === true) { 
-				clearTimeout (me.hist.timer); 
-				me.hist.timer = false; 
-			} else {
-				me.hist.getHistory();
-			}
-		}
-	});
-
-	$('#igloo-hist').mouseout(function () {
-		if (me.pageTitle !== '') {
-			me.hist.timer = setTimeout(function() {
-				me.hist.end();
-				me.hist.timer = false; 
-			}, iglooUserSettings.dropdownWinTimeout * 1000);
-		}
-	});
-};
-
-iglooPast.prototype.loadModule = function () {
-	var me = this;
-	this.histCont.innerHTML = '';
-	$(this.histDisplay).html('<div id="igloo-hist-note" style="width: 100%;">loading page history - wait...</div>');
-
-	$(this.histDisplay).mouseover(function () {
-		if (me.pageTitle !== '') {
-			if (Boolean(me.hist.timer) === true) { 
-				clearTimeout (me.hist.timer); 
-				me.hist.timer = false; 
-			} else {
-				me.hist.getHistory();
-			}
-		}
-	});
-	$(this.histDisplay).mouseout(function () {
-		if (me.pageTitle !== '') {
-			me.hist.timer = setTimeout(function() {
-				me.hist.end();
-				me.hist.timer = false; 
-			}, iglooUserSettings.dropdownWinTimeout * 1000);
-		}
-	});
-
-	$(this.histDisplay).append(this.histCont);
-	igloo.diffContainer.panel.appendChild(this.histDisplay);
-};
 
 // Class iglooHist object handles the retrieval and display of the history of a page
 function iglooHist (pageTitle) { 
@@ -2285,7 +2210,8 @@ iglooHist.prototype.getHistory = function (callback, data) {
 
 	switch (callback) {
 		default: case 0:
-			document.getElementById('igloo-hist-display').style.display = 'block';
+			$(igloo.past.dropdown.dropDisplay).css('display', 'block');
+			$(igloo.past.dropdown.name + '-note').css('display', 'block');
 
 			// get the page history
 			var pageHist = new iglooRequest({
@@ -2298,25 +2224,20 @@ iglooHist.prototype.getHistory = function (callback, data) {
 			break;
  
 		case 1:
-			document.getElementById('igloo-hist-cont').style.display = 'block';
-			document.getElementById('igloo-hist-note').style.display = 'none';
+			$(igloo.past.dropdown.name + '-note').css('display', 'none');
  
 			var pageHistory = '';
 			for (var i in data) {
 				var rev = data[i];
  
-				pageHistory += '<li id="iglooHist_'+rev.ids.revid+'" onclick="igloo.actions.loadPage(\''+me.pageTitle.replace('\'', '\\\'')+'\',  \''+rev.ids.revid+'\');" onmouseover="this.style.backgroundColor = \''+jin.Colour.LIGHT_GREY+'\';" onmouseout="this.style.backgroundColor = \''+jin.Colour.WHITE+'\';" style="cursor: pointer; width: 186px; padding: 2px; border-bottom: 1px solid #000000; list-style-type: none; list-style-image: none; marker-offset: 0px; background-color: '+jin.Colour.WHITE+';">'+rev.user+'</li>';
+				pageHistory += '<li id="'me.dropdown.itemPrefix+rev.ids.revid+'" onclick="igloo.actions.loadPage(\''+me.pageTitle.replace('\'', '\\\'')+'\',  \''+rev.ids.revid+'\');" onmouseover="this.style.backgroundColor = \''+jin.Colour.LIGHT_GREY+'\';" onmouseout="this.style.backgroundColor = \''+jin.Colour.WHITE+'\';" style="cursor: pointer; width: 186px; padding: 2px; border-bottom: 1px solid #000000; list-style-type: none; list-style-image: none; marker-offset: 0px; background-color: '+jin.Colour.WHITE+';">'+rev.user+'</li>';
 			}
 			
 			pageHistory += '<li style="width: 100%; list-style-type: none; list-style-image: none; text-align: center;"><a target="_blank" href="'+ mw.util.wikiScript('index') +'?title=' + me.pageTitle + '&action=history">- full history -</a></li>';
-			$(igloo.past.histCont).html(pageHistory);
+			$(igloo.past.dropdown.dropCont).html(pageHistory);
  
 			break;
 	}
-};
-
-iglooHist.prototype.end = function () {
-	document.getElementById('igloo-hist-display').style.display = 'none';
 };
 
 //Class iglooReversion- sets up iglooRollback
@@ -2397,8 +2318,10 @@ iglooReversion.prototype.go = function (summary) {
 			if (confirmRevert === true) {
 				if (me.pageTitle !== '') {
 					if (summary === 'custom') {
-						var customSummary = prompt('What\'s your custom sumary?');
-						me.rollback.go(customSummary.toLowerCase(), true);
+						var customSummary = prompt('What\'s your custom sumary (A summary is required)?');
+						if (customSummary !== null || customSummary !== "") {
+							me.rollback.go(customSummary.toLowerCase(), true);
+						}
 					} else {
 						me.rollback.go('' + summary.toLowerCase(), false);
 					}
@@ -2806,13 +2729,15 @@ function iglooStatus () {
 }
 
 //Class iglooDropdown- handles dropdowns
-function iglooDropdown (name, module, list, prefix, position, endtext) {
+function iglooDropdown (name, module, list, prefix, position, endtext, loadText, reload) {
 	this.name = name; //name of dropdown
 	this.module = module; //igloo module that this dropdown will be used on
 	this.list = list; //list of dropdown options
 	this.itemPrefix = prefix; //prefix of the item
 	this.position = position; //some css
 	this.endText = endtext;//text to add after dropdown
+	this.loadText = loadText || '';
+	this.reloadList = reload;
 	this.timer = null;
 }
 
@@ -2853,9 +2778,14 @@ iglooDropdown.prototype.buildInterface = function () {
 		'float': me.position.where
 	});
 
+	$(this.dropDisplay).html('<div id="'+ me.name + '-note" style="width: 100%;">' + me.loadText + '</div>');
+
 	$('#' + me.name).mouseover(function () {
-		if (me.module.pageTitle !== '') {
-			if (Boolean(me.timer)  === true) { 
+		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
+			if (me.reloadList === true) {
+				igloo[me.module.split('.')[1]].reloadData();
+			}
+			if (Boolean(me.timer) === true) { 
 				clearTimeout (me.timer); 
 				me.timer = false; 
 			} else {
@@ -2866,7 +2796,7 @@ iglooDropdown.prototype.buildInterface = function () {
 	});
 
 	$('#' + me.name).mouseout(function () {
-		if (me.module.pageTitle !== '') {
+		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
 			me.timer = setTimeout(function() {
 				$('#' + me.name + '-display').css('display', 'none');
 				me.timer = false; 
@@ -2887,8 +2817,12 @@ iglooDropdown.prototype.loadModule = function () {
 	this.dropDisplay.innerHTML = '';
 
 	$(this.dropDisplay).mouseover(function () {
-		if (me.module.pageTitle !== '') {
-			if (Boolean(me.timer)  === true) { 
+		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
+			if (me.reloadList === true) {
+				igloo[me.module.split('.')[1]].reloadData();
+			}
+
+			if (Boolean(me.timer) === true) { 
 				clearTimeout (me.timer); 
 				me.timer = false; 
 			} else {
@@ -2899,7 +2833,7 @@ iglooDropdown.prototype.loadModule = function () {
 	});
 
 	$(this.dropDisplay).mouseout(function () {
-		if (me.module.pageTitle !== '') {
+		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
 			me.timer = setTimeout(function() {
 				document.getElementById(me.name+'-display').style.display = 'none';
 				me.timer = false;
