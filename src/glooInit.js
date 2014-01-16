@@ -247,7 +247,7 @@ function iglooInitInterface() {
 		}
 			
 		this.iglooStatus.push(message);			
-
+		
 		if (document.getElementById('iglooStatusContent') !== null) {
 			document.getElementById('iglooStatusContent').innerHTML = this.iglooStatus.join('');
 			return true;
@@ -265,9 +265,10 @@ function iglooInitInterface() {
 			myWidth = el.offsetWidth,
 			myHeight = el.offsetHeight,
 			leftPos	= ((screenWidth / 2) - (myWidth / 2)),
-			topPos	= ((screenHeight / 2) - (myHeight / 2));
+			topPos	= ((screenHeight / 2) - (myHeight / 2)),
+			me = this;
 	 
-		if (typeof offset == 'object') {
+		if ($.isArray(offset)) {
 			leftPos += offset[0];
 			topPos	+= offset[1];
 		}
@@ -276,8 +277,6 @@ function iglooInitInterface() {
 			'left': leftPos + 'px',
 			'top':  topPos + 'px'
 		});
-	 
-		var me = this;
 
 		$(window).resize(function() {
 			me.center(el, offset);
