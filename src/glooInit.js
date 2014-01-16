@@ -242,19 +242,14 @@ function iglooInitInterface() {
 		// add a message to the status output, and display it.
 		if (this.iglooStatus.length > 20) this.iglooStatus.splice(0, 1);
 			
-		if (noEndline == null || noEndline === false) {
+		if (!noEndline) {
 			message += '<br />';
 		}
 			
 		this.iglooStatus.push(message);			
-			
-		var echoString = '';
-		for (var i = 0; i < this.iglooStatus.length; i ++) {
-			echoString += this.iglooStatus[i];
-		}
-			
-		if (document.getElementById('iglooStatusContent') != null) {
-			document.getElementById('iglooStatusContent').innerHTML = echoString;
+
+		if (document.getElementById('iglooStatusContent') !== null) {
+			document.getElementById('iglooStatusContent').innerHTML = this.iglooStatus.join('');
 			return true;
 		} else { 
 			return false;

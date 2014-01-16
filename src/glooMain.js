@@ -1045,7 +1045,7 @@ iglooRevision.prototype.display = function () {
 		igloo.trash.dropdown.loadModule();
 
 		//Append history module
-		igloo.past.loadModule();
+		igloo.past.dropdown.loadModule();
 		
 		// Append new content.
 		igloo.diffContainer.panel.appendChild(h2);
@@ -1105,7 +1105,7 @@ iglooRevision.prototype.display = function () {
 			igloo.trash.dropdown.loadModule();
 
 			//Append history module
-			igloo.past.loadModule();
+			igloo.past.dropdown.loadModule();
 
 			// Append new content.
 			dispWhat = (this.diffContent === "") ? same : table;
