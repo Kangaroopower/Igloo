@@ -2190,6 +2190,7 @@ function iglooPast () {
 		});
 
 		igloo.toolPane.panel.appendChild(histButton);
+		this.dropdown.buildInterface();
 	};
 
 	this.reloadData = function () {
