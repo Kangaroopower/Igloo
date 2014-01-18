@@ -670,7 +670,7 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 		// Objects that are being removed from the recent changes list are freed in the
 		// content manager for discard.
 		for (var x = 30; x < this.recentChanges.length; x++) {
-			if (this.recentChanges[x] === currentPage) continue;
+			if (this.recentChanges[x] === this.currentPage) continue;
 
 			igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
 			var page = igloo.contentManager.getPage(this.recentChanges[x].info.pageTitle);
@@ -1342,7 +1342,8 @@ iglooSettings.prototype.buildInterface = function () {
 	});
 
 	this.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
-				
+	this.popup.buildInterface();
+
 	// add tabs
 	this.addtab('info', 'user info');
 	this.addtab('general', 'general');
@@ -1367,6 +1368,7 @@ iglooSettings.prototype.show = function () {
 
 	if (tabcont === null) {
 		me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+		me.popup.buildInterface();
 		// add tabs
 		me.addtab('info', 'user info');
 		me.addtab('general', 'general');
@@ -2865,38 +2867,41 @@ iglooDropdown.prototype.loadModule = function () {
 //iglooPopup - creates a Popup
 function iglooPopup (content, width, height) {
 	this.popupMenu = document.createElement('div');
-	this.popupMenuContent = document.createElement('div'); 
-	
-	width = width || 800;
-	height = height || 400;
+	this.popupMenuContent = document.createElement('div');
 
-	$(this.popupMenu).css({
-		'opacity' : 0.7,
-		'background-color': jin.Colour.BLACK,
-		'display': 'none',
-		'position': 'fixed',
-		'top': '0px',
-		'left': '0px',
-		'cursor': 'auto',
-		'z-index': 99998
-	});
+	this.width = width || 800;
+	this.height = height || 400;
 
-	$(this.popupMenuContent).css({
-		'background-color': jin.Colour.LIGHT_GREY,
-		'position': 'absolute',
-		'width': width + 'px',
-		'height': height + 'px',
-		'padding': '0px',
-		'display': 'none',
-		'border': '1px solid rgb(0, 0, 0)',
-		'z-index': 99999
-	});
 
-	this.popupMenuContent.innerHTML = '<div>' + content + '</div>';
-	this.center();
+	this.buildInterface = function () {
+		$(this.popupMenu).css({
+			'opacity' : 0.7,
+			'background-color': jin.Colour.BLACK,
+			'display': 'none',
+			'position': 'fixed',
+			'top': '0px',
+			'left': '0px',
+			'cursor': 'auto',
+			'z-index': 99998
+		});
 
-	igloo.canvas.canvasBase.children[0].appendChild(this.popupMenuContent);
-	igloo.canvas.canvasBase.children[0].appendChild(this.popupMenu);
+		$(this.popupMenuContent).css({
+			'background-color': jin.Colour.LIGHT_GREY,
+			'position': 'absolute',
+			'width': width + 'px',
+			'height': height + 'px',
+			'padding': '0px',
+			'display': 'none',
+			'border': '1px solid rgb(0, 0, 0)',
+			'z-index': 99999
+		});
+
+		this.popupMenuContent.innerHTML = '<div>' + content + '</div>';
+		this.center();
+
+		igloo.canvas.canvasBase.children[0].appendChild(this.popupMenuContent);
+		igloo.canvas.canvasBase.children[0].appendChild(this.popupMenu);
+	};
 
 	this.center = function () {
 		var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width, 10),
