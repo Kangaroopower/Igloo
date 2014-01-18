@@ -571,6 +571,7 @@ function iglooRecentChanges () {
 	this.recentChanges = [];
 	this.viewed = [];
 	this.currentRev = -1;
+	this.currentPage = null;
 
 	// Methods
 	this.setTickTime = function (newTime) {
@@ -669,6 +670,8 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 		// Objects that are being removed from the recent changes list are freed in the
 		// content manager for discard.
 		for (var x = 30; x < this.recentChanges.length; x++) {
+			if (this.recentChanges[x] === currentPage) continue;
+
 			igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
 			var page = igloo.contentManager.getPage(this.recentChanges[x].info.pageTitle);
 			page.hold = false;
@@ -748,7 +751,6 @@ iglooRecentChanges.prototype.render = function () {
 };
 
 
-
 // Class iglooView
 	// iglooView represents a content view. There could be
 	// multiple views, each showing their own bit of content.
@@ -766,9 +768,9 @@ function iglooView () {
 	igloo.hookEvent('core', 'displayed-page-changed', function (data) {
 		if (me.displaying) {
 			if (data.page === me.displaying.page) {
-				this.changedSinceDisplay = true;
-				this.displaying = data;
-				this.displaying.show();
+				me.changedSinceDisplay = true;
+				me.displaying = data;
+				me.displaying.show();
 			}
 		}
 	});
@@ -879,21 +881,28 @@ iglooPage.prototype.display = function () {
 	// Calling display on a page will invoke the display
 	// method for the current view, and pass it the relevant
 	// revision object.
-	var currentView = igloo.getCurrentView();
+	var currentView = igloo.getCurrentView(),
+		toShow = -1;
+
+	igloo.recentChanges.currentPage = this;
 
 	if (arguments[0]) {
-		if (this.revisions[arguments[0]]) {
-			currentView.display(this.revisions[arguments[0]]);
+		for (var x = 0; x < this.revisions.length; x++) {
+			if (arguments[0] === this.revisions[arguments[0]].revId) toShow = x;
+		}
+
+		if (toShow !== -1) {
+			currentView.display(this.revisions[x]);
 		} else {
 			currentView.display(this.revisions.iglast());
 		}
 	} else {
 		currentView.display(this.revisions.iglast());
 	}
+
 	this.displaying = true;
 	this.changedSinceDisplay = false;
 };
-
 
 
 // Class iglooRevision
@@ -1704,12 +1713,8 @@ iglooActions.prototype.getRevInfo = function (page, revId, cb) {
 
 //Loads a page
 iglooActions.prototype.loadPage = function (page, revId) {
-	this.getRevInfo(page, revId, function (data) {
-		var p, res;
-		res = data;
-		p = new iglooPage(new iglooRevision(res));
-		p.display();
-	});
+	var p = igloo.recentChanges.currentPage;
+	p.display(revId);
 };
 
 // Class iglooArchive
@@ -1768,9 +1773,9 @@ function iglooArchive () {
 	};
 
 	//creates history and handles pages getting added to it
-	this.manageHist = function (page, user, revID) {
+	this.manageHist = function (page, user, revId) {
 		// add the PREVIOUS page to the display history.
-		if (page && user && revID) {
+		if (page && user && revId) {
 			if (this.canAddtoArchives === true) {
 				// first, remove any history between the current position and 0.
 				if (this.archivePosition >= 0) {
@@ -1781,7 +1786,7 @@ function iglooArchive () {
 				var histEntry = {
 					title: page,
 					user: user,
-					revID: revID
+					revId: revId
 				};
 
 				this.archives.push(histEntry);
@@ -1834,7 +1839,7 @@ function iglooArchive () {
  
 		doView = this.archives[this.archivePosition];
 		this.canAddtoArchives = false;
-		igloo.actions.loadPage(doView.title, doView.revID);
+		igloo.actions.loadPage(doView.title, doView.revId);
 
 		return true;
 	};
@@ -1856,7 +1861,7 @@ function iglooArchive () {
 		doView = this.archives[this.archivePosition];
 
 		this.canAddtoArchives = false;
-		igloo.actions.loadPage(doView.title, doView.revID);
+		igloo.actions.loadPage(doView.title, doView.revId);
 
 		return true;
 	};
@@ -2440,7 +2445,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 		default: case 0:
 			var warnReason;
 
-			// don't warn self
+			// don't warn self/on agf
 			if (thisRevert.shouldWarn === false || thisRevert.revType === 'agf') {
 				document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
 				break;
@@ -2486,14 +2491,15 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 					
 					if (t === null) break;
 					
-					warnings[i] = [];
-					warnings[i][0] = t[1]; // template
-					warnings[i][1] = t[2]; // level
-					warnings[i][2] = t[3]; // hour
-					warnings[i][3] = t[4]; // minute
-					warnings[i][4] = t[5]; // day
-					warnings[i][5] = t[6]; // month
-					warnings[i][6] = t[7]; // year
+					warnings[i] = [
+						t[1], //template
+						t[2], //level
+						t[3], //hour
+						t[4], //minute
+						t[5], //day
+						t[6], //month
+						t[7], //year
+					];
 
 					i++;
 				}
@@ -2509,7 +2515,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 
 				if (typeof warnings[useWarning][0] === 'string') {
 					var tmplate = warnings[useWarning][0];
-					if (tmplate.indexOf('block') > -1) { 
+					if (tmplate.indexOf('block') > -1) {
 						useWarning--; 
 						warnings[useWarning][1] = 0; 
 					}
@@ -2534,8 +2540,8 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 				}
 					
 				// check whether a header already exists for the current month. if not, create one
-				var currentHeader = new RegExp ('={2,4} *' + months[currentMonth] + ' *' + currentYear + ' *={2,4}', 'gi');
-				if (currentHeader.test (pageData) !== true) { 
+				var currentHeader = new RegExp('={2,4} *' + months[currentMonth] + ' *' + currentYear + ' *={2,4}', 'gi');
+				if (currentHeader.test(pageData) !== true) { 
 					header = '== '+months[currentMonth]+' '+currentYear+' =='; 
 				} else { 
 					header = false; 
@@ -2573,15 +2579,12 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 
 			if (thisRevert.isCustom === true) {
 				message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate.custom);
-			} else {
-				message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate[thisRevert.revType]);
-			}
-
-			if (thisRevert.isCustom === true) {
 				summary = iglooConfiguration.warningSummary.custom;
 			} else {
+				message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate[thisRevert.revType]);
 				summary = iglooConfiguration.warningSummary[thisRevert.revType];
 			}
+
 			summary = summary.replace (/%LEVEL%/g, this.warningLevel);
 			summary = summary.replace (/%PAGE%/g, this.pageTitle);
 				
@@ -2625,16 +2628,18 @@ iglooRollback.prototype.reportUser = function(callback, details) {
 					
 		case 1:
 			var pageData = details[0].content,
+				template = thisRevert.isIp ? iglooConfiguration.aivIp : iglooConfiguration.aivUser,
 				aivLink,
 				myReport,
 				mySummary;
-			
-			// check whether they are already reported
+
+			//check if page for AIV exists
 			if (details === false) {
 				igloo.statusLog.addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because the report page does not appear to exist.');
 				return false; // error
 			}
-					
+
+			// check whether they are already reported
 			if (pageData.indexOf ('|' + thisRevert.revertUser + '}}') > -1) {
 				igloo.statusLog.addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because they have already been reported.');
 				return false; // error
@@ -2645,17 +2650,11 @@ iglooRollback.prototype.reportUser = function(callback, details) {
 					
 			// build the report
 			myReport = iglooConfiguration.aivMessage;
-
-			if (thisRevert.isIp === true) { 
-				myReport = myReport.replace(/%TEMPLATE%/g, iglooConfiguration.aivIp); 
-			} else { 
-				myReport = myReport.replace(/%TEMPLATE%/g, iglooConfiguration.aivUser); 
-			}
-			myReport = myReport.replace(/%USER%/g, thisRevert.revertUser);
+				myReport = myReport.replace(/%TEMPLATE%/g, template); 
+				myReport = myReport.replace(/%USER%/g, thisRevert.revertUser);
 					
 			// build the summary
-			mySummary = iglooConfiguration.aivSummary;
-			mySummary = mySummary.replace (/%USER%/g, thisRevert.revertUser);
+			mySummary = iglooConfiguration.aivSummary.replace(/%USER%/g, thisRevert.revertUser);
 					
 			// perform the edit
 			var userReport = new iglooRequest({
@@ -2898,36 +2897,36 @@ function iglooPopup (content, width, height) {
 
 	igloo.canvas.canvasBase.children[0].appendChild(this.popupMenuContent);
 	igloo.canvas.canvasBase.children[0].appendChild(this.popupMenu);
+
+	this.center = function () {
+		var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width, 10),
+			screenHeight = parseInt(igloo.canvas.canvasBase.children[0].style.height, 10),
+			myWidth = parseInt($(this.popupMenuContent).css('width'), 10),
+			myHeight = parseInt($(this.popupMenuContent).css('height'), 10),
+			leftPos	= ((screenWidth / 2) - (myWidth / 2)),
+			topPos = ((screenHeight / 2) - (myHeight / 2)),
+			me = this;
+	 
+		$(this.popupMenuContent).css({
+			'left': leftPos + 'px',
+			'top':  topPos + 'px'
+		});
+	 
+		$(window).resize(function() {
+			me.center();
+		});
+	};
+
+	this.show = function () {
+		$(this.popupMenu).css({'display': 'block'});
+		$(this.popupMenuContent).css({'display': 'block'});
+	};
+
+	this.hide = function () {
+		$(this.popupMenu).remove();
+		$(this.popupMenuContent).remove();
+	};
 }
-
-iglooPopup.prototype.center = function () {
-	var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width, 10),
-		screenHeight = parseInt(igloo.canvas.canvasBase.children[0].style.height, 10),
-		myWidth = parseInt($(this.popupMenuContent).css('width'), 10),
-		myHeight = parseInt($(this.popupMenuContent).css('height'), 10),
-		leftPos	= ((screenWidth / 2) - (myWidth / 2)),
-		topPos = ((screenHeight / 2) - (myHeight / 2)),
-		me = this;
- 
-	$(this.popupMenuContent).css({
-		'left': leftPos + 'px',
-		'top':  topPos + 'px'
-	});
- 
-	$(window).resize(function() {
-		me.center();
-	});
-};
-
-iglooPopup.prototype.show = function () {
-	$(this.popupMenu).css({'display': 'block'});
-	$(this.popupMenuContent).css({'display': 'block'});
-};
-
-iglooPopup.prototype.hide = function () {
-	$(this.popupMenu).remove();
-	$(this.popupMenuContent).remove();
-};
 
 //Class iglooRequest- sends a request to API
 function iglooRequest (request, priority, important, flash) {	
@@ -2955,7 +2954,9 @@ iglooRequest.prototype.run = function () {
 	if (this.important === true) {
 		// If important, execute immediately.
 		if (this.flash === true) {
-			Flash(this.request.module).load(this.request.params).wait(this.request.callback).run();
+			Flash(this.request.module).load(this.request.params).wait(this.request.callback).fail(function () {
+				igloo.statusLog.addStatus('<strong><span style="color:darkred;">Igloo was unable to connect with Wikipedia\'s servers. Please repeat your action. If you are seeing this more than once, please check your internet connection</span></strong>');
+			}).run();
 		}
 		this.requestItem = $.ajax(this.request);
 		return this.requestItem;
