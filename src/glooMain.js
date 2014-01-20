@@ -547,8 +547,6 @@ function iglooContentManager () {
 }
 
 
-
-
 // Class iglooRecentChanges
 	/*
 	** iglooRecentChanges is the ticker class for igloo.
@@ -870,7 +868,7 @@ iglooPage.prototype.addRevision = function (newRev) {
 	this.revisions.sort(function (a, b) { return a.revId - b.revId; });
 	
 	if (newRev.revId > this.lastRevision) this.lastRevision = newRev.revId;
-	if (this.displaying) {
+	if (this.displaying && newRev.revId > this.lastRevision) {
 		alert('update');
 		igloo.fireEvent('core', 'displayed-page-changed', newRev);
 		this.changedSinceDisplay = true;
@@ -888,7 +886,7 @@ iglooPage.prototype.display = function () {
 
 	if (arguments[0]) {
 		for (var x = 0; x < this.revisions.length; x++) {
-			if (arguments[0] === this.revisions[arguments[0]].revId) toShow = x;
+			if (arguments[0] === this.revisions[x].revId) toShow = x;
 		}
 
 		if (toShow !== -1) {
@@ -1715,8 +1713,10 @@ iglooActions.prototype.getRevInfo = function (page, revId, cb) {
 
 //Loads a page
 iglooActions.prototype.loadPage = function (page, revId) {
-	var p = igloo.recentChanges.currentPage;
-	p.display(revId);
+	this.getRevInfo(page, revId, function (data) {
+		var p = new iglooPage(new iglooRevision(data));
+		p.display();
+	});
 };
 
 // Class iglooArchive
@@ -2740,6 +2740,7 @@ function iglooDropdown (name, module, list, prefix, position, endtext, loadText,
 	this.endText = endtext;//text to add after dropdown
 	this.loadText = loadText || '';
 	this.reloadList = reload;
+	this.dropdownClosed = true;
 	this.timer = null;
 }
 
@@ -2784,13 +2785,14 @@ iglooDropdown.prototype.buildInterface = function () {
 
 	$('#' + me.name).mouseover(function () {
 		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-			if (me.reloadList === true) {
+			if (me.reloadList === true && me.dropdownClosed === true) {
 				igloo[me.module.split('.')[1]].reloadData();
 			}
 			if (Boolean(me.timer) === true) { 
-				clearTimeout (me.timer); 
+				clearTimeout(me.timer); 
 				me.timer = false; 
 			} else {
+				me.dropdownClosed = false;
 				$('#' + me.name + '-cont').css('display', 'block');
 				$('#' + me.name + '-display').css('display', 'block');
 			}
@@ -2801,6 +2803,7 @@ iglooDropdown.prototype.buildInterface = function () {
 		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
 			me.timer = setTimeout(function() {
 				$('#' + me.name + '-display').css('display', 'none');
+				me.dropdownClosed = true;
 				me.timer = false; 
 			}, iglooUserSettings.dropdownWinTimeout * 1000);
 		}
@@ -2820,16 +2823,16 @@ iglooDropdown.prototype.loadModule = function () {
 
 	$(this.dropDisplay).mouseover(function () {
 		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-			if (me.reloadList === true) {
+			if (me.reloadList === true && me.dropdownClosed === true) {
 				igloo[me.module.split('.')[1]].reloadData();
 			}
-
 			if (Boolean(me.timer) === true) { 
-				clearTimeout (me.timer); 
+				clearTimeout(me.timer); 
 				me.timer = false; 
 			} else {
-				document.getElementById(me.name + '-cont').style.display = 'block';
-				document.getElementById(me.name + '-display').style.display = 'block';
+				me.dropdownClosed = false;
+				$('#' + me.name + '-cont').css('display', 'block');
+				$('#' + me.name + '-display').css('display', 'block');
 			}
 		}
 	});
@@ -2837,8 +2840,9 @@ iglooDropdown.prototype.loadModule = function () {
 	$(this.dropDisplay).mouseout(function () {
 		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
 			me.timer = setTimeout(function() {
-				document.getElementById(me.name+'-display').style.display = 'none';
-				me.timer = false;
+				$('#' + me.name + '-display').css('display', 'none');
+				me.dropdownClosed = true;
+				me.timer = false; 
 			}, iglooUserSettings.dropdownWinTimeout * 1000);
 		}
 	});
