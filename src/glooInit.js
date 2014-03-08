@@ -88,11 +88,11 @@ function iglooInitControl() {
 
 				break;
 			case '5':
-				if (mw.user.options.get('userjs-iglooRemoteConnect') === null || firstRun === true) {
+				if (/*mw.user.options.get('userjs-iglooRemoteConnect') === null ||*/ firstRun === true) {
 					var remoteClick = false;
 					firstRun = true;
 
-					igLauncher.runIglooInterface.addStatus('Note: This appears to be your first time connecting to igloo');
+					/*igLauncher.runIglooInterface.addStatus('Note: This appears to be your first time connecting to igloo');
 					igLauncher.runIglooInterface.addStatus('<span style="font-color:red">You should no that there are two ways to store data in igloo- iglooNet and locally</span>');
 					igLauncher.runIglooInterface.addStatus('');
 					igLauncher.runIglooInterface.addStatus('iglooNet is a remote server hosted on Wikimedia Labs, but run by igloo developers.');
@@ -108,9 +108,12 @@ function iglooInitControl() {
 					igLauncher.runIglooInterface.addStatus('However, if you store settings only locally and they are lost, there is no way to retrieve them.');
 					igLauncher.runIglooInterface.addStatus('');
 					igLauncher.runIglooInterface.addStatus('<center><span id="ig-remoteConnect" style="margin:auto; width: 170px; border: 1px solid rgb(68, 68, 68); background-color: rgb(241, 241, 241); color: #0b0080; font-size: 1.35em; font-weight: bold; text-align: center; cursor: pointer;">Connect Remotely</span>&nbsp;<span id="ig-localConnect" style="margin:auto; width: 170px; border: 1px solid rgb(68, 68, 68); background-color: rgb(241, 241, 241); color: #0b0080; font-size: 1.35em; font-weight: bold; text-align: center; cursor: pointer;">Connect Locally</span></center>');
-					igLauncher.runIglooInterface.addStatus('');
+					igLauncher.runIglooInterface.addStatus(''); */
 
-					$('#ig-remoteConnect').click(function () {
+					igLauncher.runIglooInterface.addStatus('Note: This appears to be your first time connecting to igloo');
+					igLauncher.runIglooInterface.addStatus('Please note that Igloo stores your settings on Wikipedia\'s servers and has no access to it');
+
+					/* $('#ig-remoteConnect').click(function () {
 						remoteClick = true;
 						Flash('preferences').load({key: 'userjs-iglooRemoteConnect', value: 'true'}).wait(function (data) {
 							igLauncher.runIglooInterface.addStatus('You have decided to store settings remotely. You can change this later in igloo settings.');
@@ -122,10 +125,10 @@ function iglooInitControl() {
 								igLauncher.runIglooInit.init('6'); 
 							}, 500);
 						}).run();
-					});
+					}); */
 
-					$('#ig-localConnect').click(function () {
-						if (remoteClick) return;
+					//$('#ig-localConnect').click(function () {
+					//	if (remoteClick) return;
 						
 						Flash('preferences').load({key: 'userjs-iglooRemoteConnect', value: 'false'}).wait(function (data) {
 							igLauncher.runIglooInterface.addStatus('You have decided to store settings locally. You can change this later in igloo settings.');
@@ -136,9 +139,9 @@ function iglooInitControl() {
 								igLauncher.runIglooInit.init('6'); 
 							}, 500);
 						}).run();
-					});
+					//});
 
-				} else if (mw.user.options.get('userjs-iglooRemoteConnect') === "true" && connectLocal !== true) {
+				} /*else if (mw.user.options.get('userjs-iglooRemoteConnect') === "true" && connectLocal !== true) {
 					firstRun = false;
 					remoteConnect = true;
 
@@ -154,15 +157,15 @@ function iglooInitControl() {
 					setTimeout(function() {
 						igLauncher.runIglooInit.init('6'); 
 					}, 500);
-				} else {
+				} */else {
 					remoteConnect = false;
 					firstRun = false;
 					sessionKey = null;
 
-					igLauncher.runIglooInterface.addStatus('You have decided to connect locally, hosting your settings on Wikipedia servers'); 
+					/*igLauncher.runIglooInterface.addStatus('You have decided to connect locally, hosting your settings on Wikipedia servers'); 
 					igLauncher.runIglooInterface.addStatus('This means igloo does not host any info on you, but your info can also be lost more easily.');
 					igLauncher.runIglooInterface.addStatus('If you wish to change and connect to iglooNet, you may do so in iglooSettings');
-					igLauncher.runIglooInterface.addStatus('');
+					igLauncher.runIglooInterface.addStatus('');*/
 
 					setTimeout(function() {
 						igLauncher.runIglooInit.init('6'); 
@@ -293,8 +296,7 @@ function iglooInit () {
 	this.runIglooInit = new iglooInitControl();
 
 	this.launch = function () {
-		if (mw.config.get('wgPageName') !== 'Wikipedia:Igloo/run') return;
-		if (mw.config.get('wgAction') !== 'view') return;
+		if (mw.config.get('wgPageName') !== 'Wikipedia:Igloo/run' || mw.config.get('wgAction') !== 'view') return;
 		this.runIglooInit.init();
 	};
 }
