@@ -190,9 +190,10 @@ function iglooMain () {
 
 		document.title = 'igloo - ' + iglooConfiguration.version;
 
-		//Settings
-		this.cogs = new iglooSettings();
-		this.cogs.retrieve();
+		this.remoteConnect = initData.doRemoteConnect;
+		this.firstRun = initData.isFirstRun;
+		this.sessionKey = initData.sessionId;
+		this.connectLocal = initData.isDown;
 
 		for (var i = 0; i < groups.length; i++) {
 			if (groups[i] === 'steward' || groups[i] === 'sysop') { 
@@ -200,10 +201,9 @@ function iglooMain () {
 			}
 		}
 
-		this.remoteConnect = initData.doRemoteConnect;
-		this.firstRun = initData.isFirstRun;
-		this.sessionKey = initData.sessionId;
-		this.connectLocal = initData.isDown;
+		//Settings
+		this.cogs = new iglooSettings();
+		this.cogs.retrieve();
 
 		//Launch
 		this.launch();
@@ -627,7 +627,8 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 
 		//Check if we've already seen this revision
 		for (var k = 0; k < this.viewed.length; k++) {
-			if (data[i].revid === this.viewed[k]) {
+			if (data[i].revid === this.viewed[k].revId) {
+				this.viewed[k].stillHere = true;
 				exclude = true;
 				break;
 			}
@@ -688,8 +689,17 @@ iglooRecentChanges.prototype.markViewed = function (revId) {
 		if (me.recentChanges[change].revisions.iglast().revId === revId) {
 			me.recentChanges.splice(change, 1);
 			me.render();
-			me.viewed.push(revId);
+			me.viewed.push({
+				revId: revId,
+				stillHere: false
+			});
 			break;
+		}
+	}
+
+	for (var i = 0; i < this.viewed.length; i++) {
+		if (!me.viewed[i].stillHere) {
+			me.viewed.splice(change, 1);
 		}
 	}
 };
@@ -1298,6 +1308,7 @@ iglooSettings.prototype.set = function (setting, value, cb) {
 	this.settingsEnabled = false;
 
 	if (igloo.remoteConnect && setting !== "remoteConnect" && !igloo.connectLocal) { //It'd be useless to query remotely to see if we're allowed to connect remotely
+		//settingEnabled isn't made true for this because we still need to use the API.
 		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(value) + '&session=' + igloo.sessionKey, true);
 	}
 
@@ -1424,7 +1435,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 			cont.innerHTML += '<div style="padding: 10px;">';
 			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
 
-				$(cont).append(me.createOption('<b>Connect to Remote Server <span style="border-bottom: 1px dotted" title="igloo only stores settings and a session key- No IP adresses/personal info">?</a></b>', 'remoteConnect', {
+				/* $(cont).append(me.createOption('<b>Connect to Remote Server <span style="border-bottom: 1px dotted" title="igloo only stores settings and a session key- No IP adresses/personal info">?</a></b>', 'remoteConnect', {
 					type: "checkbox",
 					checked: igloo.remoteConnect ? true : false,
 					onchange: function () {
@@ -1438,7 +1449,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/>"; */
 
 				$(cont).append(me.createOption('RC Ticker Update Time', 'updateTime', {
 					type: "text",
