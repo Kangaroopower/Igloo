@@ -35,7 +35,7 @@ $(function () {
 	var baseURL = 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/lib/';
 
 	function getScriptURL (page, remote) {
-		var c = new Date (),
+		var c = new Date(),
 			cachebypass = '&killcache=' + c.getDate() + c.getSeconds() + c.getMilliseconds(),
 			url;
 		
