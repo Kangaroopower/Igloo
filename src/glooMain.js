@@ -2924,7 +2924,7 @@ function iglooPopup (content, width, height) {
 		var screenWidth = parseInt(igloo.canvas.canvasBase.children[0].style.width, 10),
 			screenHeight = parseInt(igloo.canvas.canvasBase.children[0].style.height, 10),
 			leftPos	= ((screenWidth / 2) - (this.width / 2)),
-			topPos = ((screenHeight / 2) - (this.width / 2)),
+			topPos = ((screenHeight / 2) - (this.height / 2)),
 			me = this;
 
 		$(this.popupMenuContent).css({
