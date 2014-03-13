@@ -54,10 +54,6 @@ function iglooHookInterface() {
 	};
 		
 	this.run();
-<<<<<<< HEAD
-}
-=======
 }
 
 $(iglooHookInterface);
->>>>>>> b3dde552dd67ea61b99a3707b22d588cc13d6692
