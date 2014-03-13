@@ -3059,4 +3059,3 @@ function iglooHandleLaunch (data) {
 	igloo.load(data);
 	igloo.announce('core');
 }
-igloo.announce('core');
