@@ -124,6 +124,10 @@ var iglooUserSettings = {
 
 	// Misc
 	maxContentSize: 50,
+<<<<<<< HEAD
+=======
+	version: "0.7.1 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Igloo") : "Igloo"),
+>>>>>>> b3dde552dd67ea61b99a3707b22d588cc13d6692
 	mesysop: false,
 
 	//Diffs
@@ -3055,6 +3059,10 @@ function iglooHandleLaunch (data) {
 	if (typeof igloo === 'undefined')
 		igloo = new iglooMain();
 
+<<<<<<< HEAD
 	igloo.load(data);
 	igloo.announce('core');
 }
+=======
+igloo.announce('core');
+>>>>>>> b3dde552dd67ea61b99a3707b22d588cc13d6692
