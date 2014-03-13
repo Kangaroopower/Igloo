@@ -11,7 +11,7 @@
 
 function iglooHookInterface() {
 	this.run = function() {
-		// igloo functionality
+		// igloo page
 		var glooPage = 'Wikipedia:Igloo/run';
 
 		if (mw.config.get('wgPageName') === glooPage) {

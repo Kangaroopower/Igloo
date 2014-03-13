@@ -21,7 +21,7 @@ var _iglooViewable = new iglooViewable();
 //igloo meta variables used in many other places
 var glooLocalBase = 'Wikipedia:Igloo',
 	glooSig = '([['+ glooLocalBase +'|GLOO]])',
-	igloo; //instance of iglooMain that's actually used.
+	igloo; //the instance of iglooMain that's actually used.
 
 // Class iglooConfiguration
 	/*
