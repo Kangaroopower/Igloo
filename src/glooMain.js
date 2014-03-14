@@ -1345,7 +1345,7 @@ iglooSettings.prototype.buildInterface = function () {
 		'height': '73px',
 		'padding-left': '-1px',
 		'padding-top': '-1px',
-		'margin-top': '-73px',
+		'margin-top': '17px',
 		'margin-left': '5px',
 		'margin-right': '5px',
 		'cursor': 'pointer'
@@ -1908,7 +1908,6 @@ iglooSearch.prototype.buildInterface = function () {
 	$(search).css({
 		'position': 'relative',
 		'float': 'left',
-		'width': '330px',
 		'height': '20px',
 		'left': '-' + browsePos + 'px',
 		'margin-top': '60px',
@@ -2202,7 +2201,7 @@ function iglooPast () {
 			'height': '73px',
 			'margin-top': '12px',
 			'margin-left': '5px',
-			'right': '30px',
+			'left': '30px',
 			'padding-left': '-1px',
 			'padding-top': '-1px',
 			'cursor': 'pointer'
