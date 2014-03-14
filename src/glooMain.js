@@ -2199,7 +2199,7 @@ function iglooPast () {
 			'float': 'left',
 			'width': '73px',
 			'height': '73px',
-			'margin-top': '12px',
+			'margin-top': '17px',
 			'margin-left': '5px',
 			'left': '30px',
 			'padding-left': '-1px',
