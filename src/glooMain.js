@@ -2198,7 +2198,7 @@ function iglooPast () {
 			'height': '73px',
 			'margin-top': '17px',
 			'margin-left': '5px',
-			//'left': '30px',
+			'right': '10px',
 			'padding-left': '-1px',
 			'padding-top': '-1px',
 			'cursor': 'pointer'
