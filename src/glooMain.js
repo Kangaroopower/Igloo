@@ -2908,11 +2908,9 @@ iglooDropdown.prototype.loadModule = function () {
 iglooDropdown.prototype.close = function () {
 	var me = this;
 	if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-		me.timer = setTimeout(function() {
-			$('#' + me.name + '-display').css('display', 'none');
-			me.dropdownClosed = true;
-			me.timer = false; 
-		}, iglooUserSettings.dropdownWinTimeout * 1000);
+		$('#' + me.name + '-display').css('display', 'none');
+		me.dropdownClosed = true;
+		me.timer = false; 
 	}
 };
  
