@@ -2687,13 +2687,14 @@ function iglooStatus () {
 	this.idCounter = 1;
  
 	this.buildInterface = function() {
-		this.display = document.createElement('div');
+		var me = this;
 
+		this.display = document.createElement('div');
 		this.display.innerHTML = '<div id="iglooStatusDisplay" style="width: 100%; height: 100%; overflow: auto; font-size: 12px;"><div id="statusObj_0" class="statusObj">Welcome to igloo! This is your status window, where you see the actions that igloo is taking on your behalf.<br /></div>';
 
 		$(this.display).css({
 			'left': '0px',
-			'top': (parseInt(igloo.canvas.canvasBase.children[0].style.height, 10) - 252) + 'px',	
+			'top': (parseInt(igloo.canvas.canvasBase.children[0].style.height, 10) - 252) + 'px',
 			'width': '100%',
 			'height': '140px',
 			'background-color': jin.Colour.LIGHT_GREY,
@@ -2703,6 +2704,10 @@ function iglooStatus () {
 			'z-index': 99997,
 			'display': 'block',
 			'position': 'absolute'
+		});
+
+		$(window).resize(function() {
+			$(me.display).css('top', (parseInt(igloo.canvas.canvasBase.children[0].style.height, 10) - 252) + 'px');
 		});
 
 		igloo.content.panel.appendChild(this.display);
