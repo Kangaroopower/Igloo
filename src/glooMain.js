@@ -218,6 +218,7 @@ function iglooMain () {
 		this.contentManager = new iglooContentManager();
 		this.statusLog = new iglooStatus();
 		this.actions = new iglooActions();
+		this.dropManager = new iglooDropdownManager();
 
 		this.recentChanges.update();
 		this.recentChanges.setTickTime(iglooUserSettings.updateTime * 1000);
@@ -2068,7 +2069,8 @@ iglooCSD.prototype.doCSD = function () {
 			module: 'delete',
 			params: { targ: me.pageTitle, summary: csdsummary },
 			callback: function (data) { 
-				igloo.statusLog.addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!'); }
+				igloo.statusLog.addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!');
+			}
 		}, 0, true, true);
 		deletePage.run();
 	} else {
@@ -2513,7 +2515,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 						t[4], //minute
 						t[5], //day
 						t[6], //month
-						t[7], //year
+						t[7] //year
 					];
 
 					i++;
@@ -2743,6 +2745,24 @@ function iglooStatus () {
 	};
 }
 
+//Static Class iglooDropdownManager- make sure only one iglooDropdown is open at a time
+function iglooDropdownManager () {
+	this.dropdowns = [];
+
+	this.add = function (name) {
+		this.dropdowns.push(name);
+	};
+
+	this.opened = function (name) {
+		var drops = this.dropdowns;
+
+		for (var i = 0; i < drops.length; i++) {
+			if (drops[i].name !== name) drops[i].close();
+		}
+	};
+}
+
+
 //Class iglooDropdown- handles dropdowns
 function iglooDropdown (name, module, list, prefix, position, endtext, loadText, reload) {
 	this.name = name; //name of dropdown
@@ -2755,6 +2775,8 @@ function iglooDropdown (name, module, list, prefix, position, endtext, loadText,
 	this.reloadList = reload;
 	this.dropdownClosed = true;
 	this.timer = null;
+
+	igloo.dropManager.add(name);
 }
 
 iglooDropdown.prototype.buildInterface = function () {
@@ -2806,6 +2828,7 @@ iglooDropdown.prototype.buildInterface = function () {
 				me.timer = false; 
 			} else {
 				me.dropdownClosed = false;
+				igloo.dropManager.opened(me.name);
 				$('#' + me.name + '-cont').css('display', 'block');
 				$('#' + me.name + '-display').css('display', 'block');
 			}
@@ -2844,6 +2867,7 @@ iglooDropdown.prototype.loadModule = function () {
 				me.timer = false; 
 			} else {
 				me.dropdownClosed = false;
+				igloo.dropManager.opened(me.name);
 				$('#' + me.name + '-cont').css('display', 'block');
 				$('#' + me.name + '-display').css('display', 'block');
 			}
@@ -2881,6 +2905,17 @@ iglooDropdown.prototype.loadModule = function () {
 	});
 };
 
+iglooDropdown.prototype.close = function () {
+	var me = this;
+	if (igloo[me.module.split('.')[1]].pageTitle !== '') {
+		me.timer = setTimeout(function() {
+			$('#' + me.name + '-display').css('display', 'none');
+			me.dropdownClosed = true;
+			me.timer = false; 
+		}, iglooUserSettings.dropdownWinTimeout * 1000);
+	}
+};
+ 
 //iglooPopup - creates a Popup
 function iglooPopup (content, width, height) {
 	this.popupMenu = document.createElement('div');
