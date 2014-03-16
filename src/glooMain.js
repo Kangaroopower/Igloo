@@ -219,6 +219,7 @@ function iglooMain () {
 		this.statusLog = new iglooStatus();
 		this.actions = new iglooActions();
 		this.dropManager = new iglooDropdownManager();
+		this.piano = new iglooKeys();
 
 		this.recentChanges.update();
 		this.recentChanges.setTickTime(iglooUserSettings.updateTime * 1000);
@@ -383,9 +384,6 @@ function iglooMain () {
 	};
 
 	this.loadModules = function () {
-		this.piano = new iglooKeys();
-		this.announce('keys');
-
 		this.justice = new iglooReversion();
 		this.justice.buildInterface();
 		this.announce('rollback');
