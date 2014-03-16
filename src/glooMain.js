@@ -1999,7 +1999,7 @@ iglooDelete.prototype.buildInterface = function () {
 
 	this.dropdown = new iglooDropdown('igloo-delete', "igloo.trash", reasons, 'igDel',  {
 		top: 103,
-		left: 37,
+		left: '75px',
 		where: 'left'
 	}, '');
 
@@ -2187,7 +2187,7 @@ function iglooPast () {
 
 		this.dropdown = new iglooDropdown('igloo-hist', "igloo.past", {}, 'igPast',  {
 			top: 103,
-			left: 80,
+			left: '80%',
 			where: 'right'
 		}, '', 'loading page history - wait...', true);
 
@@ -2296,7 +2296,7 @@ iglooReversion.prototype.buildInterface = function () {
 
 	this.dropdown = new iglooDropdown('igloo-revert', "igloo.justice", summaries, 'igRevert',  {
 		top: 103,
-		left: 27,
+		left: '5px',
 		where: 'left'
 	}, '');
 	
@@ -2796,7 +2796,7 @@ iglooDropdown.prototype.buildInterface = function () {
 		'float': me.position.where,
 		'position':'fixed',
 		'z-index': 999999999999,
-		'left': me.position.left + '%'
+		'left': me.position.left
 	});
 
 	$(this.dropCont).css({
