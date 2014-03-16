@@ -224,6 +224,7 @@ function iglooMain () {
 		this.recentChanges.setTickTime(iglooUserSettings.updateTime * 1000);
 		this.statusLog.buildInterface();
 		this.currentView.displayWelcome();
+		this.cogs.buildInterface();
 
 		this.loadModules(); 
 	};
@@ -404,10 +405,6 @@ function iglooMain () {
 		this.past = new iglooPast();
 		this.past.buildInterface();
 		this.announce('hist');
-
-		//settings isn't technically a modules, but we need to build its interface
-		//after iglooPast
-		this.cogs.buildInterface();
 
 		this.bindKeys();
 		this.fireEvent('core', 'modules-loaded', true);
@@ -2198,12 +2195,12 @@ function iglooPast () {
 
 		$(histButton).css({
 			'position': 'relative',
-			'float': 'left',
+			'float': 'right',
 			'width': '73px',
 			'height': '73px',
 			'margin-top': '17px',
 			'margin-left': '5px',
-			'left': '30px',
+			//'left': '30px',
 			'padding-left': '-1px',
 			'padding-top': '-1px',
 			'cursor': 'pointer'
