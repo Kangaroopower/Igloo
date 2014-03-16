@@ -1998,8 +1998,8 @@ iglooDelete.prototype.buildInterface = function () {
 	deleteButton.innerHTML = '<img title="Tag page for CSD" style="margin-left:7px; width:63px; height:63px;" src= "' + iglooConfiguration.fileHost + 'images/igloo-delete.png">';
 
 	this.dropdown = new iglooDropdown('igloo-delete', "igloo.trash", reasons, 'igDel',  {
-		top: 103,
-		left: '75px',
+		top: 113,
+		left: '335px',
 		where: 'left'
 	}, '');
 
@@ -2186,7 +2186,7 @@ function iglooPast () {
 		histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.fileHost + 'images/igloo-hist.png">';
 
 		this.dropdown = new iglooDropdown('igloo-hist', "igloo.past", {}, 'igPast',  {
-			top: 103,
+			top: 113,
 			left: '80%',
 			where: 'right'
 		}, '', 'loading page history - wait...', true);
@@ -2295,8 +2295,8 @@ iglooReversion.prototype.buildInterface = function () {
 	revertButton.innerHTML = '<img title="Revert Edit" src= "' + iglooConfiguration.fileHost + 'images/igloo-revert.png">';
 
 	this.dropdown = new iglooDropdown('igloo-revert', "igloo.justice", summaries, 'igRevert',  {
-		top: 103,
-		left: '5px',
+		top: 113,
+		left: '265px',
 		where: 'left'
 	}, '');
 	
