@@ -2749,8 +2749,8 @@ function iglooStatus () {
 function iglooDropdownManager () {
 	this.dropdowns = [];
 
-	this.add = function (name) {
-		this.dropdowns.push(name);
+	this.add = function (dropdown) {
+		this.dropdowns.push(dropdown);
 	};
 
 	this.opened = function (name) {
@@ -2776,7 +2776,7 @@ function iglooDropdown (name, module, list, prefix, position, endtext, loadText,
 	this.dropdownClosed = true;
 	this.timer = null;
 
-	igloo.dropManager.add(name);
+	igloo.dropManager.add(this);
 }
 
 iglooDropdown.prototype.buildInterface = function () {
