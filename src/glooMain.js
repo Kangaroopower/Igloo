@@ -133,6 +133,7 @@ var iglooUserSettings = {
 
 	//Keys
 	useKeys: true,
+	upDownKeys: false,
 
 	// Modules
 
@@ -409,29 +410,20 @@ function iglooMain () {
 	};
 
 	this.bindKeys = function () {
-		this.piano.register('up', 'default', function () {
-			igloo.recentChanges.browseFeed(-1);
-		});
+		if (iglooUserSettings.upDownKeys) {
+			this.piano.register('up', 'default', function () {
+				igloo.recentChanges.browseFeed(-1);
+			});
 
-		this.piano.register('down', 'default', function () {
-			igloo.recentChanges.browseFeed(1);
-		});
+			this.piano.register('down', 'default', function () {
+				igloo.recentChanges.browseFeed(1);
+			});
+		}
 
 		this.piano.register('backspace', 'default', function () {
 			igloo.archives.goBack(1);
 		});
 
-		this.piano.register('q', 'default', function () {
-			if (me.justice.pageTitle !== '') {
-				igloo.justice.rollback.go();
-			}
-		});
-
-		this.piano.register('g', 'default', function () {
-			if (me.justice.pageTitle !== '') {
-				igloo.justice.rollback.go('agf', false);
-			}
-		});
 		this.piano.register('f5', 'default', function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
@@ -1573,6 +1565,23 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
+				cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('Use the up and down arrow keys to browse the RC ticker', 'upDownKeys', {
+					type: "checkbox",
+					checked: iglooUserSettings.upDownKeys ? true : false,
+					onchange: function () {
+						var el = $(this);
+						igloo.cogs.set("upDownKeys", el.prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.upDownKeys = el.prop('checked');
+							} else {
+								el.attr('checked', !el.prop('checked'));
+							}
+						});
+					}
+				}));
+
 				/*cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Hide Bot edits', 'hideBot', {
@@ -2276,6 +2285,18 @@ function iglooReversion () {
 		me.reversionEnabled = 'yes';
 		me.rollback = new iglooRollback(data.pageTitle, data.user, data.revId);
 	});
+
+	igloo.piano.register('q', 'default', function () {
+		if (me.pageTitle !== '') {
+			me.rollback.go();
+		}
+	});
+
+	igloo.piano.register('g', 'default', function () {
+		if (me.pageTitle !== '') {
+			me.rollback.go('agf', false);
+		}
+	});	
 }
 
 iglooReversion.prototype.buildInterface = function () {
