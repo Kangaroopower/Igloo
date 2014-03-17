@@ -1216,6 +1216,18 @@ function iglooKeys () {
 		'settings': {}
 	};
 
+	//Change mousetrap callback
+	Mousetrap.stopCallback = function(e, element, combo) {
+		// if the element has the class "mousetrap" then no need to stop
+		if ((' ' + element.className + ' ').indexOf(' mousetrap ') > -1) {
+			return false;
+		}
+
+		// stop for input, select, and textarea
+		//and if the combo is enter
+		return combo != 'enter' || element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || (element.contentEditable && element.contentEditable == 'true');
+	};
+
 	//This registers a new keybinding for use in igloo
 	//And then executes the function under the right circumstances
 	this.register = function (combo, mode, func) {
@@ -1905,7 +1917,7 @@ iglooSearch.prototype.buildInterface = function () {
 		browsePos = (62 * 2) - 15,
 		error = document.createElement('div');
 
-	search.innerHTML = '<input placeholder="Search" id="igloo-search-to" class="mousetrap" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.fileHost + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
+	search.innerHTML = '<input placeholder="Search" id="igloo-search-to" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.fileHost + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
 	error.innerHTML = '';
 
 	error.id = 'igloo-search-error';
