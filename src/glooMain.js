@@ -1212,7 +1212,9 @@ function iglooKeys () {
 	this.keys = ['default', 'search', 'settings'];
 	this.cbs = {
 		'default': {},
-		'search': {},
+		'search': {
+			noDefault: true
+		},
 		'settings': {}
 	};
 
@@ -1224,7 +1226,7 @@ function iglooKeys () {
 			this.cbs[mode][combo] = func;
 
 			Mousetrap.bind(combo, function(e, input) {
-				if (igloo.piano.mode !== 'search') {
+				if (!me.cbs[igloo.piano.mode].noDefault && input !== 'f5') {
 					if (e.preventDefault) {
 						e.preventDefault();
 					} else {
