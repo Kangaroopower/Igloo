@@ -38,7 +38,7 @@ var iglooConfiguration = {
 	defaultContentScore: 20,
 	fileHost: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/', //Holds resources
 	remoteHost: '', //Actual remote server
-	version: "0.8 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Alpha") : "Alpha"),
+	version: "0.81 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Alpha") : "Alpha"),
 	limitRequests: 5,
 	flagColours: ['#ff8888', '#ffbbbb', '#ffffff', '#bbffbb', '#88ff88'],
 
