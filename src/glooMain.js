@@ -133,6 +133,7 @@ var iglooUserSettings = {
 
 	//Keys
 	useKeys: true,
+	upDownKeys: false,
 
 	// Modules
 
@@ -218,11 +219,14 @@ function iglooMain () {
 		this.contentManager = new iglooContentManager();
 		this.statusLog = new iglooStatus();
 		this.actions = new iglooActions();
+		this.dropManager = new iglooDropdownManager();
+		this.piano = new iglooKeys();
 
 		this.recentChanges.update();
 		this.recentChanges.setTickTime(iglooUserSettings.updateTime * 1000);
 		this.statusLog.buildInterface();
 		this.currentView.displayWelcome();
+		this.cogs.buildInterface();
 
 		this.loadModules(); 
 	};
@@ -381,9 +385,6 @@ function iglooMain () {
 	};
 
 	this.loadModules = function () {
-		this.piano = new iglooKeys();
-		this.announce('keys');
-
 		this.justice = new iglooReversion();
 		this.justice.buildInterface();
 		this.announce('rollback');
@@ -404,38 +405,25 @@ function iglooMain () {
 		this.past.buildInterface();
 		this.announce('hist');
 
-		//settings isn't technically a modules, but we need to build its interface
-		//after iglooPast
-		this.cogs.buildInterface();
-
 		this.bindKeys();
 		this.fireEvent('core', 'modules-loaded', true);
 	};
 
 	this.bindKeys = function () {
-		this.piano.register('up', 'default', function () {
-			igloo.recentChanges.browseFeed(-1);
-		});
+		if (iglooUserSettings.upDownKeys) {
+			this.piano.register('up', 'default', function () {
+				igloo.recentChanges.browseFeed(-1);
+			});
 
-		this.piano.register('down', 'default', function () {
-			igloo.recentChanges.browseFeed(1);
-		});
+			this.piano.register('down', 'default', function () {
+				igloo.recentChanges.browseFeed(1);
+			});
+		}
 
 		this.piano.register('backspace', 'default', function () {
 			igloo.archives.goBack(1);
 		});
 
-		this.piano.register('q', 'default', function () {
-			if (me.justice.pageTitle !== '') {
-				igloo.justice.rollback.go();
-			}
-		});
-
-		this.piano.register('g', 'default', function () {
-			if (me.justice.pageTitle !== '') {
-				igloo.justice.rollback.go('agf', false);
-			}
-		});
 		this.piano.register('f5', 'default', function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
@@ -1224,7 +1212,9 @@ function iglooKeys () {
 	this.keys = ['default', 'search', 'settings'];
 	this.cbs = {
 		'default': {},
-		'search': {},
+		'search': {
+			noDefault: true
+		},
 		'settings': {}
 	};
 
@@ -1236,11 +1226,13 @@ function iglooKeys () {
 			this.cbs[mode][combo] = func;
 
 			Mousetrap.bind(combo, function(e, input) {
-				if (e.preventDefault) {
-					e.preventDefault();
-				} else {
-					// internet explorer
-					e.returnValue = false;
+				if (!me.cbs[igloo.piano.mode].noDefault || input === 'f5') {
+					if (e.preventDefault) {
+						e.preventDefault();
+					} else {
+						// internet explorer
+						e.returnValue = false;
+					}
 				}
 
 				me.cbs[igloo.piano.mode][input]();
@@ -1345,7 +1337,7 @@ iglooSettings.prototype.buildInterface = function () {
 		'height': '73px',
 		'padding-left': '-1px',
 		'padding-top': '-1px',
-		'margin-top': '-73px',
+		'margin-top': '17px',
 		'margin-left': '5px',
 		'margin-right': '5px',
 		'cursor': 'pointer'
@@ -1570,6 +1562,23 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 						igloo.cogs.set("logCSD", el.prop('checked'), function (res) {
 							if (res) {
 								iglooUserSettings.logCSD = el.prop('checked');
+							} else {
+								el.attr('checked', !el.prop('checked'));
+							}
+						});
+					}
+				}));
+
+				cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('Use the up and down arrow keys to browse the RC ticker', 'upDownKeys', {
+					type: "checkbox",
+					checked: iglooUserSettings.upDownKeys ? true : false,
+					onchange: function () {
+						var el = $(this);
+						igloo.cogs.set("upDownKeys", el.prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.upDownKeys = el.prop('checked');
 							} else {
 								el.attr('checked', !el.prop('checked'));
 							}
@@ -1908,7 +1917,6 @@ iglooSearch.prototype.buildInterface = function () {
 	$(search).css({
 		'position': 'relative',
 		'float': 'left',
-		'width': '330px',
 		'height': '20px',
 		'left': '-' + browsePos + 'px',
 		'margin-top': '60px',
@@ -2003,8 +2011,8 @@ iglooDelete.prototype.buildInterface = function () {
 	deleteButton.innerHTML = '<img title="Tag page for CSD" style="margin-left:7px; width:63px; height:63px;" src= "' + iglooConfiguration.fileHost + 'images/igloo-delete.png">';
 
 	this.dropdown = new iglooDropdown('igloo-delete', "igloo.trash", reasons, 'igDel',  {
-		top: 103,
-		left: 37,
+		top: 113,
+		left: '335px',
 		where: 'left'
 	}, '');
 
@@ -2069,7 +2077,8 @@ iglooCSD.prototype.doCSD = function () {
 			module: 'delete',
 			params: { targ: me.pageTitle, summary: csdsummary },
 			callback: function (data) { 
-				igloo.statusLog.addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!'); }
+				igloo.statusLog.addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!');
+			}
 		}, 0, true, true);
 		deletePage.run();
 	} else {
@@ -2190,19 +2199,19 @@ function iglooPast () {
 		histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.fileHost + 'images/igloo-hist.png">';
 
 		this.dropdown = new iglooDropdown('igloo-hist', "igloo.past", {}, 'igPast',  {
-			top: 103,
-			left: 80,
+			top: 113,
+			left: '80%',
 			where: 'right'
 		}, '', 'loading page history - wait...', true);
 
 		$(histButton).css({
 			'position': 'relative',
-			'float': 'left',
+			'float': 'right',
 			'width': '73px',
 			'height': '73px',
-			'margin-top': '12px',
+			'margin-top': '17px',
 			'margin-left': '5px',
-			'right': '30px',
+			'right': '10px',
 			'padding-left': '-1px',
 			'padding-top': '-1px',
 			'cursor': 'pointer'
@@ -2280,6 +2289,18 @@ function iglooReversion () {
 		me.reversionEnabled = 'yes';
 		me.rollback = new iglooRollback(data.pageTitle, data.user, data.revId);
 	});
+
+	igloo.piano.register('q', 'default', function () {
+		if (me.pageTitle !== '') {
+			me.rollback.go();
+		}
+	});
+
+	igloo.piano.register('g', 'default', function () {
+		if (me.pageTitle !== '') {
+			me.rollback.go('agf', false);
+		}
+	});	
 }
 
 iglooReversion.prototype.buildInterface = function () {
@@ -2299,8 +2320,8 @@ iglooReversion.prototype.buildInterface = function () {
 	revertButton.innerHTML = '<img title="Revert Edit" src= "' + iglooConfiguration.fileHost + 'images/igloo-revert.png">';
 
 	this.dropdown = new iglooDropdown('igloo-revert', "igloo.justice", summaries, 'igRevert',  {
-		top: 103,
-		left: 27,
+		top: 113,
+		left: '265px',
 		where: 'left'
 	}, '');
 	
@@ -2514,7 +2535,7 @@ iglooRollback.prototype.warnUser = function(callback, details) {
 						t[4], //minute
 						t[5], //day
 						t[6], //month
-						t[7], //year
+						t[7] //year
 					];
 
 					i++;
@@ -2744,6 +2765,24 @@ function iglooStatus () {
 	};
 }
 
+//Static Class iglooDropdownManager- make sure only one iglooDropdown is open at a time
+function iglooDropdownManager () {
+	this.dropdowns = [];
+
+	this.add = function (dropdown) {
+		this.dropdowns.push(dropdown);
+	};
+
+	this.opened = function (name) {
+		var drops = this.dropdowns;
+
+		for (var i = 0; i < drops.length; i++) {
+			if (drops[i].name !== name) drops[i].close();
+		}
+	};
+}
+
+
 //Class iglooDropdown- handles dropdowns
 function iglooDropdown (name, module, list, prefix, position, endtext, loadText, reload) {
 	this.name = name; //name of dropdown
@@ -2756,6 +2795,8 @@ function iglooDropdown (name, module, list, prefix, position, endtext, loadText,
 	this.reloadList = reload;
 	this.dropdownClosed = true;
 	this.timer = null;
+
+	igloo.dropManager.add(this);
 }
 
 iglooDropdown.prototype.buildInterface = function () {
@@ -2780,7 +2821,7 @@ iglooDropdown.prototype.buildInterface = function () {
 		'float': me.position.where,
 		'position':'fixed',
 		'z-index': 999999999999,
-		'left': me.position.left + '%'
+		'left': me.position.left
 	});
 
 	$(this.dropCont).css({
@@ -2807,6 +2848,7 @@ iglooDropdown.prototype.buildInterface = function () {
 				me.timer = false; 
 			} else {
 				me.dropdownClosed = false;
+				igloo.dropManager.opened(me.name);
 				$('#' + me.name + '-cont').css('display', 'block');
 				$('#' + me.name + '-display').css('display', 'block');
 			}
@@ -2845,6 +2887,7 @@ iglooDropdown.prototype.loadModule = function () {
 				me.timer = false; 
 			} else {
 				me.dropdownClosed = false;
+				igloo.dropManager.opened(me.name);
 				$('#' + me.name + '-cont').css('display', 'block');
 				$('#' + me.name + '-display').css('display', 'block');
 			}
@@ -2882,6 +2925,15 @@ iglooDropdown.prototype.loadModule = function () {
 	});
 };
 
+iglooDropdown.prototype.close = function () {
+	var me = this;
+	if (igloo[me.module.split('.')[1]].pageTitle !== '') {
+		$('#' + me.name + '-display').css('display', 'none');
+		me.dropdownClosed = true;
+		me.timer = false; 
+	}
+};
+ 
 //iglooPopup - creates a Popup
 function iglooPopup (content, width, height) {
 	this.popupMenu = document.createElement('div');
