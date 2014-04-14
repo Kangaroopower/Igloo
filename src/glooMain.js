@@ -2357,7 +2357,7 @@ iglooBan.prototype.buildInterface = function () {
 		me = this;
 
 	banButton.id = 'igloo-block';
-	banButton.innerHTML = '<img title="Block User whose edit you\'re currently viewing" src= "' + iglooConfiguration.fileHost + 'images/igloo-block.png">';
+	banButton.innerHTML = '<img title="Block User whose edit you\'re currently viewing" style="margin-left:7px; width:63px; height:63px;" src= "' + iglooConfiguration.fileHost + 'images/igloo-block.png">';
 	
 	$(banButton).click(function () {
 		if (me.pageTitle !== '') {
@@ -2370,6 +2370,7 @@ iglooBan.prototype.buildInterface = function () {
 		'float': 'left',
 		'width': '73px',
 		'height': '73px',
+		'left': '-109px',
 		'margin-top': '17px',
 		'margin-left': '5px',
 		'cursor': 'pointer'
