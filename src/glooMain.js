@@ -723,7 +723,7 @@ iglooRecentChanges.prototype.browseFeed = function (number) {
 // ask a diff to show its changes
 iglooRecentChanges.prototype.show = function (elementId) {
 	var me = this;
-	if (!igloo.actions.stopActions) return false;
+	if (igloo.actions.stopActions) return false;
 	this.currentRev = elementId;
 	this.recentChanges[elementId].display();
 	var pause = setTimeout(function () {
@@ -796,7 +796,7 @@ function iglooView () {
 iglooView.prototype.display = function (revision) {
 	// If a revision is being displayed, set the displaying
 	// flag for the page to false.
-	if (!igloo.actions.stopActions) return false;
+	if (igloo.actions.stopActions) return false;
 
 	if (this.displaying) {
 		this.displaying.page.displaying = false;
@@ -1793,7 +1793,7 @@ iglooActions.prototype.getRevInfo = function (page, revId, cb) {
 
 //Loads a page
 iglooActions.prototype.loadPage = function (page, revId) {
-	if (!igloo.actions.stopActions) return false;
+	if (igloo.actions.stopActions) return false;
 
 	this.getRevInfo(page, revId, function (data) {
 		var p = new iglooPage(new iglooRevision(data));
@@ -1913,7 +1913,7 @@ function iglooArchive () {
 	this.goBack = function (count) {
 		var doView;
 
-		if (this.archives.length <= 0 && !igloo.actions.stopActions) return false;
+		if (this.archives.length <= 0 || igloo.actions.stopActions) return false;
 
 		if (!count) count = 1;
 
@@ -1934,7 +1934,7 @@ function iglooArchive () {
 	this.goForward = function(count) {
 		var doView;
 
-		if (this.archivePosition < 0 && !igloo.actions.stopActions) return false;
+		if (this.archivePosition < 0 || igloo.actions.stopActions) return false;
 
 		if (!count) count = 1;
  
@@ -2761,7 +2761,7 @@ iglooReversion.prototype.buildInterface = function () {
 iglooReversion.prototype.go = function (summary) {
 	var me = this;
 
-	if (!igloo.actions.stopActions) return false;
+	if (igloo.actions.stopActions) return false;
 
 	var userGroupCheck = new iglooRequest({
 		module: 'getUserGroups',
