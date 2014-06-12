@@ -32,7 +32,7 @@
 var iglooBranch = window.iglooBranch || 'dev';
 
 $(function () {
-	var baseURL = 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/lib/';
+	var baseURL = 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch;
 
 	function getScriptURL (page, remote) {
 		var c = new Date(),
@@ -58,15 +58,16 @@ $(function () {
 	}
   
 	window.iglooImport = iglooImport;
+	window.glooBase = baseURL;
 
 	mw.loader.implement('igloo.lib', [
-		getScriptURL(baseURL + 'flash.js', true),
-		getScriptURL(baseURL + 'jin.js', true),
-		getScriptURL(baseURL + 'mousetrap.js', true)
+		getScriptURL(baseURL + '/lib/flash.js', true),
+		getScriptURL(baseURL + '/lib/jin.js', true),
+		getScriptURL(baseURL + '/lib/mousetrap.js', true)
 	], {}, {});
 
 	mw.loader.using(['igloo.lib'], function () {
-		iglooImport('https://raw.github.com/Kangaroopower/Igloo/'+iglooBranch+'/src/glooInterfaceHook.js', true).onload = function () {
+		iglooImport(baseURL + '/src/glooInterfaceHook.js', true).onload = function () {
 			iglooHookInterface();
 		};
 	});

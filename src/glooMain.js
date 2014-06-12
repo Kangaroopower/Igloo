@@ -36,7 +36,7 @@ var glooLocalBase = 'Wikipedia:Igloo',
 var iglooConfiguration = {
 	api: mw.util.wikiScript('api'),
 	defaultContentScore: 20,
-	fileHost: 'https://raw.github.com/Kangaroopower/Igloo/' + iglooBranch + '/', //Holds resources
+	fileHost: window.glooBase + '/', //Holds resources
 	remoteHost: '', //Actual remote server
 	version: "0.9 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Alpha") : "Alpha"),
 	limitRequests: 5,
@@ -105,7 +105,6 @@ var iglooConfiguration = {
 	blockSpecTemp: '1 month', // non-default templates above will only be used when handling blocks greater than or equal to this setting
 	anonBlockSettings: '&anononly=&nocreate=&allowusertalk=', // this should take the form of an API block settings string, and will be attached to the api request (default string)
 	userBlockSettings: '&autoblock=&nocreate=&allowusertalk=' // this should take the form of an API block settings string, and will be attached to the api request (default string)
-
 };
 
 	
