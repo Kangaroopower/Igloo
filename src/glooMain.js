@@ -104,7 +104,55 @@ var iglooConfiguration = {
 	blockDefault: 6, // the above block length to issue by default
 	blockSpecTemp: '1 month', // non-default templates above will only be used when handling blocks greater than or equal to this setting
 	anonBlockSettings: '&anononly=&nocreate=&allowusertalk=', // this should take the form of an API block settings string, and will be attached to the api request (default string)
-	userBlockSettings: '&autoblock=&nocreate=&allowusertalk=' // this should take the form of an API block settings string, and will be attached to the api request (default string)
+	userBlockSettings: '&autoblock=&nocreate=&allowusertalk=', // this should take the form of an API block settings string, and will be attached to the api request (default string)
+
+	//Warns w/o reverts
+	warnSummaries = { //Credit to Twinkle for compiling these
+		"Common warnings": {
+			"uw-vandalism": "Vandalism",
+			"uw-disruptive": "Disruptive editing",
+			"uw-test": "Editing tests",
+			"uw-delete": "Removal of content, blanking"
+		},
+		"Behavior in articles": {
+			"uw-biog": "Adding unreferenced controversial information about living persons",
+			"uw-defam": "Addition of defamatory content",
+			"uw-error": "Introducing deliberate factual errors",
+			"uw-genre": "Frequent or mass changes to genres without consensus or references",
+			"uw-image": "Image-related vandalism in articles",
+			"uw-joke": "Using improper humor in articles",
+			"uw-nor": "Adding original research, including unpublished syntheses of sources",
+			"uw-notcensored": "Censorship of material",
+			"uw-own": "Ownership of articles",
+			"uw-tdel": "Removal of maintenance templates",
+			"uw-unsourced": "Addition of unsourced or improperly cited material"
+		},
+		"Promotions and spam": {
+			"uw-advert": "Using Wikipedia for advertising or promotion",
+			"uw-npov": "Not adhering to neutral point of view",
+			"uw-spam": "Adding spam links"
+		},
+		"Behavior towards other editors": {
+			"uw-agf": "Not assuming good faith",
+			"uw-harass": "Harassment of other users",
+			"uw-npa": "Personal attack directed at a specific editor",
+			"uw-tempabuse": "Improper use of warning or blocking template"
+		},
+		"Removal of deletion tags": {
+			"uw-afd": "Removing {{afd}} templates",
+			"uw-blpprod": "Removing {{blp prod}} templates",
+			"uw-idt": "Removing file deletion tags",
+			"uw-speedy": "Removing speedy deletion tags"
+		},
+		"Other": {
+			"uw-chat": "Using talk page as forum",
+			"uw-create": "Creating inappropriate pages",
+			"uw-mos": "Manual of style",
+			"uw-move": "Page moves against naming conventions or consensus",
+			"uw-tpv": "Refactoring others' talk page comments",
+			"uw-upload": "Uploading unencyclopedic images"
+		}
+	}
 };
 
 	
@@ -146,6 +194,7 @@ var iglooUserSettings = {
 
 	//Rollback
 	promptRevertSelf: true,
+	watchRollbacked: false,
 
 	//Block
 	blockAction: 'prompt',
@@ -157,7 +206,8 @@ var iglooUserSettings = {
 	maxArchives: 20,
 
 	//CSD Module
-	logCSD: false
+	logCSD: false,
+	watchTagged: true
 };
 
 function getp (obj) {
@@ -574,6 +624,7 @@ function iglooRecentChanges () {
 	this.tickTime = 4000;
 	this.recentChanges = [];
 	this.viewed = [];
+	this.botList = [];
 	this.currentRev = -1;
 	this.currentPage = null;
 
@@ -613,7 +664,7 @@ iglooRecentChanges.prototype.update = function () {
 	
 	var rcFetch = new iglooRequest({
 		url: me.loadUrl,
-		data: { format: 'json', action: 'query', list: 'recentchanges', rcprop: 'title|user|ids|comment|timestamp|', rclimit: iglooUserSettings.updateQuantity },
+		data: { format: 'json', action: 'query', list: 'recentchanges', rcprop: 'title|user|ids|comment|timestamp|flags', rclimit: iglooUserSettings.updateQuantity },
 		dataType: 'json',
 		context: me,
 		success: function (data) {
@@ -645,6 +696,11 @@ iglooRecentChanges.prototype.loadChanges = function (changeSet) {
 			if (data[i].user === mw.config.get('wgUserName')) {
 				exclude = true;
 			}
+		}
+
+		//Hide bot edits
+		if (iglooUserSettings.hideBot === true) {
+			if (typeof data[i].bot !== "undefined") exclude = true;
 		}
 		
 		if (exclude === true) {
@@ -1269,6 +1325,9 @@ function iglooKeys () {
 //Class iglooSettings- builds settings interface and manages settings storage/handling
 function iglooSettings () {
 	this.popup = null;
+	this.dialogs = {
+		warn: null
+	};
 	this.settingsEnabled = true;
 	this.isOpen = false;
 }
@@ -1288,8 +1347,8 @@ iglooSettings.prototype.retrieve = function () {
 					$.extend(iglooUserSettings, JSON.parse(mw.user.options.get('userjs-igloo')));
 				}
 
-				for (var defaultSetting in iglooUserSettings) {
-					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(defaultSetting) + '&value=' + encodeURIComponent(iglooUserSettings[defaultSetting]) + '&session=' + igloo.sessionKey, true);
+				for (var origSetting in iglooUserSettings) {
+					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(origSetting) + '&value=' + encodeURIComponent(iglooUserSettings[origSetting]) + '&session=' + igloo.sessionKey, true);
 				}
 			}
 		};
@@ -1358,11 +1417,24 @@ iglooSettings.prototype.set = function (setting, value, cb) {
 
 iglooSettings.prototype.buildInterface = function () {
 	var settingsButton = document.createElement('div'),
+		qActions = {
+			warn: "Warn User (no revert)",
+			report: "Report User",
+			talk: "Go to page talk on Wikipedia",
+			diff: "View diff on Wikipedia",
+			stats: "View basic user info"
+		},
 		me = this;
 
 	settingsButton.id = 'igloo-settings';
 	settingsButton.innerHTML = '<img title="Modify Igloo Settings" src= "' + iglooConfiguration.fileHost + 'images/igloo-settings.png">';
 	
+	this.dropdown = new iglooDropdown('igloo-qactions', "igloo.cogs", qActions, 'igQActions',  {
+		top: 113,
+		right: '5px',
+		where: 'right'
+	}, ''); 
+
 	$(settingsButton).click(function () {
 		me.show();
 	});
@@ -1399,6 +1471,49 @@ iglooSettings.prototype.buildInterface = function () {
 	});
 
 	igloo.log('igloo: prepped settings main');
+};
+
+iglooSettings.prototype.go = function (action) {
+	/*qActions = {
+			warn: "Warn User (no revert)",
+			report: "Report User",
+			talk: "Go to page talk on Wikipedia",
+			diff: "View diff on Wikipedia",
+			stats: "View basic user info"
+		},*/
+	var me = this;
+	switch (action) {
+		case 'warn':
+			var wdText = '<div>Please select what you would like to warn the user for:</div><div><select id="glooWarn">';
+
+			for (var og in iglooUserSettings.warnSummaries) {
+				var optgroup = '<optgroup label="' + iglooUserSettings.warnSummaries[og] + '">';
+				for (var opt in iglooUserSettings.warnSummaries[og]) {
+					optgroup += '<option value="' + opt + '">' + iglooUserSettings.warnSummaries[og][opt] + '</option>';
+				}
+
+				wdText += optgroup;
+			}
+
+			wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="igloo.cogs.dialogs.warn.hide(); igloo.actions.warnUser(\''+ document.getElementById('glooWarn').value +'\'">Warn User</a>--</div>';
+
+			me.dialogs.warn = new iglooPopup(wdText);
+			me.dialogs.warn.buildInterface();
+			me.dialogs.warn.show();
+			break;
+		case 'report':
+			var makeSure = confirm('Are you sure you want to report this user to ARV');
+			igloo.actions.reportUser();
+			break;
+		case 'talk':
+			igloo.actions.gotoTalk();
+			break;
+		case 'diff':
+			igloo.actions.gotoDiff();
+			break;
+		case 'stats':
+			break;
+	}
 };
 		
 iglooSettings.prototype.show = function () {
@@ -1623,7 +1738,7 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 					}
 				}));
 
-				/*cont.innerHTML += "<br/>";
+				cont.innerHTML += "<br/>";
 
 				$(cont).append(me.createOption('Hide Bot edits', 'hideBot', {
 					type: "checkbox",
@@ -1638,7 +1753,42 @@ iglooSettings.prototype.switchtab = function ( tabid ) {
 							}
 						});
 					}
-				}));*/
+				}));
+
+				cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('Watch pages whose edits you revert', 'watchRollbacked', {
+					type: "checkbox",
+					checked: iglooUserSettings.watchRollbacked ? true : false,
+					onchange: function () {
+						var el = $(this);
+						igloo.cogs.set("watchRollbacked", el.prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.watchRollbacked = el.prop('checked');
+							} else {
+								el.attr('checked', !el.prop('checked'));
+							}
+						});
+					}
+				}));
+
+				cont.innerHTML += "<br/>";
+
+				$(cont).append(me.createOption('Watch pages you tag for deletion', 'watchTagged', {
+					type: "checkbox",
+					checked: iglooUserSettings.watchTagged ? true : false,
+					onchange: function () {
+						var el = $(this);
+						igloo.cogs.set("watchTagged", el.prop('checked'), function (res) {
+							if (res) {
+								iglooUserSettings.watchTagged = el.prop('checked');
+							} else {
+								el.attr('checked', !el.prop('checked'));
+							}
+						});
+					}
+				}));
+
 			cont.innerHTML += '</table></div>';
 			
 			tabcont.appendChild(cont);
@@ -2125,39 +2275,62 @@ function iglooCSD (page, csdtype) {
 	this.csdtype = csdtype;
 }
 
-iglooCSD.prototype.doCSD = function () {
-	var me = this, csdsummary;
-	if(iglooUserSettings.mesysop === true) {
-		csdsummary = iglooConfiguration.csdSummary.admin;
-		csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
+iglooCSD.prototype.doCSD = function (callback) {
+	var me = this;
+	switch (callback) {
+		default: case 0:
+			var csdsummary;
+			if(iglooUserSettings.mesysop === true) {
+				csdsummary = iglooConfiguration.csdSummary.admin;
+				csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
 
-		var deleteConfirm = confirm('Are you sure you wish to delete ' + me.pageTitle + ' ?');
+				var deleteConfirm = confirm('Are you sure you wish to delete ' + me.pageTitle + ' ?');
 
-		if (deleteConfirm !== true) return;
+				if (deleteConfirm !== true) return;
 
-		var deletePage = new iglooRequest({
-			module: 'delete',
-			params: { targ: me.pageTitle, summary: csdsummary },
-			callback: function (data) { 
-				igloo.statusLog.addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!');
+				var deletePage = new iglooRequest({
+					module: 'delete',
+					params: { targ: me.pageTitle, summary: csdsummary },
+					callback: function (data) { 
+						igloo.statusLog.addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!');
+					}
+				}, 0, true, true);
+				deletePage.run();
+			} else {
+				var csdmessage = iglooConfiguration.csdTemplate.replace('%CSDTYPE%', me.csdtype) + '\n\n';
+				
+				csdsummary = iglooConfiguration.csdSummary.user;
+
+				var tagCSD = new iglooRequest({
+					module: 'edit',
+					params: { targ: me.pageTitle, isMinor: false, text: csdmessage, summary: csdsummary, where: 'prependtext' },
+					callback: function (data) {
+						igloo.statusLog.addStatus('Successfully issued a csd tag on <strong>' + me.pageTitle + '</strong>!');
+						if (iglooUserSettings.watchTagged) {
+							me.doCSD(1);
+						} else {
+							igloo.statusLog.addStatus('Notifying page creator...');
+							me.notifyUser();
+						}			
+					}
+				}, 0, true, true);
+				tagCSD.run();
 			}
-		}, 0, true, true);
-		deletePage.run();
-	} else {
-		var csdmessage = iglooConfiguration.csdTemplate.replace('%CSDTYPE%', me.csdtype) + '\n\n';
-		
-		csdsummary = iglooConfiguration.csdSummary.user;
+			break;
 
-		var tagCSD = new iglooRequest({
-			module: 'edit',
-			params: { targ: me.pageTitle, isMinor: false, text: csdmessage, summary: csdsummary, where: 'prependtext' },
-			callback: function (data) {
-				igloo.statusLog.addStatus('Successfully issued a csd tag on <strong>' + me.pageTitle + '</strong>!');
-				igloo.statusLog.addStatus('Notifying page creator...');
-				me.notifyUser();				
-			}
-		}, 0, true, true);
-		tagCSD.run();
+		case 1:
+			igloo.statusLog.addStatus('Adding <strong>' + me.pageTitle + '</strong> to watchlist...');
+			// watch tagged page
+			var watchCSD = new iglooRequest({
+				module: 'watch',
+				params: { targ: me.pageTitle },
+				callback: function (data) {
+					igloo.statusLog.addStatus('Added <strong>' + me.pageTitle + '</strong> to watchlist!');
+					me.notifyUser();
+				}
+			}, 0, true, true);
+			watchCSD.run();
+			break;
 	}
 };
  
@@ -2388,7 +2561,7 @@ iglooBan.prototype.go = function (callback, data) {
 			// If we reach a final warning, remember that no further action is required if the user is already blocked!
 			var blockCheck = new iglooRequest({
 				module: 'question',
-				params: 'action=query&list=blocks&bkusers=' + thisRevert.revertUser,
+				params: 'action=query&list=blocks&bkusers=' + me.revertUser,
 				callback: function (data) {
 					me.go(1, data);
 				}
@@ -2399,11 +2572,12 @@ iglooBan.prototype.go = function (callback, data) {
 		case 1:
 			// If already blocked, tell and exit.
 			if (data.query.blocks[0] !== "undefined") {
-				igloo.statusLog.addStatus( 'igloo will take no further action because <strong>' + thisRevert.revertUser + '</strong> is currently blocked.' );
+				igloo.statusLog.addStatus( 'igloo will take no further action because <strong>' + me.revertUser + '</strong> is currently blocked.' );
 				return false;
 			}
 
 			me.block.setUpBlock();
+			break;
 	}
 };
 
@@ -2459,7 +2633,7 @@ iglooBlock.prototype.startBlock = function (callback, details) {
 iglooBlock.prototype.autoBlock = function (details) {
 	// autoblocking - decide on the best warning
 	// pick the best warning length
-	var lastlength = 'neverblocked';
+	var lastlength = 'neverblocked', me = this;
 	me.useduration = iglooConfiguration.blockIncrement[iglooConfiguration.blockDefault];
 	if (details.query.logevents !== null) {
 		if (details.query.logevents.length === 1) {
@@ -2555,6 +2729,8 @@ iglooBlock.prototype.autoBlock = function (details) {
 };
 
 iglooBlock.prototype.setUpBlock = function (details) {
+	var me = this;
+
 	if (details === 'error') {
 		// something went wrong. Abort and report user.
 		igloo.statusLog.addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: an error occurred! Will now report...');
@@ -2638,6 +2814,7 @@ iglooBlock.prototype.setUpBlock = function (details) {
 			
 iglooBlock.prototype.doBlock = function () {
 	// DO THE BLOCK! Note that this function can be called even without reverting any page.
+	var me = this;
 	if (!me.useduration || !me.usetemplate || !me.currentUser) {
 		if (!me.currentUser) me.currentUser = 'no user supplied';
 		igloo.statusLog.addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: an error occurred!'); 
@@ -2667,12 +2844,13 @@ iglooBlock.prototype.doBlock = function () {
 };
 
 iglooBlock.prototype.notifyUser = function () {
-	igloo.statusLog.addStatus ( 'Notifying <strong>' + me.currentUser + '</strong> of block (duration: ' + me.useduration + ')...' );
-	var message = me.usetemplate;
+	var me = this,
+		summary = 'Notifying user of block ' + glooSig,
+		message = me.usetemplate;
 		message = message.replace(/%DURATION%/g, me.useduration);			
 		message = '\n\n{{' + message + '}}';
 
-	var summary = 'Notifying user of block ' + glooSig;
+	igloo.statusLog.addStatus ( 'Notifying <strong>' + me.currentUser + '</strong> of block (duration: ' + me.useduration + ')...' );
 
 	var notifyBlock = new iglooRequest({
 		module: 'edit',
@@ -2834,50 +3012,74 @@ iglooRollback.prototype.go = function (type, isCustom) {
 };
 
 iglooRollback.prototype.performRollback = function (callback, details) {
-	var noMessage = 'You cannot revert this edit to ' + this.pageTitle + ', ',
-		summary = '',
-		thisRevert = this;
-	
-	// check that reversion is switched on
-	if (igloo.justice.reversionEnabled === 'no') { 
-		alert(noMessage + 'because you made it using igloo');  
-		return false; 
-	}
+	var thisRevert = this;
 
-	if (igloo.justice.reversionEnabled === 'pause') { 
-		alert(noMessage + 'because a diff is still loading'); 
-		return false; 
-	}
+	switch (callback) {
+		default: case 0: 
+			var noMessage = 'You cannot revert this edit to ' + this.pageTitle + ', ',
+				summary = '';
 
-	// notify user
-	igloo.statusLog.addStatus('Attempting to revert the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>...');
+			// check that reversion is switched on
+			if (igloo.justice.reversionEnabled === 'no') { 
+				alert(noMessage + 'because you made it using igloo');  
+				return false; 
+			}
 
-	// prevent interference with this page while we are reverting it
-	igloo.justice.reversionEnabled = 'pause';
-					
-	// let the user know we're working...
-	document.getElementById('iglooPageTitle').innerHTML = document.getElementById('iglooPageTitle').innerHTML + ' - reverting edit...';
+			if (igloo.justice.reversionEnabled === 'pause') { 
+				alert(noMessage + 'because a diff is still loading'); 
+				return false; 
+			}
 
-	// build the reversion summary
-	summary = (thisRevert.isCustom === true) ? (thisRevert.revType + ' ' + glooSig) : iglooConfiguration.rollbackSummary[thisRevert.revType];
-					
-	// attempt the actual rollback
-	var thisReversion = new iglooRequest({
-		module: 'rollback',
-		params: { targ: thisRevert.pageTitle, user: thisRevert.revertUser, summary: summary },
-		callback: function (data) {
-			if (data === false) {
-				igloo.statusLog.addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because another user has already done so.');
-				if (thisRevert.pageTitle === igloo.justice.pageTitle) {
-					igloo.justice.reversionEnabled = 'no';
+			// notify user
+			igloo.statusLog.addStatus('Attempting to revert the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>...');
+
+			// prevent interference with this page while we are reverting it
+			igloo.justice.reversionEnabled = 'pause';
+							
+			// let the user know we're working...
+			document.getElementById('iglooPageTitle').innerHTML = document.getElementById('iglooPageTitle').innerHTML + ' - reverting edit...';
+
+			// build the reversion summary
+			summary = (thisRevert.isCustom === true) ? (thisRevert.revType + ' ' + glooSig) : iglooConfiguration.rollbackSummary[thisRevert.revType];
+							
+			// attempt the actual rollback
+			var thisReversion = new iglooRequest({
+				module: 'rollback',
+				params: { targ: thisRevert.pageTitle, user: thisRevert.revertUser, summary: summary },
+				callback: function (data) {
+					if (typeof data.error !== "undefined") {
+						igloo.statusLog.addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because another user has already done so.');
+						if (thisRevert.pageTitle === igloo.justice.pageTitle) {
+							igloo.justice.reversionEnabled = 'no';
+						}
+					} else {
+						igloo.statusLog.addStatus('Successfully reverted the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>!');
+						thisRevert.performRollback(1);
+					}
 				}
+			}, 0, true, true);
+			thisReversion.run();
+
+			break;
+
+		case 1:
+			if (iglooUserSettings.watchRollbacked) {
+				// watch rollbacked page
+				var pageWatch = new iglooRequest({
+					module: 'watch',
+					params: { targ: thisRevert.pageTitle },
+					callback: function (data) {
+						igloo.statusLog.addStatus('Added <strong>' + thisRevert.pageTitle + '</strong> to watchlist!');
+						thisRevert.warnUser();
+					}
+				}, 0, true, true);
+				pageWatch.run();
 			} else {
-				igloo.statusLog.addStatus('Successfully reverted the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>!');
 				thisRevert.warnUser();
 			}
-		}
-	}, 0, true, true);
-	thisReversion.run();
+
+			break;
+	}
 };
 		
 iglooRollback.prototype.warnUser = function(callback, details) {
@@ -3272,7 +3474,6 @@ function iglooDropdownManager () {
 		}
 	};
 }
-
 
 //Class iglooDropdown- handles dropdowns
 function iglooDropdown (name, module, list, prefix, position, endtext, loadText, reload) {
