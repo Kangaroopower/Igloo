@@ -107,7 +107,7 @@ var iglooConfiguration = {
 	userBlockSettings: '&autoblock=&nocreate=&allowusertalk=', // this should take the form of an API block settings string, and will be attached to the api request (default string)
 
 	//Warns w/o reverts
-	warnSummaries = { //Credit to Twinkle for compiling these
+	warnSummaries: { //Credit to Twinkle for compiling these
 		"Common warnings": {
 			"uw-vandalism": "Vandalism",
 			"uw-disruptive": "Disruptive editing",
