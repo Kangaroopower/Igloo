@@ -2561,7 +2561,7 @@ iglooBan.prototype.go = function (callback, data) {
 			// If we reach a final warning, remember that no further action is required if the user is already blocked!
 			var blockCheck = new iglooRequest({
 				module: 'question',
-				params: 'action=query&list=blocks&bkusers=' + me.revertUser,
+				params: '?action=query&list=blocks&bkusers=' + me.revertUser,
 				callback: function (data) {
 					me.go(1, data);
 				}
@@ -2602,7 +2602,7 @@ iglooBlock.prototype.startBlock = function (callback, details) {
 			// analyze user
 			var getBlocks = new iglooRequest({
 				module: 'question',
-				params: 'action=query&list=logevents&letype=block&letitle=User:' + me.currentUser,
+				params: '?action=query&list=logevents&letype=block&letitle=User:' + me.currentUser,
 				callback: function (data) {
 					me.startBlock(1, data);
 				}
@@ -3324,7 +3324,7 @@ iglooRollback.prototype.handleFinalWarning = function (callback, data) {
 			// If we reach a final warning, remember that no further action is required if the user is already blocked!
 			var blockCheck = new iglooRequest({
 				module: 'question',
-				params: 'action=query&list=blocks&bkusers=' + thisRevert.revertUser,
+				params: '?action=query&list=blocks&bkusers=' + thisRevert.revertUser,
 				callback: function (data) {
 					thisRevert.handleFinalWarning(1, data);
 				}
