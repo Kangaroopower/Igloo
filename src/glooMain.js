@@ -1099,7 +1099,7 @@ iglooRevision.prototype.display = function () {
 	$('#igloo-search-error').html('');
 
 	//You can get the pageHistory/csd of new pages and diffs
-	igloo.fireEvent(['csd', 'history', 'actions'], 'new-diff', {
+	igloo.fireEvent(['csd', 'history', 'block', 'actions'], 'new-diff', {
 		pageTitle: me.pageTitle,
 		revId: me.revId,
 		user: me.user
