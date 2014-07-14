@@ -2789,7 +2789,7 @@ iglooBlock.prototype.setUpBlock = function (details) {
 	var blockInfoPopup = new iglooPopup(content);
 		blockInfoPopup.show();
 	
-	$('#igloo-finish-block').clickfunction () { 
+	$('#igloo-finish-block').click(function () { 
 		// set settings
 		if (document.getElementById ('iglooBlock-duration-b').value === '') {
 			me.useduration = document.getElementById ('iglooBlock-duration-a').value;
