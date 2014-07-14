@@ -2704,7 +2704,8 @@ iglooBlock.prototype.autoBlock = function (details) {
 			'<span style="padding-left: 10px;">user: ' + me.currentUser + '<br />duration: ' + me.useduration + ' (last blocked for: ' + lastlength + ')<br />block template: ' + me.usetemplate +
 			'</span><br /><br /><span id="igloo-just-do-block" style="cursor: pointer;">perform this block (recommended)</span> | <span id="igloo-adjust-block" style="cursor: pointer;">adjust block settings</span> | <span id="igloo-abort-block" style="cursor: pointer;">abort block (report user)</span>',
 		autoBlockPopup = new iglooPopup('<div><span style="width: 100%; border-bottom: 1px solid #000;"><strong>igloo needs your permission to continue...</strong></span><br /><div style="text-align: left; margin-left: 10px; width: 90%; color: #222222;">' + message + '</div></div>', 500, 130);
-		
+	
+	autoBlockPopup.buildInterface();
 	autoBlockPopup.show();
 	igloo.actions.stopActions = true;
 	
@@ -2787,6 +2788,7 @@ iglooBlock.prototype.setUpBlock = function (details) {
 	content += '</table></span>';
 
 	var blockInfoPopup = new iglooPopup(content);
+		blockInfoPopup.buildInterface();
 		blockInfoPopup.show();
 	
 	$('#igloo-finish-block').click(function () { 
