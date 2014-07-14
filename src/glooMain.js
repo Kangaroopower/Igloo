@@ -2772,14 +2772,14 @@ iglooBlock.prototype.setUpBlock = function (details) {
 	content += '<div style="padding-left: 15px;"><span style="width: 100%; border-bottom: 1px solid #000; font-size: 16px; font-weight: bold;">Block user</span><br />You are blocking a user - select the block options from below. Remember that you are responsible for all blocks made using your account.';
 	content += '<br /><br />';
 	//content += '<div style="float: right; width: 200px; height: 100px;">' + t2 + '</div>';
-	content += '<table style="border: none; width: 700px; background-color: #ccccff;">';
-	content += '<tr><td width="140px">Username:</td><td><input id="iglooBlock-username" style="width: 200px;" type="text" ' + disabled + ' value="' + me.currentUser + '" />' + lastlength + '</td></tr>';
+	content += '<table style="border: none; width: 700px;>';
+	content += '<tr><td width="140px">Username:</td><td><input id="iglooBlock-username" style="width: 200px;" type="text" ' + disabled + ' value="' + me.user + '" />' + lastlength + '</td></tr>';
 	content += '<tr><td width="140px">Duration:</td><td><select style="width: 205px;" id="iglooBlock-duration-a">' + t + '</select> (or type) <input id="iglooBlock-duration-b" style="width: 200px;" type="text" /></td></tr>';
 	content += '<tr><td width="140px">Reason:</td><td><input id="iglooBlock-reason" style="width: 200px;" type="text" value="' + me.blockReason + '" /></td></tr>';
 	content += '<tr><td width="140px">Notify with template (igloo will automatically add \'{{\' and \'}}\'): </td><td><input id="iglooBlock-template" style="width: 200px;" type="text" value="' + me.usetemplate + '" /></td></tr>';
 	content += '<tr><td colspan="2" height="30px" style="margin-top: 30px; font-weight: bold;">Details:</td></tr>';
 	content += '<tr><td colspan="2">';
-		content += '<table width="150px" style="margin-left: 10px; background-color: #ccccff;"><tr>';
+		content += '<table width="150px" style="margin-left: 10px;"><tr>';
 		content += '<td width="120px">Autoblock: </td><td><input  ' + me.checked.auto + ' id="iglooBlock-autoblock" type="checkbox" /></td></tr><tr><td width="120px">Anon only: </td><td><input  ' + me.checked.anon + ' id="iglooBlock-anononly" type="checkbox" /></td></tr><tr><td width="120px">Block acc create: </td><td><input  ' + me.checked.create + ' id="iglooBlock-blockcreate" type="checkbox" /></td></tr><tr>';
 		content += '<td width="120px">Block talk: </td><td><input  ' + me.checked.talk + ' id="iglooBlock-blocktalk" type="checkbox" /></td></tr><tr><td width="120px">Block email: </td><td><input  ' + me.checked.email + ' id="iglooBlock-blockemail" type="checkbox" /></td>';
 		content += '</tr></table>';
