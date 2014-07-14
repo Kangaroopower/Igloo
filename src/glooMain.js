@@ -2787,7 +2787,7 @@ iglooBlock.prototype.setUpBlock = function (details) {
 	content += '</table></span>';
 
 	var blockInfoPopup = new iglooPopup(content);
-	blockInfoPopup(content);
+		blockInfoPopup.show();
 	
 	document.getElementById ('igloo-finish-block').onclick = function () { 
 		// set settings
