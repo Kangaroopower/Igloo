@@ -2561,7 +2561,7 @@ iglooBan.prototype.go = function (callback, data) {
 			// If we reach a final warning, remember that no further action is required if the user is already blocked!
 			var blockCheck = new iglooRequest({
 				module: 'question',
-				params: '?action=query&list=blocks&bkusers=' + me.revertUser,
+				params: '?action=query&list=blocks&bkusers=' + me.user,
 				callback: function (data) {
 					me.go(1, data);
 				}
@@ -2571,8 +2571,8 @@ iglooBan.prototype.go = function (callback, data) {
 			
 		case 1:
 			// If already blocked, tell and exit.
-			if (data.query.blocks[0] !== "undefined") {
-				igloo.statusLog.addStatus( 'igloo will take no further action because <strong>' + me.revertUser + '</strong> is currently blocked.' );
+			if (data.query.blocks.length !== 0) {
+				igloo.statusLog.addStatus( 'igloo will take no further action because <strong>' + me.user + '</strong> is currently blocked.' );
 				return false;
 			}
 
@@ -2789,7 +2789,7 @@ iglooBlock.prototype.setUpBlock = function (details) {
 	var blockInfoPopup = new iglooPopup(content);
 		blockInfoPopup.show();
 	
-	document.getElementById ('igloo-finish-block').onclick = function () { 
+	$('#igloo-finish-block').clickfunction () { 
 		// set settings
 		if (document.getElementById ('iglooBlock-duration-b').value === '') {
 			me.useduration = document.getElementById ('iglooBlock-duration-a').value;
@@ -2809,7 +2809,7 @@ iglooBlock.prototype.setUpBlock = function (details) {
 		
 		me.doBlock();
 		return; // done!
-	};	
+	});	
 };
 			
 iglooBlock.prototype.doBlock = function () {
