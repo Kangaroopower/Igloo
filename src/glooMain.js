@@ -2784,14 +2784,22 @@ iglooBlock.prototype.setUpBlock = function (details) {
 		content += '<td width="120px">Block talk: </td><td><input  ' + me.checked.talk + ' id="iglooBlock-blocktalk" type="checkbox" /></td></tr><tr><td width="120px">Block email: </td><td><input  ' + me.checked.email + ' id="iglooBlock-blockemail" type="checkbox" /></td>';
 		content += '</tr></table>';
 	content += '</td></tr>';
-	content += '<tr><td colspan="2" height="50px" style="margin-top: 50px; font-weight: bold;"><input id="igloo-finish-block" type="button" value="Block" onclick="igloo.iglooPopup.hide(); igloo.piano.mode = \'default\';" /> | <input type="button" value="Cancel" onclick="igloo.iglooPopup.hide(); igloo.piano.mode = \'default\';" /></td></tr>';
+	content += '<tr><td colspan="2" height="50px" style="margin-top: 50px; font-weight: bold;"><input id="igloo-finish-block" type="button" value="Block" /> | <input id="igloo-block-cancel" type="button" value="Cancel" /></td></tr>';
 	content += '</table></span>';
 
 	var blockInfoPopup = new iglooPopup(content);
 		blockInfoPopup.buildInterface();
 		blockInfoPopup.show();
+
+	$('#igloo-block-cancel').click(function () {
+		blockInfoPopup.hide();
+		igloo.piano.mode = 'default';
+	});
 	
 	$('#igloo-finish-block').click(function () { 
+		blockInfoPopup.hide();
+		igloo.piano.mode = 'default';
+
 		// set settings
 		if (document.getElementById ('iglooBlock-duration-b').value === '') {
 			me.useduration = document.getElementById ('iglooBlock-duration-a').value;
