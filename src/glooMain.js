@@ -1429,7 +1429,7 @@ iglooSettings.prototype.buildInterface = function () {
 	settingsButton.id = 'igloo-settings';
 	settingsButton.innerHTML = '<img title="Modify Igloo Settings" src= "' + iglooConfiguration.fileHost + 'images/igloo-settings.png">';
 	
-	this.dropdown = new iglooDropdown('igloo-qactions', "igloo.cogs", qActions, 'igQActions',  {
+	this.dropdown = new iglooDropdown('igloo-settings', "igloo.cogs", qActions, 'igQActions',  {
 		top: 113,
 		right: '5px',
 		where: 'right'
