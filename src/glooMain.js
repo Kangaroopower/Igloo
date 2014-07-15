@@ -1463,6 +1463,9 @@ iglooSettings.prototype.buildInterface = function () {
 
 	igloo.toolPane.panel.appendChild(settingsButton);
 
+	//dropdown
+	this.dropdown.buildInterface();
+
 	igloo.piano.register('f5', 'settings', function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
