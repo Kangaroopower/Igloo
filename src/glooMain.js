@@ -1130,6 +1130,9 @@ iglooRevision.prototype.display = function () {
 
 		//Append history module
 		igloo.past.dropdown.loadModule();
+
+		//Append quick actions module
+		igloo.cogs.dropdown.loadModule();
 		
 		// Append new content.
 		igloo.diffContainer.panel.appendChild(h2);
@@ -1190,6 +1193,9 @@ iglooRevision.prototype.display = function () {
 
 			//Append history module
 			igloo.past.dropdown.loadModule();
+
+			//Append Quick Actions module
+			igloo.cogs.dropdown.loadModule();
 
 			// Append new content.
 			dispWhat = (this.diffContent === "") ? same : table;
