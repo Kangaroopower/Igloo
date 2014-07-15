@@ -2797,9 +2797,6 @@ iglooBlock.prototype.setUpBlock = function (details) {
 	});
 	
 	$('#igloo-finish-block').click(function () { 
-		blockInfoPopup.hide();
-		igloo.piano.mode = 'default';
-
 		// set settings
 		if (document.getElementById ('iglooBlock-duration-b').value === '') {
 			me.useduration = document.getElementById ('iglooBlock-duration-a').value;
@@ -2816,6 +2813,9 @@ iglooBlock.prototype.setUpBlock = function (details) {
 		if (document.getElementById ('iglooBlock-anononly').checked === true) me.customsettings.onlyanon = true;
 		if (document.getElementById ('iglooBlock-blockemail').checked === true) me.customsettings.noemail = true;
 		if (document.getElementById ('iglooBlock-blockcreate').checked === true) me.customsettings.nocreate = true;
+
+		blockInfoPopup.hide();
+		igloo.piano.mode = 'default';
 		
 		me.doBlock();
 		return; // done!
