@@ -21,7 +21,13 @@ var _iglooViewable = new iglooViewable();
 //igloo meta variables used in many other places
 var glooLocalBase = 'Wikipedia:Igloo',
 	glooSig = '([['+ glooLocalBase +'|GLOO]])',
-	igloo; //the instance of iglooMain that's actually used.
+	//the instance of iglooMain that's actually used. Starts off with only one function, extendProto, that's needed for compile
+	igloo = {
+		extendProto: function (func, extendWith) {
+			func.prototype = $.extend(extendWith(), func.prototype);
+		}
+	},
+	iglooF;
 
 // Class iglooConfiguration
 	/*
@@ -3893,3 +3899,18 @@ Array.prototype.iglast = function () {
 /*
 	COMPLETE ==========================
 	*/
+
+// MAIN
+function iglooHandleLaunch (data) {
+	this.data = data || {};
+
+	this.run  = function () {
+		if (typeof igloo !== 'function') {
+			igloo = new iglooMain();
+			iglooF = igloo.fetchModule;
+		}
+
+		igloo.load(data);
+		igloo.announce('core');
+	};
+}
