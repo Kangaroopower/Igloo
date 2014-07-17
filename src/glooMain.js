@@ -283,12 +283,12 @@ function iglooMain () {
 
 		this.currentView = new iglooView();
 		this.registerModule([
-			{'recentChanges': new iglooRecentChanges()},
-			{'contentManager': new iglooContentManager()},
-			{'statusLog': new iglooStatus()},
-			{'actions': new iglooActions()},
-			{'dropManager': new iglooDropdownManager()},
-			{'piano': new iglooKeys()}
+			{name: 'recentChanges', obj: new iglooRecentChanges()},
+			{name: 'contentManager', obj: new iglooContentManager()},
+			{name: 'statusLog', obj: new iglooStatus()},
+			{name: 'actions', obj: new iglooActions()},
+			{name: 'dropManager', obj: new iglooDropdownManager()},
+			{name: 'piano', obj: new iglooKeys()}
 		]);
 
 		iglooF('recentChanges').update();
