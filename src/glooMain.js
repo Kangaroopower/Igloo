@@ -502,7 +502,7 @@ function iglooMain () {
 	};
 
 	this.fetchModule = function (module) {
-		return this.modules[module];
+		return igloo.modules[module];
 	};
 
 	this.bindKeys = function () {
