@@ -492,9 +492,11 @@ function iglooMain () {
 	this.registerModule = function (module, obj) {
 		if (typeof obj === 'undefined') {
 			if (typeof module === 'object') {
-				this.registerModule(module.name, module.obj);
-			} else {
-				for (var i = 0; i < module.length; i++) this.registerModule(module[i].name, module[i].obj);
+				if ($.isArray(module)) {
+					for (var i = 0; i < module.length; i++) this.registerModule(module[i].name, module[i].obj);
+				} else {
+					this.registerModule(module.name, module.obj);
+				}
 			}
 		} else {
 			this.modules[module] = obj;
