@@ -237,6 +237,7 @@ function iglooMain () {
 
 	this.currentView = null;
 	
+	this.listeners = {};
 	this.modules = {};
 
 	//igloo's logger
@@ -264,8 +265,8 @@ function iglooMain () {
 		}
 
 		//Settings
-		this.cogs = new iglooSettings();
-		this.cogs.retrieve();
+		this.registerModule('cogs', new iglooSettings());
+		iglooF('cogs').retrieve();
 
 		//Launch
 		this.launch();
@@ -275,18 +276,20 @@ function iglooMain () {
 		this.buildInterface();
 
 		this.currentView = new iglooView();
-		this.recentChanges = new iglooRecentChanges();
-		this.contentManager = new iglooContentManager();
-		this.statusLog = new iglooStatus();
-		this.actions = new iglooActions();
-		this.dropManager = new iglooDropdownManager();
-		this.piano = new iglooKeys();
+		this.registerModule([
+			{'recentChanges': new iglooRecentChanges()},
+			{'contentManager': new iglooContentManager()},
+			{'statusLog': new iglooStatus()},
+			{'actions': new iglooActions()},
+			{'dropManager': new iglooDropdownManager()},
+			{'piano': new iglooKeys()}
+		]);
 
-		this.recentChanges.update();
-		this.recentChanges.setTickTime(iglooUserSettings.updateTime * 1000);
-		this.statusLog.buildInterface();
+		iglooF('recentChanges').update();
+		iglooF('recentChanges').setTickTime(iglooUserSettings.updateTime * 1000);
+		iglooF('statusLog').buildInterface();
 		this.currentView.displayWelcome();
-		this.cogs.buildInterface();
+		iglooF('cogs').buildInterface();
 
 		this.announce('actions');
 		this.announce('settings');
@@ -382,14 +385,14 @@ function iglooMain () {
 		EVENTS ==================
 		*/
 	this.announce = function (moduleName) {
-		if (!this.modules[moduleName]) this.modules[moduleName] = {};
-		this.modules[moduleName]['exists'] = true;
-		this.modules[moduleName]['ready'] = true;
+		if (!this.listeners[moduleName]) this.listeners[moduleName] = {};
+		this.listeners[moduleName]['exists'] = true;
+		this.listeners[moduleName]['ready'] = true;
 	};
 
 	this.isModuleReady = function (moduleName) {
-		if (!this.modules[moduleName]) return false;
-		return this.modules[moduleName]['ready'];
+		if (!this.listeners[moduleName]) return false;
+		return this.listeners[moduleName]['ready'];
 	};
 
 	this.hookEvent = function (moduleName, hookName, func) {
@@ -402,16 +405,16 @@ function iglooMain () {
 				me.hookEvent(moduleName, hookName[hook], func);
 			}
 		} else {
-			if (!this.modules[moduleName]) { 
-				this.modules[moduleName] = {};
-				this.modules[moduleName]['exists'] = true;
-				this.modules[moduleName]['ready'] = false; 
+			if (!this.listeners[moduleName]) { 
+				this.listeners[moduleName] = {};
+				this.listeners[moduleName]['exists'] = true;
+				this.listeners[moduleName]['ready'] = false; 
 			}
 
-			if (!this.modules[moduleName][hookName]) {
-				this.modules[moduleName][hookName] = [func];
+			if (!this.listeners[moduleName][hookName]) {
+				this.listeners[moduleName][hookName] = [func];
 			} else {
-				this.modules[moduleName][hookName].push(func);
+				this.listeners[moduleName][hookName].push(func);
 			}
 
 			return 0;
@@ -419,11 +422,11 @@ function iglooMain () {
 	};
 
 	this.unhookEvent = function (moduleName, hookName, func) {
-		if (this.modules[moduleName]) {
-			if (this.modules[moduleName][hookName]) {
-				for (var i = 0; i < this.modules[moduleName][hookName].length; i++) {
-					if (this.modules[moduleName][hookName][i] === func)
-						this.modules[moduleName][hookName][i] = null;
+		if (this.listeners[moduleName]) {
+			if (this.listeners[moduleName][hookName]) {
+				for (var i = 0; i < this.listeners[moduleName][hookName].length; i++) {
+					if (this.listeners[moduleName][hookName][i] === func)
+						this.listeners[moduleName][hookName][i] = null;
 				}
 			}
 		}
@@ -436,11 +439,11 @@ function iglooMain () {
 				me.fireEvent(moduleName[module], hookName, data);
 			}
 		} else {
-			if (this.modules[moduleName]) {
-				if (this.modules[moduleName][hookName]) {
-					for (var i = 0; i < this.modules[moduleName][hookName].length; i++) {
-						if (this.modules[moduleName][hookName][i] !== null)
-							this.modules[moduleName][hookName][i](data, hookName);
+			if (this.listeners[moduleName]) {
+				if (this.listeners[moduleName][hookName]) {
+					for (var i = 0; i < this.listeners[moduleName][hookName].length; i++) {
+						if (this.listeners[moduleName][hookName][i] !== null)
+							this.listeners[moduleName][hookName][i](data, hookName);
 					}
 				}
 			}
@@ -448,50 +451,70 @@ function iglooMain () {
 	};
 
 	this.loadModules = function () {
-		this.justice = new iglooReversion();
-		this.justice.buildInterface();
+		this.registerModule('justice', new iglooReversion());
+		iglooF('justice').buildInterface();
 		this.announce('rollback');
 
-		this.trash = new iglooDelete();
-		this.trash.buildInterface();
+		this.registerModule('trash', new iglooDelete());
+		iglooF('trash').buildInterface();
 		this.announce('csd');
 
-		this.archives = new iglooArchive();
-		this.archives.buildInterface();
+		this.registerModule('archives', new iglooArchive());
+		iglooF('archives').buildInterface();
 		this.announce('archives');
 
-		this.detective = new iglooSearch();
-		this.detective.buildInterface();
+		this.registerModule('detective', new iglooSearch());
+		iglooF('detective').buildInterface();
 		this.announce('search');
 
-		this.hammer = new iglooBan();
-		this.hammer.buildInterface();
+		this.registerModule('hammer', new iglooBan());
+		iglooF('hammer').buildInterface();
 		this.announce('block');
 
-		this.past = new iglooPast();
-		this.past.buildInterface();
+		this.registerModule('past', new iglooPast());
+		iglooF('past').buildInterface();
 		this.announce('hist');
 
 		this.bindKeys();
 		this.fireEvent('core', 'modules-loaded', true);
 	};
 
+	this.extendProto = function (func, extendWith) {
+		func.prototype = $.extend(extendWith(), func.prototype);
+	};
+
+	this.registerModule = function (module, obj) {
+		if (typeof obj === 'undefined') {
+			if (typeof module === 'object') {
+				this.registerModule(module.name, module.obj);
+			} else {
+				for (var i = 0; i < module.length; i++) this.registerModule(module[i].name, module[i].obj);
+			}
+		} else {
+			this.modules[module] = obj;
+		}
+	};
+
+	this.fetchModule = function (module) {
+		return this.modules[module];
+	};
+
 	this.bindKeys = function () {
 		if (iglooUserSettings.upDownKeys) {
-			this.piano.register('up', 'default', function () {
-				igloo.recentChanges.browseFeed(-1);
+			iglooF('piano').register('up', 'default', function () {
+				iglooF('recentChanges').browseFeed(-1);
 			});
 
-			this.piano.register('down', 'default', function () {
-				igloo.recentChanges.browseFeed(1);
+			iglooF('piano').register('down', 'default', function () {
+				iglooF('recentChanges').browseFeed(1);
 			});
 		}
 
-		this.piano.register('backspace', 'default', function () {
-			igloo.archives.goBack(1);
+		iglooF('piano').register('backspace', 'default', function () {
+			iglooF('archives').goBack(1);
 		});
 
-		this.piano.register('f5', 'default', function () {
+		iglooF('piano').register('f5', 'default', function () {
 			var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 			if (keyCheck === true) {
 				window.location.reload(true);
@@ -659,167 +682,171 @@ function iglooRecentChanges () {
 	
 }
 
-iglooRecentChanges.prototype.update = function () {
-	var me = this;
-	
-	var rcFetch = new iglooRequest({
-		url: me.loadUrl,
-		data: { format: 'json', action: 'query', list: 'recentchanges', rcprop: 'title|user|ids|comment|timestamp|flags', rclimit: iglooUserSettings.updateQuantity },
-		dataType: 'json',
-		context: me,
-		success: function (data) {
-			me.loadChanges.apply(me, [data]);
-		}
-	}, 0, false);
-	rcFetch.run();
-};
+igloo.extendProto(iglooRecentChanges, function () {
+	return {
+		update: function () {
+			var me = this;
+			
+			var rcFetch = new iglooRequest({
+				url: me.loadUrl,
+				data: { format: 'json', action: 'query', list: 'recentchanges', rcprop: 'title|user|ids|comment|timestamp|flags', rclimit: iglooUserSettings.updateQuantity },
+				dataType: 'json',
+				context: me,
+				success: function (data) {
+					me.loadChanges.apply(me, [data]);
+				}
+			}, 0, false);
+			rcFetch.run();
+		},
 
-iglooRecentChanges.prototype.loadChanges = function (changeSet) {
-	var data = changeSet.query.recentchanges;
-	
-	// For each change, add it to the changeset.
-	var l = data.length;
-	for (var i = 0; i < l; i++) {
-		var exclude = false, l2 = this.recentChanges.length, exists = false, p;
+		loadChanges: function (changeSet) {
+			var data = changeSet.query.recentchanges;
+			
+			// For each change, add it to the changeset.
+			var l = data.length;
+			for (var i = 0; i < l; i++) {
+				var exclude = false, l2 = this.recentChanges.length, exists = false, p;
 
-		//Check if we've already seen this revision
-		for (var k = 0; k < this.viewed.length; k++) {
-			if (data[i].revid === this.viewed[k].revId) {
-				this.viewed[k].stillHere = true;
-				exclude = true;
-				break;
+				//Check if we've already seen this revision
+				for (var k = 0; k < this.viewed.length; k++) {
+					if (data[i].revid === this.viewed[k].revId) {
+						this.viewed[k].stillHere = true;
+						exclude = true;
+						break;
+					}
+				}
+
+				//Hide if hideown is set to true
+				if (iglooUserSettings.hideOwn === true) {
+					if (data[i].user === mw.config.get('wgUserName')) {
+						exclude = true;
+					}
+				}
+
+				//Hide bot edits
+				if (iglooUserSettings.hideBot === true) {
+					if (typeof data[i].bot !== "undefined") exclude = true;
+				}
+				
+				if (exclude === true) {
+					continue; //skip this revision if if its marked as exclude
+				}
+
+				// Check if we already have information about this page.
+				for (var j = 0; j < l2; j++) {
+					if (data[i].title === this.recentChanges[j].info.pageTitle) {
+						p = iglooF('contentManager').getPage(data[i].title);
+						p.addRevision(new iglooRevision(data[i]));
+						p.hold = true;
+						exists = true;
+						break;
+					}
+				}
+
+				if (!exists) {
+					p = new iglooPage(new iglooRevision(data[i]));
+					iglooF('contentManager').add(p);
+					this.recentChanges.push(p);
+				}
 			}
-		}
+			this.recentChanges.sort(function (a, b) { return b.lastRevision - a.lastRevision; });
 
-		//Hide if hideown is set to true
-		if (iglooUserSettings.hideOwn === true) {
-			if (data[i].user === mw.config.get('wgUserName')) {
-				exclude = true;
+			// Truncate the recent changes list to the correct length
+			if (this.recentChanges.length > 30) {
+				// Objects that are being removed from the recent changes list are freed in the
+				// content manager for discard.
+				for (var x = 30; x < this.recentChanges.length; x++) {
+					if (this.recentChanges[x] === this.currentPage) continue;
+
+					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
+					var page = iglooF('contentManager').getPage(this.recentChanges[x].info.pageTitle);
+					page.hold = false;
+				}
+				this.recentChanges = this.recentChanges.slice(0, 30);
 			}
-		}
+			
+			// Render the result
+			this.render();
+		},
 
-		//Hide bot edits
-		if (iglooUserSettings.hideBot === true) {
-			if (typeof data[i].bot !== "undefined") exclude = true;
-		}
-		
-		if (exclude === true) {
-			continue; //skip this revision if if its marked as exclude
-		}
-
-		// Check if we already have information about this page.
-		for (var j = 0; j < l2; j++) {
-			if (data[i].title === this.recentChanges[j].info.pageTitle) {
-				p = igloo.contentManager.getPage(data[i].title);
-				p.addRevision(new iglooRevision(data[i]));
-				p.hold = true;
-				exists = true;
-				break;
+		//Don't show revisions that you've already seen in the feed any more
+		markViewed: function (revId) {
+			var me = this;
+			for (var change = 0; change < this.recentChanges.length; change++) {
+				if (me.recentChanges[change].revisions.iglast().revId === revId) {
+					me.recentChanges.splice(change, 1);
+					me.render();
+					me.viewed.push({
+						revId: revId,
+						stillHere: false
+					});
+					break;
+				}
 			}
+
+			for (var i = 0; i < this.viewed.length; i++) {
+				if (!me.viewed[i].stillHere) {
+					me.viewed.splice(change, 1);
+				}
+			}
+		},
+
+		//Browse feed- used by keyboard shortcuts
+		browseFeed: function (number) {
+			number = number || 1;
+
+			if ((this.currentRev + number) >= 0 && (this.currentRev + number) < this.recentChanges.length) {
+				this.show(this.currentRev + number);
+			}
+		},
+
+		// ask a diff to show its changes
+		show: function (elementId) {
+			var me = this;
+			if (iglooF('actions').stopActions) return false;
+			this.currentRev = elementId;
+			this.recentChanges[elementId].display();
+			var pause = setTimeout(function () {
+				var page = me.recentChanges[elementId];
+				me.markViewed(page.revisions.iglast().revId);
+				pause = false;
+			}, 500);
+
+			return this;
+		},
+
+		//render RC
+		render: function () {
+			this.renderResult.innerHTML = '';
+			for (var i = 0; i < this.recentChanges.length; i++) {
+				// Create each element
+				var t = document.createElement('li');
+				
+				// Styling
+				$(t).css ({
+					'padding': '0px 0px 0px 10px',
+					'borderBottom': '1px solid #000000',
+					'list-style-type': 'none',
+					'list-style-image': 'none',
+					'marker-offset': '0px',
+					'margin': '0px'
+				});
+				
+				// Finish
+				if (this.recentChanges[i].isNewPage) {
+					t.innerHTML = "<strong>N</strong> " + this.recentChanges[i].info.pageTitle;
+				} else {
+					t.innerHTML = this.recentChanges[i].info.pageTitle;
+				}
+				$(t).data("elId", i);
+				this.renderResult.appendChild(t);
+			}
+			igloo.log("Rendered " + i + " recent changes.");
+			
+			return this;
 		}
-
-		if (!exists) {
-			p = new iglooPage(new iglooRevision(data[i]));
-			igloo.contentManager.add(p);
-			this.recentChanges.push(p);
-		}
-	}
-	this.recentChanges.sort(function (a, b) { return b.lastRevision - a.lastRevision; });
-
-	// Truncate the recent changes list to the correct length
-	if (this.recentChanges.length > 30) {
-		// Objects that are being removed from the recent changes list are freed in the
-		// content manager for discard.
-		for (var x = 30; x < this.recentChanges.length; x++) {
-			if (this.recentChanges[x] === this.currentPage) continue;
-
-			igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
-			var page = igloo.contentManager.getPage(this.recentChanges[x].info.pageTitle);
-			page.hold = false;
-		}
-		this.recentChanges = this.recentChanges.slice(0, 30);
-	}
-	
-	// Render the result
-	this.render();
-};
-
-//Don't show revisions that you've already seen in the feed any more
-iglooRecentChanges.prototype.markViewed = function (revId) {
-	var me = this;
-	for (var change = 0; change < this.recentChanges.length; change++) {
-		if (me.recentChanges[change].revisions.iglast().revId === revId) {
-			me.recentChanges.splice(change, 1);
-			me.render();
-			me.viewed.push({
-				revId: revId,
-				stillHere: false
-			});
-			break;
-		}
-	}
-
-	for (var i = 0; i < this.viewed.length; i++) {
-		if (!me.viewed[i].stillHere) {
-			me.viewed.splice(change, 1);
-		}
-	}
-};
-
-//Browse feed- used by keyboard shortcuts
-iglooRecentChanges.prototype.browseFeed = function (number) {
-	number = number || 1;
-
-	if ((this.currentRev + number) >= 0 && (this.currentRev + number) < this.recentChanges.length) {
-		this.show(this.currentRev + number);
-	}
-};
-
-// ask a diff to show its changes
-iglooRecentChanges.prototype.show = function (elementId) {
-	var me = this;
-	if (igloo.actions.stopActions) return false;
-	this.currentRev = elementId;
-	this.recentChanges[elementId].display();
-	var pause = setTimeout(function () {
-		var page = me.recentChanges[elementId];
-		me.markViewed(page.revisions.iglast().revId);
-		pause = false;
-	}, 500);
-
-	return this;
-};
-
-//render RC
-iglooRecentChanges.prototype.render = function () {
-	this.renderResult.innerHTML = '';
-	for (var i = 0; i < this.recentChanges.length; i++) {
-		// Create each element
-		var t = document.createElement('li');
-		
-		// Styling
-		$(t).css ({
-			'padding': '0px 0px 0px 10px',
-			'borderBottom': '1px solid #000000',
-			'list-style-type': 'none',
-			'list-style-image': 'none',
-			'marker-offset': '0px',
-			'margin': '0px'
-		});
-		
-		// Finish
-		if (this.recentChanges[i].isNewPage) {
-			t.innerHTML = "<strong>N</strong> " + this.recentChanges[i].info.pageTitle;
-		} else {
-			t.innerHTML = this.recentChanges[i].info.pageTitle;
-		}
-		$(t).data("elId", i);
-		this.renderResult.appendChild(t);
-	}
-	igloo.log("Rendered " + i + " recent changes.");
-	
-	return this;
-};
+	};
+});
 
 
 // Class iglooView
@@ -838,7 +865,7 @@ function iglooView () {
 	// Hook to relevant events
 	igloo.hookEvent('core', 'displayed-page-changed', function (data) {
 		if (me.displaying) {
-			if (data.page === me.displaying.page && !igloo.actions.stopActions) {
+			if (data.page === me.displaying.page && !iglooF('actions').stopActions) {
 				me.changedSinceDisplay = true;
 				me.displaying = data;
 				me.displaying.show();
@@ -847,53 +874,57 @@ function iglooView () {
 	});
 }
 
-//Displays a revision
-iglooView.prototype.display = function (revision) {
-	// If a revision is being displayed, set the displaying
-	// flag for the page to false.
-	if (igloo.actions.stopActions) return false;
+igloo.extendProto(iglooView, function () {
+	return {
+		//Displays a revision
+		display: function (revision) {
+			// If a revision is being displayed, set the displaying
+			// flag for the page to false.
+			if (iglooF('actions').stopActions) return false;
 
-	if (this.displaying) {
-		this.displaying.page.displaying = false;
-		this.displaying.page.changedSinceDisplay = false;
-	}
-
-	// Set the new revision into the page, then show it.
-	this.displaying = revision;
-	this.displaying.show();
-};
-
-//Display the welcome message
-iglooView.prototype.displayWelcome = function () {
-	// this function specifically displays the welcome message in the diff window
-	var welcomeRequest = new iglooRequest({
-		module: 'getPage',
-		params: { targ: glooLocalBase + '/config', revisions: 1, properties: 'content' },
-		callback: function (data) {
-			//Perform regex
-			var regTest, o, regResult;
-
-			if (igloo.firstRun === true) {
-				regTest = /firstrun:(.+?);;/i;
-			} else {
-				regTest = /welcome:(.+?);;/i;
+			if (this.displaying) {
+				this.displaying.page.displaying = false;
+				this.displaying.page.changedSinceDisplay = false;
 			}
 
-			//get Regex
-			regResult = regTest.exec(data[0].content);
-			o = regResult[1].replace('%CURRENTVERSION%', iglooConfiguration.version);
-			o = o.replace('%CURRENTUSER%', mw.config.get('wgUserName'));
+			// Set the new revision into the page, then show it.
+			this.displaying = revision;
+			this.displaying.show();
+		},
 
-			// Clear current display.
-			$(igloo.diffContainer.panel).find('*').remove();
-				
-			// Append new content.
-			$(igloo.diffContainer.panel).append(o);
+		//Display the welcome message
+		displayWelcome: function () {
+			// this function specifically displays the welcome message in the diff window
+			var welcomeRequest = new iglooRequest({
+				module: 'getPage',
+				params: { targ: glooLocalBase + '/config', revisions: 1, properties: 'content' },
+				callback: function (data) {
+					//Perform regex
+					var regTest, o, regResult;
 
+					if (igloo.firstRun === true) {
+						regTest = /firstrun:(.+?);;/i;
+					} else {
+						regTest = /welcome:(.+?);;/i;
+					}
+
+					//get Regex
+					regResult = regTest.exec(data[0].content);
+					o = regResult[1].replace('%CURRENTVERSION%', iglooConfiguration.version);
+					o = o.replace('%CURRENTUSER%', mw.config.get('wgUserName'));
+
+					// Clear current display.
+					$(igloo.diffContainer.panel).find('*').remove();
+						
+					// Append new content.
+					$(igloo.diffContainer.panel).append(o);
+
+				}
+			}, 0, true, true);
+			welcomeRequest.run();
 		}
-	}, 0, true, true);
-	welcomeRequest.run();
-};
+	};
+});
 
 // Class iglooPage
 function iglooPage () {
@@ -926,57 +957,60 @@ function iglooPage () {
 	}
 }
 
-iglooPage.prototype.addRevision = function (newRev) {
-	// Check if this is a duplicate revision.
-	for (var i = 0; i < this.revisions.length; i++) {
-		if (newRev.revId === this.revisions[i].revId) return;
-	}
+igloo.extendProto(iglooPage, function () {
+	return {
+		addRevision: function (newRev) {
+			// Check if this is a duplicate revision.
+			for (var i = 0; i < this.revisions.length; i++) {
+				if (newRev.revId === this.revisions[i].revId) return;
+			}
 
-	if (this.isNewPage) {
-		this.isNewPage = false;
-	} else if (newRev.type === 'new') {
-		this.isNewPage = true;
-	}
+			if (this.isNewPage) {
+				this.isNewPage = false;
+			} else if (newRev.type === 'new') {
+				this.isNewPage = true;
+			}
 
-	newRev.page = this;
-	this.revisions.push(newRev);
-	this.revisions.sort(function (a, b) { return a.revId - b.revId; });
-	
-	if (newRev.revId > this.lastRevision) this.lastRevision = newRev.revId;
-	if (this.displaying && newRev.revId > this.lastRevision) {
-		alert('update');
-		igloo.fireEvent('core', 'displayed-page-changed', newRev);
-		this.changedSinceDisplay = true;
-	}
-};
+			newRev.page = this;
+			this.revisions.push(newRev);
+			this.revisions.sort(function (a, b) { return a.revId - b.revId; });
+			
+			if (newRev.revId > this.lastRevision) this.lastRevision = newRev.revId;
+			if (this.displaying && newRev.revId > this.lastRevision) {
+				alert('update');
+				igloo.fireEvent('core', 'displayed-page-changed', newRev);
+				this.changedSinceDisplay = true;
+			}
+		},
 
-iglooPage.prototype.display = function () {
-	// Calling display on a page will invoke the display
-	// method for the current view, and pass it the relevant
-	// revision object.
-	var currentView = igloo.getCurrentView(),
-		toShow = -1;
+		display: function () {
+			// Calling display on a page will invoke the display
+			// method for the current view, and pass it the relevant
+			// revision object.
+			var currentView = igloo.getCurrentView(),
+				toShow = -1;
 
-	igloo.recentChanges.currentPage = this;
+			iglooF('recentChanges').currentPage = this;
 
-	if (arguments[0]) {
-		for (var x = 0; x < this.revisions.length; x++) {
-			if (arguments[0] === this.revisions[x].revId) toShow = x;
+			if (arguments[0]) {
+				for (var x = 0; x < this.revisions.length; x++) {
+					if (arguments[0] === this.revisions[x].revId) toShow = x;
+				}
+
+				if (toShow !== -1) {
+					currentView.display(this.revisions[x]);
+				} else {
+					currentView.display(this.revisions.iglast());
+				}
+			} else {
+				currentView.display(this.revisions.iglast());
+			}
+
+			this.displaying = true;
+			this.changedSinceDisplay = false;
 		}
-
-		if (toShow !== -1) {
-			currentView.display(this.revisions[x]);
-		} else {
-			currentView.display(this.revisions.iglast());
-		}
-	} else {
-		currentView.display(this.revisions.iglast());
-	}
-
-	this.displaying = true;
-	this.changedSinceDisplay = false;
-};
-
+	};
+});
 
 // Class iglooRevision
 	/*
@@ -1010,276 +1044,281 @@ function iglooRevision () {
 	}
 }
 
-//Sets the data of this revision
-iglooRevision.prototype.setMetaData = function (newData) {
-	this.page = newData.title;
-	this.pageTitle = newData.title;
-	this.namespace = newData.ns;
-	this.oldId = newData.old_revid;
-	this.revId = newData.revid;
-	this.type = newData.type;
-	this.user = newData.user;
-	this.summary = newData.comment;
-	this.timestamp = new Date(newData.timestamp);
-	this.minor = "";//(newData.minor != "undefined") === true ? 'm' : '';
-};
+igloo.extendProto(iglooRevision, function () {
+	return {
+		//Sets the data of this revision
+		setMetaData: function (newData) {
+			this.page = newData.title;
+			this.pageTitle = newData.title;
+			this.namespace = newData.ns;
+			this.oldId = newData.old_revid;
+			this.revId = newData.revid;
+			this.type = newData.type;
+			this.user = newData.user;
+			this.summary = newData.comment;
+			this.timestamp = new Date(newData.timestamp);
+			this.minor = "";//(newData.minor != "undefined") === true ? 'm' : '';
+		},
 
-iglooRevision.prototype.loadRevision = function () {
-	var me = this;
+		loadRevision: function () {
+			var me = this;
 
-	igloo.justice.reversionEnabled = 'pause';
+			iglooF('justice').reversionEnabled = 'pause';
 
-	if (this.revisionRequest === null) {
-		this.revisionRequest = new iglooRequest({
-			url: iglooConfiguration.api,
-			data: { format: 'json', action: 'query', prop: 'revisions', revids: '' + me.revId, rvprop: 'content', rvparse: 'true' },
-			dataType: 'json',
-			context: me,
-			success: function (data) {
-				for (var i in data.query.pages) {
-					this.revisionContent = data.query.pages[i].revisions[0]['*'];
-				}
-				this.revisionLoaded = true;
-				if (this.displayRequest === 'revision') this.display('revision');
-				this.revisionRequest = null;
+			if (this.revisionRequest === null) {
+				this.revisionRequest = new iglooRequest({
+					url: iglooConfiguration.api,
+					data: { format: 'json', action: 'query', prop: 'revisions', revids: '' + me.revId, rvprop: 'content', rvparse: 'true' },
+					dataType: 'json',
+					context: me,
+					success: function (data) {
+						for (var i in data.query.pages) {
+							this.revisionContent = data.query.pages[i].revisions[0]['*'];
+						}
+						this.revisionLoaded = true;
+						if (this.displayRequest === 'revision') this.display('revision');
+						this.revisionRequest = null;
+					}
+				}, 0, true);
+				this.revisionRequest.run();
 			}
-		}, 0, true);
-		this.revisionRequest.run();
-	}
-};
+		},
 
-iglooRevision.prototype.loadDiff = function () {
-	var me = this;
+		loadDiff: function () {
+			var me = this;
 
-	igloo.justice.reversionEnabled = 'pause';
+			iglooF('justice').reversionEnabled = 'pause';
 
-	if (this.diffRequest === null) {
-		igloo.log('Attempted to show a diff, but we had no data so has to load it.');
-		this.diffRequest = new iglooRequest({
-			url: iglooConfiguration.api,
-			data: { format: 'json', action: 'compare', fromrev: '' + me.oldId, torev: '' + me.revId },
-			dataType: 'json',
-			context: me,
-			success: function (data) {
-				this.diffContent = data.compare['*'];
-				this.diffLoaded = true;
-				if (this.displayRequest === 'diff') this.display('diff');
-				this.diffRequest = null;
+			if (this.diffRequest === null) {
+				igloo.log('Attempted to show a diff, but we had no data so has to load it.');
+				this.diffRequest = new iglooRequest({
+					url: iglooConfiguration.api,
+					data: { format: 'json', action: 'compare', fromrev: '' + me.oldId, torev: '' + me.revId },
+					dataType: 'json',
+					context: me,
+					success: function (data) {
+						this.diffContent = data.compare['*'];
+						this.diffLoaded = true;
+						if (this.displayRequest === 'diff') this.display('diff');
+						this.diffRequest = null;
+					}
+				}, 0, true);
+				this.diffRequest.run();
 			}
-		}, 0, true);
-		this.diffRequest.run();
-	}
-};
+		},
 
-//Actually displays the diff in the diffContainer
-iglooRevision.prototype.display = function () {
-	// Determine what should be displayed.
-	var displayWhat,
-		me = this,
-		h2,
-		months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+		//Actually displays the diff in the diffContainer
+		display: function () {
+			// Determine what should be displayed.
+			var displayWhat,
+				me = this,
+				h2,
+				months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-	if (!arguments[0]) {
-		displayWhat = 'diff';
-	} else {
-		displayWhat = arguments[0];
-	}
+			if (!arguments[0]) {
+				displayWhat = 'diff';
+			} else {
+				displayWhat = arguments[0];
+			}
 
-	// If this was fired as a result of a display request, clear the flag.
-	if (this.displayRequest) this.displayRequest = false;
-	
-	// Mark as displaying, and fire the displaying event.
-	this.displaying = true;
-	igloo.fireEvent('core', 'displaying-change', this);
-
-	// Add to archives
-	igloo.archives.manageHist(this.pageTitle, this.user, this.revId);
-
-	//Clear search error tag
-	$('#igloo-search-error').html('');
-
-	//You can get the pageHistory/csd of new pages and diffs
-	igloo.fireEvent(['csd', 'history', 'block', 'actions'], 'new-diff', {
-		pageTitle: me.pageTitle,
-		revId: me.revId,
-		user: me.user
-	});
-
-	// Create display element.
-	if (displayWhat === 'revision' || this.type === 'new') {
-		var div = document.createElement('div');
-
-		h2 = document.createElement('h2');
-		h2.id = 'iglooPageTitle';
-
-		// Append new content.
-		h2.innerHTML = this.pageTitle;
-		div.innerHTML = this.revisionContent;
-		
-		// Style display element.
-		$(div).find('a').each(function () {
-			$(this).prop('target', '_blank');
-		});
-		$(h2).css({'font-size' : '18px', 'margin-bottom': '5px', 'margin-top': '5px'});
-		
-		// Clear current display.
-		$(igloo.diffContainer.panel).find('*').remove();
-
-		//Append delete module
-		igloo.trash.dropdown.loadModule();
-
-		//Append history module
-		igloo.past.dropdown.loadModule();
-
-		//Append quick actions module
-		igloo.cogs.dropdown.loadModule();
-		
-		// Append new content.
-		igloo.diffContainer.panel.appendChild(h2);
-		igloo.diffContainer.panel.appendChild(div);
-
-		//You can't rollback new pages
-		igloo.fireEvent('rollback','new-diff', {
-			pageTitle: '',
-			revId: -1,
-			user: ''
-		});
-
-	} else if (displayWhat === 'diff') {
-		var table = document.createElement('table'), 
-			same = document.createElement('div'),
-			ts = this.timestamp,
-			old = {},
-			ots = null,
-			dispWhat;
-
-		igloo.actions.getRevInfo(this.pageTitle, this.oldId, function (data) {
-			old = data;
-			ots = new Date(data.timestamp);
-		
-			h2 = document.createElement('h2');
-			h2.id = 'iglooPageTitle';
-
-			table.innerHTML = '<tr style="vertical-align: top;"><td colspan="2" style="text-align: center;"><div><strong>Revision as of ' + ots.getUTCHours() + ':' + ots.getUTCMinutes() + ', ' + ots.getUTCDate() + ' ' + months[ots.getUTCMonth()] + ' ' + ots.getFullYear() + '</strong></div><div>'+ old.user +'</div><div><strong title="This is a minor edit">'+ old.minor + '</strong>&nbsp;<span>('+ old.comment +')</span></div></td><td colspan="2" style="text-align: center;"><div><strong>Revision as of ' + ts.getUTCHours() + ':' + ts.getUTCMinutes() + ', ' + ts.getUTCDate() + ' ' + months[ts.getUTCMonth()] + ' ' + ts.getFullYear() + '</strong></div><div>' + me.user + '</div><div><strong title="This is a minor edit">'+ me.minor + '</strong>&nbsp;<span>('+ me.summary +')</span></div></td></tr><tr><td id="iglooDiffCol1" colspan="2"> </td><td id="iglooDiffCol2" colspan="2"> </td></tr>' + me.diffContent;
-			h2.innerHTML = me.pageTitle;
-			same.innerHTML = '<br/><span style="text-align:center">(No Change)</span><br/>';
-
-			//Style stuff
-			$(h2).css({'font-size' : '18px', 'margin-bottom': '5px', 'margin-top': '5px'});
-
-			$(table).css({ 'width': '100%', 'overflow': 'auto', 'font-size': iglooUserSettings.diffFontSize + 'px'});
-			$(table).find('#iglooDiffCol1').css({ 'width': '50%' });
-			$(table).find('#iglooDiffCol2').css({ 'width': '50%' });
-
-			$(table).find('.diff-empty').css('');
-			$(table).find('.diff-addedline').css({ 'background-color': '#ccffcc' });
-			$(table).find('.diff-marker').css({ 'text-align': 'right' });
-			$(table).find('.diff-lineno').css({ 'font-weight': 'bold' });
-			$(table).find('.diff-deletedline').css({ 'background-color': '#ffffaa' });
-			$(table).find('.diff-context').css({ 'background-color': '#eeeeee' });
-			$(table).find('.diffchange').css({ 'color': 'red' });
-
-			//flag Profanity
-			table.innerHTML = me.flagProfanity(table.innerHTML);
+			// If this was fired as a result of a display request, clear the flag.
+			if (this.displayRequest) this.displayRequest = false;
 			
-			// Clear current display.
-			$(igloo.diffContainer.panel).find('*').remove();
-			
-			//Append rollback module
-			igloo.justice.dropdown.loadModule();
+			// Mark as displaying, and fire the displaying event.
+			this.displaying = true;
+			igloo.fireEvent('core', 'displaying-change', this);
 
-			//Append csd module
-			igloo.trash.dropdown.loadModule();
+			// Add to archives
+			iglooF('archives').manageHist(this.pageTitle, this.user, this.revId);
 
-			//Append history module
-			igloo.past.dropdown.loadModule();
+			//Clear search error tag
+			$('#igloo-search-error').html('');
 
-			//Append Quick Actions module
-			igloo.cogs.dropdown.loadModule();
-
-			// Append new content.
-			dispWhat = (this.diffContent === "") ? same : table;
-			
-			igloo.diffContainer.panel.appendChild(h2);
-			igloo.diffContainer.panel.appendChild(dispWhat);
-
-			//Alert rollback as to page info
-			igloo.fireEvent('rollback','new-diff', {
+			//You can get the pageHistory/csd of new pages and diffs
+			igloo.fireEvent(['csd', 'history', 'block', 'actions'], 'new-diff', {
 				pageTitle: me.pageTitle,
 				revId: me.revId,
 				user: me.user
 			});
 
-			// we can now revert this edit
-			if (igloo.justice.reversionEnabled === 'pause') igloo.justice.reversionEnabled = 'yes';
-		});
-	}
-};
+			// Create display element.
+			if (displayWhat === 'revision' || this.type === 'new') {
+				var div = document.createElement('div');
 
-//Called from iglooView/iglooPage- determines what to display
-iglooRevision.prototype.show = function () {
-	// Determine what to show.
-	var displayWhat;
-  
-	if (!arguments[0]) {
-		displayWhat = 'diff';
-	} else {
-		displayWhat = arguments[0];
-	}
+				h2 = document.createElement('h2');
+				h2.id = 'iglooPageTitle';
 
-	if (displayWhat === 'diff' && this.type === 'edit') {
-		igloo.log('diff display requested, page: ' + this.page.info.pageTitle);
-		
-		if ((!this.diffLoaded) && (!this.diffRequest)) {
-			this.displayRequest = 'diff';
-			this.loadDiff();
-		} else {
-			this.display('diff');
+				// Append new content.
+				h2.innerHTML = this.pageTitle;
+				div.innerHTML = this.revisionContent;
+				
+				// Style display element.
+				$(div).find('a').each(function () {
+					$(this).prop('target', '_blank');
+				});
+				$(h2).css({'font-size' : '18px', 'margin-bottom': '5px', 'margin-top': '5px'});
+				
+				// Clear current display.
+				$(igloo.diffContainer.panel).find('*').remove();
+
+				//Append delete module
+				iglooF('trash').dropdown.loadModule();
+
+				//Append history module
+				iglooF('past').dropdown.loadModule();
+
+				//Append quick actions module
+				iglooF('cogs').dropdown.loadModule();
+				
+				// Append new content.
+				igloo.diffContainer.panel.appendChild(h2);
+				igloo.diffContainer.panel.appendChild(div);
+
+				//You can't rollback new pages
+				igloo.fireEvent('rollback','new-diff', {
+					pageTitle: '',
+					revId: -1,
+					user: ''
+				});
+
+			} else if (displayWhat === 'diff') {
+				var table = document.createElement('table'), 
+					same = document.createElement('div'),
+					ts = this.timestamp,
+					old = {},
+					ots = null,
+					dispWhat;
+
+				iglooF('actions').getRevInfo(this.pageTitle, this.oldId, function (data) {
+					old = data;
+					ots = new Date(data.timestamp);
+				
+					h2 = document.createElement('h2');
+					h2.id = 'iglooPageTitle';
+
+					table.innerHTML = '<tr style="vertical-align: top;"><td colspan="2" style="text-align: center;"><div><strong>Revision as of ' + ots.getUTCHours() + ':' + ots.getUTCMinutes() + ', ' + ots.getUTCDate() + ' ' + months[ots.getUTCMonth()] + ' ' + ots.getFullYear() + '</strong></div><div>'+ old.user +'</div><div><strong title="This is a minor edit">'+ old.minor + '</strong>&nbsp;<span>('+ old.comment +')</span></div></td><td colspan="2" style="text-align: center;"><div><strong>Revision as of ' + ts.getUTCHours() + ':' + ts.getUTCMinutes() + ', ' + ts.getUTCDate() + ' ' + months[ts.getUTCMonth()] + ' ' + ts.getFullYear() + '</strong></div><div>' + me.user + '</div><div><strong title="This is a minor edit">'+ me.minor + '</strong>&nbsp;<span>('+ me.summary +')</span></div></td></tr><tr><td id="iglooDiffCol1" colspan="2"> </td><td id="iglooDiffCol2" colspan="2"> </td></tr>' + me.diffContent;
+					h2.innerHTML = me.pageTitle;
+					same.innerHTML = '<br/><span style="text-align:center">(No Change)</span><br/>';
+
+					//Style stuff
+					$(h2).css({'font-size' : '18px', 'margin-bottom': '5px', 'margin-top': '5px'});
+
+					$(table).css({ 'width': '100%', 'overflow': 'auto', 'font-size': iglooUserSettings.diffFontSize + 'px'});
+					$(table).find('#iglooDiffCol1').css({ 'width': '50%' });
+					$(table).find('#iglooDiffCol2').css({ 'width': '50%' });
+
+					$(table).find('.diff-empty').css('');
+					$(table).find('.diff-addedline').css({ 'background-color': '#ccffcc' });
+					$(table).find('.diff-marker').css({ 'text-align': 'right' });
+					$(table).find('.diff-lineno').css({ 'font-weight': 'bold' });
+					$(table).find('.diff-deletedline').css({ 'background-color': '#ffffaa' });
+					$(table).find('.diff-context').css({ 'background-color': '#eeeeee' });
+					$(table).find('.diffchange').css({ 'color': 'red' });
+
+					//flag Profanity
+					table.innerHTML = me.flagProfanity(table.innerHTML);
+					
+					// Clear current display.
+					$(igloo.diffContainer.panel).find('*').remove();
+					
+					//Append rollback module
+					iglooF('justice').dropdown.loadModule();
+
+					//Append csd module
+					iglooF('trash').dropdown.loadModule();
+
+					//Append history module
+					iglooF('past').dropdown.loadModule();
+
+					//Append Quick Actions module
+					iglooF('cogs').dropdown.loadModule();
+
+					// Append new content.
+					dispWhat = (this.diffContent === "") ? same : table;
+					
+					igloo.diffContainer.panel.appendChild(h2);
+					igloo.diffContainer.panel.appendChild(dispWhat);
+
+					//Alert rollback as to page info
+					igloo.fireEvent('rollback','new-diff', {
+						pageTitle: me.pageTitle,
+						revId: me.revId,
+						user: me.user
+					});
+
+					// we can now revert this edit
+					if (iglooF('justice').reversionEnabled === 'pause') iglooF('justice').reversionEnabled = 'yes';
+				});
+			}
+		},
+
+		//Called from iglooView/iglooPage- determines what to display
+		show: function () {
+			// Determine what to show.
+			var displayWhat;
+		  
+			if (!arguments[0]) {
+				displayWhat = 'diff';
+			} else {
+				displayWhat = arguments[0];
+			}
+
+			if (displayWhat === 'diff' && this.type === 'edit') {
+				igloo.log('diff display requested, page: ' + this.page.info.pageTitle);
+				
+				if ((!this.diffLoaded) && (!this.diffRequest)) {
+					this.displayRequest = 'diff';
+					this.loadDiff();
+				} else {
+					this.display('diff');
+				}
+			} else {
+				igloo.log('revision display requested, page: ' + this.page.info.pageTitle);
+				
+				if ((!this.revisionLoaded) && (!this.revisionRequest)) {
+					this.displayRequest = 'revision';
+					this.loadRevision();
+				} else {
+					this.display('revision');
+				}
+			}
+		},
+
+		//Flags profanity in the diff
+		flagProfanity: function(html) {
+			// this function flags profanity in the diff window
+			if (iglooUserSettings.profFilter !== true) return html;
+		 
+			var profanity = new Array(
+											/\b((?:moth[era]*)?[ -]*f+(?:u|oo)[ck]{2,}(?:ing?|er|hole)?s*|s[e3]+x+[iey]*|r[a4]p(?:e+d*|i+s+t+s*)|su[ck]+(?:s+|ed+|i+n+g+)?|gang[- ]?bang(?:er|ing)?|(?:(?:t+h+|f+)r[e3]{2,}|four)+s[o0]+me+)\b/ig, 
+											/\b(h[o0]+m[o0]+(?:sexual(?:it(?:y|e)+)?)?|(?:is +)?ga+[iy]+|lesb(?:ian|[o0]*))\b/ig,
+									 
+											/\b([ck][o0]+[ck]{2,}(?:head|face|(?:su[ck]{2,}(?:er|ing)?))?|d[o0]+n+g|p[3e]+n[iu]+s+[3e]*s*|p+[3e]{2,}|d[i1]+[ck]{2,}s*(?:su[ck]{2,}(?:er|ing)?)?|manh(?:[o0]{2,}|u+)d+|b[o0]+n+e*r+s*|ball[sz]+(?:a[ck]{2,})?)\b/ig, 
+											/\b(cun+(?:t|[iey]+)s*|vag(?:ina)?s*|puss+[yie]+s*|fann+[yie]+s*)\b/ig, 
+											/\b(t+i+t+(?:s*|[iey]+[sz]*)|breasts*|b+[o0]{2,}b+[ieys]*)\b/ig, 
+											/\b(anal+|ar*ss+e*|ar*se+s+|(?:bum+|butt+) ?(?:h[o0]+le|cr+a[ck]+|o(?:[ck]+s|x+))?)\b/ig,
+									 
+											/\b((?:bull)?(?:s+hite*|ass+)(?:holes?|he[a4]+d+s*)?|cr[a4*]+p+[iy]*|cru+d+|poo+)\b/ig,
+											/\b(w*h+[o0]+r*e+s*|prostitutes*|s+l+u+t+s*|slags*|cu+m+(?:ing)?|d[il]{2,}d[o0]+[o0e]*s*|(?:b+l+[o0]+w+|h+[a4]+n+d+|t[i1]+t+[iey]*)j+[o0]+b+[sz]*|c[o0]+ndom[sz]*|p[o0]+rn)\b/ig,
+											/\b(nigg+(?:er|a+)s*|naz+i+[sz]+|ped[o0]+(?:[phf]+ile)?[sz]*)\b/ig,
+											/\b(ret[a4]+r+d+(?:ed|s)?|f+[a4]+g+([o0]+t+)?s*|d[ou]+che?(ba+g)?s*|bast[ea]rds*|bit*ch[iey]*|[you]*r+ ?m+[ou]+m+)\b/ig,
+									 
+											/('{3,}bold text'{3,}|'{2,}italic text'{2,}|\[{2,}link title\]{2,}|\[http:\/\/www\.example\.com link title\]|={2,} *headline text *={2,})/ig,
+											/\b(q[qwerty]{5,}|[asdf]{8,}|[ghjkl]{8,}|[uiop]{8,})\b/ig,
+											/\b(lol(?:l*ol|cat[sz]*)*|li+e+k)\b/ig,
+											/\b(ha?i+(?=\/)|he+ll+o+|(?:ha+|hee+|ho+)+|l[ou]+v+|ya|ye+h+)\b/ig,
+											/([!?;]{3,}|[.|]{4,}|={6,}|([a-z0-9])\2{6,})/ig
+			);
+		 
+			for (var i = 0; i < profanity.length; i++) {
+				html = html.replace(profanity[i], '<span style="background-color: #ff99ff; font-weight: bold; text-decoration: underline;">$1</span>');
+			}
+		 
+			return html;
 		}
-	} else {
-		igloo.log('revision display requested, page: ' + this.page.info.pageTitle);
-		
-		if ((!this.revisionLoaded) && (!this.revisionRequest)) {
-			this.displayRequest = 'revision';
-			this.loadRevision();
-		} else {
-			this.display('revision');
-		}
-	}
-};
+	};
+});
 
-//Flags profanity in the diff
-iglooRevision.prototype.flagProfanity = function(html) {
-	// this function flags profanity in the diff window
-	if (iglooUserSettings.profFilter !== true) return html;
- 
-	var profanity = new Array(
-									/\b((?:moth[era]*)?[ -]*f+(?:u|oo)[ck]{2,}(?:ing?|er|hole)?s*|s[e3]+x+[iey]*|r[a4]p(?:e+d*|i+s+t+s*)|su[ck]+(?:s+|ed+|i+n+g+)?|gang[- ]?bang(?:er|ing)?|(?:(?:t+h+|f+)r[e3]{2,}|four)+s[o0]+me+)\b/ig, 
-									/\b(h[o0]+m[o0]+(?:sexual(?:it(?:y|e)+)?)?|(?:is +)?ga+[iy]+|lesb(?:ian|[o0]*))\b/ig,
-							 
-									/\b([ck][o0]+[ck]{2,}(?:head|face|(?:su[ck]{2,}(?:er|ing)?))?|d[o0]+n+g|p[3e]+n[iu]+s+[3e]*s*|p+[3e]{2,}|d[i1]+[ck]{2,}s*(?:su[ck]{2,}(?:er|ing)?)?|manh(?:[o0]{2,}|u+)d+|b[o0]+n+e*r+s*|ball[sz]+(?:a[ck]{2,})?)\b/ig, 
-									/\b(cun+(?:t|[iey]+)s*|vag(?:ina)?s*|puss+[yie]+s*|fann+[yie]+s*)\b/ig, 
-									/\b(t+i+t+(?:s*|[iey]+[sz]*)|breasts*|b+[o0]{2,}b+[ieys]*)\b/ig, 
-									/\b(anal+|ar*ss+e*|ar*se+s+|(?:bum+|butt+) ?(?:h[o0]+le|cr+a[ck]+|o(?:[ck]+s|x+))?)\b/ig,
-							 
-									/\b((?:bull)?(?:s+hite*|ass+)(?:holes?|he[a4]+d+s*)?|cr[a4*]+p+[iy]*|cru+d+|poo+)\b/ig,
-									/\b(w*h+[o0]+r*e+s*|prostitutes*|s+l+u+t+s*|slags*|cu+m+(?:ing)?|d[il]{2,}d[o0]+[o0e]*s*|(?:b+l+[o0]+w+|h+[a4]+n+d+|t[i1]+t+[iey]*)j+[o0]+b+[sz]*|c[o0]+ndom[sz]*|p[o0]+rn)\b/ig,
-									/\b(nigg+(?:er|a+)s*|naz+i+[sz]+|ped[o0]+(?:[phf]+ile)?[sz]*)\b/ig,
-									/\b(ret[a4]+r+d+(?:ed|s)?|f+[a4]+g+([o0]+t+)?s*|d[ou]+che?(ba+g)?s*|bast[ea]rds*|bit*ch[iey]*|[you]*r+ ?m+[ou]+m+)\b/ig,
-							 
-									/('{3,}bold text'{3,}|'{2,}italic text'{2,}|\[{2,}link title\]{2,}|\[http:\/\/www\.example\.com link title\]|={2,} *headline text *={2,})/ig,
-									/\b(q[qwerty]{5,}|[asdf]{8,}|[ghjkl]{8,}|[uiop]{8,})\b/ig,
-									/\b(lol(?:l*ol|cat[sz]*)*|li+e+k)\b/ig,
-									/\b(ha?i+(?=\/)|he+ll+o+|(?:ha+|hee+|ho+)+|l[ou]+v+|ya|ye+h+)\b/ig,
-									/([!?;]{3,}|[.|]{4,}|={6,}|([a-z0-9])\2{6,})/ig
-	);
- 
-	for (var i = 0; i < profanity.length; i++) {
-		html = html.replace(profanity[i], '<span style="background-color: #ff99ff; font-weight: bold; text-decoration: underline;">$1</span>');
-	}
- 
-	return html;
-};
 
 // Class iglooKeys
 	/*
@@ -1309,7 +1348,7 @@ function iglooKeys () {
 			this.cbs[mode][combo] = func;
 
 			Mousetrap.bind(combo, function(e, input) {
-				if (!me.cbs[igloo.piano.mode].noDefault || input === 'f5') {
+				if (!me.cbs[iglooF('piano').mode].noDefault || input === 'f5') {
 					if (e.preventDefault) {
 						e.preventDefault();
 					} else {
@@ -1318,7 +1357,7 @@ function iglooKeys () {
 					}
 				}
 
-				me.cbs[igloo.piano.mode][input]();
+				me.cbs[iglooF('piano').mode][input]();
 			});
 			return true;
 		} else {
@@ -1338,559 +1377,564 @@ function iglooSettings () {
 	this.isOpen = false;
 }
 
-iglooSettings.prototype.retrieve = function () {
-	if (igloo.remoteConnect && !igloo.connectLocal) {
-		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=get&session=' + igloo.sessionKey, true).onload = function () {
-			if (typeof iglooNetSettings !== "undefined") {
-				iglooUserSettings.firstRun = false;
-				$.extend(iglooUserSettings, iglooNetSettings);	
-				
-				for (var defaultSetting in iglooUserSettings) {
-					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(defaultSetting) + '&value=' + encodeURIComponent(iglooUserSettings[defaultSetting]) + '&session=' + igloo.sessionKey, true);
-				}
+igloo.extendProto(iglooSettings, function () {
+	return {
+		retrieve: function () {
+			if (igloo.remoteConnect && !igloo.connectLocal) {
+				iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=get&session=' + igloo.sessionKey, true).onload = function () {
+					if (typeof iglooNetSettings !== "undefined") {
+						iglooUserSettings.firstRun = false;
+						$.extend(iglooUserSettings, iglooNetSettings);	
+						
+						for (var defaultSetting in iglooUserSettings) {
+							iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(defaultSetting) + '&value=' + encodeURIComponent(iglooUserSettings[defaultSetting]) + '&session=' + igloo.sessionKey, true);
+						}
+					} else {
+						if (mw.user.options.get('userjs-igloo') !== null) {
+							$.extend(iglooUserSettings, JSON.parse(mw.user.options.get('userjs-igloo')));
+						}
+
+						for (var origSetting in iglooUserSettings) {
+							iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(origSetting) + '&value=' + encodeURIComponent(iglooUserSettings[origSetting]) + '&session=' + igloo.sessionKey, true);
+						}
+					}
+				};
+			}
+
+			var setIglooPrefs;
+			if (mw.user.options.get('userjs-igloo') === null) {
+				setIglooPrefs = new iglooRequest({
+					module: 'preferences',
+					params: { key: 'userjs-igloo', value: JSON.stringify(iglooUserSettings) },
+					callback: function (data) {
+						igloo.launch();
+					}
+				}, 0, true, true);
+				setIglooPrefs.run();
 			} else {
-				if (mw.user.options.get('userjs-igloo') !== null) {
-					$.extend(iglooUserSettings, JSON.parse(mw.user.options.get('userjs-igloo')));
-				}
+				var stored = JSON.parse(mw.user.options.get('userjs-igloo'));
+				igloo.firstRun = false;
+				$.extend(iglooUserSettings, stored);
+				//and then if there's settings in iglooUserSettings that aren't in the stored settings
+				//merge them. This happens when we add a new key.
+				$.extend(stored, iglooUserSettings);
 
-				for (var origSetting in iglooUserSettings) {
-					iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(origSetting) + '&value=' + encodeURIComponent(iglooUserSettings[origSetting]) + '&session=' + igloo.sessionKey, true);
-				}
+				setIglooPrefs = new iglooRequest({
+					module: 'preferences',
+					params: { key: 'userjs-igloo', value: JSON.stringify(stored) },
+					callback: function (data) {
+						igloo.launch();
+					}
+				}, 0, true, true);
+				setIglooPrefs.run();
 			}
-		};
-	}
 
-	var setIglooPrefs;
-	if (mw.user.options.get('userjs-igloo') === null) {
-		setIglooPrefs = new iglooRequest({
-			module: 'preferences',
-			params: { key: 'userjs-igloo', value: JSON.stringify(iglooUserSettings) },
-			callback: function (data) {
-				igloo.launch();
-			}
-		}, 0, true, true);
-		setIglooPrefs.run();
-	} else {
-		var stored = JSON.parse(mw.user.options.get('userjs-igloo'));
-		igloo.firstRun = false;
-		$.extend(iglooUserSettings, stored);
-		//and then if there's settings in iglooUserSettings that aren't in the stored settings
-		//merge them. This happens when we add a new key.
-		$.extend(stored, iglooUserSettings);
-
-		setIglooPrefs = new iglooRequest({
-			module: 'preferences',
-			params: { key: 'userjs-igloo', value: JSON.stringify(stored) },
-			callback: function (data) {
-				igloo.launch();
-			}
-		}, 0, true, true);
-		setIglooPrefs.run();
-	}
-
-	igloo.launch();
-};
-
-iglooSettings.prototype.set = function (setting, value, cb) {
-	var me = this,
-		storedSettings = JSON.parse(mw.user.options.get('userjs-igloo')),
-		key = (setting === "remoteConnect") ? 'userjs-iglooRemoteConnect' : 'userjs-igloo';
-
-	cb = (typeof cb !== "undefined" || typeof cb === "function") ? cb : function () {};
-
-	if (this.settingsEnabled !== true) cb(false);
-
-	this.settingsEnabled = false;
-
-	if (igloo.remoteConnect && setting !== "remoteConnect" && !igloo.connectLocal) { //It'd be useless to query remotely to see if we're allowed to connect remotely
-		//settingEnabled isn't made true for this because we still need to use the API.
-		iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(value) + '&session=' + igloo.sessionKey, true);
-	}
-
-	storedSettings[setting] = value;
-
-	var setIglooSetting = new iglooRequest({
-		module: 'preferences',
-		params: { key: key, value: JSON.stringify(storedSettings) },
-		callback: function (data) {
-			var success = data.options === "success";
-			cb(success);
-			me.settingsEnabled = true;
-		}
-	}, 0, true, true);
-	setIglooSetting.run();
-};
-
-iglooSettings.prototype.buildInterface = function () {
-	var settingsButton = document.createElement('div'),
-		qActions = {
-			warn: "Warn User (no revert)",
-			report: "Report User",
-			talk: "Go to page talk on Wikipedia",
-			diff: "View diff on Wikipedia",
-			stats: "View basic user info"
+			igloo.launch();
 		},
-		me = this;
 
-	settingsButton.id = 'igloo-settings';
-	settingsButton.innerHTML = '<img title="Modify Igloo Settings" src= "' + iglooConfiguration.fileHost + 'images/igloo-settings.png">';
-	
-	this.dropdown = new iglooDropdown('igloo-settings', "igloo.cogs", qActions, 'igQActions',  {
-		top: 113,
-		right: '5px',
-		where: 'right'
-	}, ''); 
+		set: function (setting, value, cb) {
+			var me = this,
+				storedSettings = JSON.parse(mw.user.options.get('userjs-igloo')),
+				key = (setting === "remoteConnect") ? 'userjs-iglooRemoteConnect' : 'userjs-igloo';
 
-	$(settingsButton).click(function () {
-		me.show();
-	});
+			cb = (typeof cb !== "undefined" || typeof cb === "function") ? cb : function () {};
 
-	$(settingsButton).css({
-		'position': 'relative',
-		'float': 'right',
-		'width': '73px',
-		'height': '73px',
-		'padding-left': '-1px',
-		'padding-top': '-1px',
-		'margin-top': '17px',
-		'margin-left': '5px',
-		'margin-right': '5px',
-		'cursor': 'pointer'
-	});
+			if (this.settingsEnabled !== true) cb(false);
 
-	this.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
-	this.popup.buildInterface();
+			this.settingsEnabled = false;
 
-	// add tabs
-	this.addtab('info', 'user info');
-	this.addtab('general', 'general');
-	this.addtab('interface', 'interface');
-	this.addtab('close', 'close');
-
-	igloo.toolPane.panel.appendChild(settingsButton);
-
-	//dropdown
-	this.dropdown.buildInterface();
-
-	igloo.piano.register('f5', 'settings', function () {
-		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
-		if (keyCheck === true) {
-			window.location.reload(true);
-		}
-	});
-
-	igloo.log('igloo: prepped settings main');
-};
-
-iglooSettings.prototype.go = function (action) {
-	/*qActions = {
-			warn: "Warn User (no revert)",
-			report: "Report User",
-			talk: "Go to page talk on Wikipedia",
-			diff: "View diff on Wikipedia",
-			stats: "View basic user info"
-		},*/
-	var me = this;
-	switch (action) {
-		case 'warn':
-			var wdText = '<div>Please select what you would like to warn the user for:</div><div><select id="glooWarn">';
-
-			for (var og in iglooUserSettings.warnSummaries) {
-				var optgroup = '<optgroup label="' + iglooUserSettings.warnSummaries[og] + '">';
-				for (var opt in iglooUserSettings.warnSummaries[og]) {
-					optgroup += '<option value="' + opt + '">' + iglooUserSettings.warnSummaries[og][opt] + '</option>';
-				}
-
-				wdText += optgroup;
+			if (igloo.remoteConnect && setting !== "remoteConnect" && !igloo.connectLocal) { //It'd be useless to query remotely to see if we're allowed to connect remotely
+				//settingEnabled isn't made true for this because we still need to use the API.
+				iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=set&setting=' + encodeURIComponent(setting) + '&value=' + encodeURIComponent(value) + '&session=' + igloo.sessionKey, true);
 			}
 
-			wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="igloo.cogs.dialogs.warn.hide(); igloo.actions.warnUser(\''+ document.getElementById('glooWarn').value +'\'">Warn User</a>--</div>';
+			storedSettings[setting] = value;
 
-			me.dialogs.warn = new iglooPopup(wdText);
-			me.dialogs.warn.buildInterface();
-			me.dialogs.warn.show();
-			break;
-		case 'report':
-			var makeSure = confirm('Are you sure you want to report this user to ARV');
-			igloo.actions.reportUser();
-			break;
-		case 'talk':
-			igloo.actions.gotoTalk();
-			break;
-		case 'diff':
-			igloo.actions.gotoDiff();
-			break;
-		case 'stats':
-			break;
-	}
-};
-		
-iglooSettings.prototype.show = function () {
-	var tabcont = document.getElementById('igloo-settings-content'), 
-		me = this;
+			var setIglooSetting = new iglooRequest({
+				module: 'preferences',
+				params: { key: key, value: JSON.stringify(storedSettings) },
+				callback: function (data) {
+					var success = data.options === "success";
+					cb(success);
+					me.settingsEnabled = true;
+				}
+			}, 0, true, true);
+			setIglooSetting.run();
+		},
 
-	if (tabcont === null) {
-		me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
-		me.popup.buildInterface();
-		// add tabs
-		me.addtab('info', 'user info');
-		me.addtab('general', 'general');
-		me.addtab('interface', 'interface');
-		me.addtab('close', 'close');
-	}
+		buildInterface: function () {
+			var settingsButton = document.createElement('div'),
+				qActions = {
+					warn: "Warn User (no revert)",
+					report: "Report User",
+					talk: "Go to page talk on Wikipedia",
+					diff: "View diff on Wikipedia",
+					stats: "View basic user info"
+				},
+				me = this;
 
-	this.popup.show();
-
-	//Set isOpen variable
-	this.isOpen = true;
-
-	//Set key mode
-	igloo.piano.mode = 'settings';
- 
-	// default tab
-	this.switchtab('info');
-};
-		
-iglooSettings.prototype.hidedisplay = function () {
-	this.popup.hide();
-	this.isOpen = false;
-	igloo.piano.mode = 'default';
-};
-		
-iglooSettings.prototype.addtab = function ( tabid, tabtext ) {
-	if (!tabid || !tabtext) return false;
-	var tabscont = document.getElementById( 'igloo-settings-tabs' );
+			settingsButton.id = 'igloo-settings';
+			settingsButton.innerHTML = '<img title="Modify Igloo Settings" src= "' + iglooConfiguration.fileHost + 'images/igloo-settings.png">';
 			
-	tabscont.innerHTML += '<div id="igloo-settings-tab-' + tabid + '" style="float: left; position: relative; top: 1px; font-size: 10px; height: 12px; width: 50px; border: 1px solid #000; text-align: center; cursor: pointer; margin-right: 10px;" onclick="igloo.cogs.switchtab (\'' + tabid + '\');"> ' + tabtext + '</div>';
-		
-	return tabscont;
-};
-		
-iglooSettings.prototype.switchtab = function ( tabid ) {
-	if (!tabid) {
-		igloo.log('igloo: unexpected settings call, tab is missing');
-		return false;
-	}
+			this.dropdown = new iglooDropdown('igloo-settings', "cogs", qActions, 'igQActions',  {
+				top: 113,
+				right: '5px',
+				where: 'right'
+			}, ''); 
 
-	var tabcont = document.getElementById('igloo-settings-content'), cont, me = this;
-			
-	switch ( tabid ) {
-		case 'info':
-			tabcont.innerHTML = ''; // blank
-			tabcont.innerHTML += '<div style="padding: 10px;">Welcome to the igloo settings panel. From here, you can update your igloo settings - there is no need to save your changes or restart igloo as any alterations will take place immediately. igloo currently has the following data regarding your account:<br /><br />- username: ' + mw.config.get('wgUserName') + '<br />- is an admin: ' + iglooUserSettings.mesysop + '<br /></div>';
-			break;
+			$(settingsButton).click(function () {
+				me.show();
+			});
 
-		case 'general':
-			cont = document.createElement('div');
-			tabcont.innerHTML = ''; // blank
-				
-			cont.style.padding = '10px';
-			cont.innerHTML = '';
-			cont.innerHTML += '<div style="padding: 10px;">';
-			cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
+			$(settingsButton).css({
+				'position': 'relative',
+				'float': 'right',
+				'width': '73px',
+				'height': '73px',
+				'padding-left': '-1px',
+				'padding-top': '-1px',
+				'margin-top': '17px',
+				'margin-left': '5px',
+				'margin-right': '5px',
+				'cursor': 'pointer'
+			});
 
-				$(cont).append(me.createOption('<b>Connect to Remote Server <span style="border-bottom: 1px dotted" title="igloo only stores settings and a session key- No IP adresses/personal info">?</a></b>', 'remoteConnect', {
-					type: "checkbox",
-					checked: igloo.remoteConnect ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("remoteConnect", el.prop('checked'), function (res) {
-							if (!res) {
-								el.attr('checked', !el.prop('checked'));
-								alert('It seems like igloo is still processing your last settings change. Please wait a moment and then try again.');
-							}
-						});
+			this.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+			this.popup.buildInterface();
+
+			// add tabs
+			this.addtab('info', 'user info');
+			this.addtab('general', 'general');
+			this.addtab('interface', 'interface');
+			this.addtab('close', 'close');
+
+			igloo.toolPane.panel.appendChild(settingsButton);
+
+			//dropdown
+			this.dropdown.buildInterface();
+
+			iglooF('piano').register('f5', 'settings', function () {
+				var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
+				if (keyCheck === true) {
+					window.location.reload(true);
+				}
+			});
+
+			igloo.log('igloo: prepped settings main');
+		},
+
+		go: function (action) {
+			/*qActions = {
+					warn: "Warn User (no revert)",
+					report: "Report User",
+					talk: "Go to page talk on Wikipedia",
+					diff: "View diff on Wikipedia",
+					stats: "View basic user info"
+				},*/
+			var me = this;
+			switch (action) {
+				case 'warn':
+					var wdText = '<div>Please select what you would like to warn the user for:</div><div><select id="glooWarn">';
+
+					for (var og in iglooUserSettings.warnSummaries) {
+						var optgroup = '<optgroup label="' + iglooUserSettings.warnSummaries[og] + '">';
+						for (var opt in iglooUserSettings.warnSummaries[og]) {
+							optgroup += '<option value="' + opt + '">' + iglooUserSettings.warnSummaries[og][opt] + '</option>';
+						}
+
+						wdText += optgroup;
 					}
-				}));
 
-				cont.innerHTML += "<br/>";
+					wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ document.getElementById('glooWarn').value +'\'">Warn User</a>--</div>';
 
-				$(cont).append(me.createOption('RC Ticker Update Time', 'updateTime', {
-					type: "text",
-					value: iglooUserSettings.updateTime,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateTime);
-						} else {
-							igloo.cogs.set("updateTime", el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateTime = parseInt(el.val(), 10);
-								} else {
+					me.dialogs.warn = new iglooPopup(wdText);
+					me.dialogs.warn.buildInterface();
+					me.dialogs.warn.show();
+					break;
+				case 'report':
+					var makeSure = confirm('Are you sure you want to report this user to ARV');
+					iglooF('actions').reportUser();
+					break;
+				case 'talk':
+					iglooF('actions').gotoTalk();
+					break;
+				case 'diff':
+					iglooF('actions').gotoDiff();
+					break;
+				case 'stats':
+					break;
+			}
+		},
+				
+		show: function () {
+			var tabcont = document.getElementById('igloo-settings-content'), 
+				me = this;
+
+			if (tabcont === null) {
+				me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+				me.popup.buildInterface();
+				// add tabs
+				me.addtab('info', 'user info');
+				me.addtab('general', 'general');
+				me.addtab('interface', 'interface');
+				me.addtab('close', 'close');
+			}
+
+			this.popup.show();
+
+			//Set isOpen variable
+			this.isOpen = true;
+
+			//Set key mode
+			iglooF('piano').mode = 'settings';
+		 
+			// default tab
+			this.switchtab('info');
+		},
+				
+		hidedisplay: function () {
+			this.popup.hide();
+			this.isOpen = false;
+			iglooF('piano').mode = 'default';
+		},
+				
+		addtab: function ( tabid, tabtext ) {
+			if (!tabid || !tabtext) return false;
+			var tabscont = document.getElementById( 'igloo-settings-tabs' );
+					
+			tabscont.innerHTML += '<div id="igloo-settings-tab-' + tabid + '" style="float: left; position: relative; top: 1px; font-size: 10px; height: 12px; width: 50px; border: 1px solid #000; text-align: center; cursor: pointer; margin-right: 10px;" onclick="iglooF(\'cogs\').switchtab (\'' + tabid + '\');"> ' + tabtext + '</div>';
+				
+			return tabscont;
+		},
+				
+		switchtab: function ( tabid ) {
+			if (!tabid) {
+				igloo.log('igloo: unexpected settings call, tab is missing');
+				return false;
+			}
+
+			var tabcont = document.getElementById('igloo-settings-content'), cont, me = this;
+					
+			switch ( tabid ) {
+				case 'info':
+					tabcont.innerHTML = ''; // blank
+					tabcont.innerHTML += '<div style="padding: 10px;">Welcome to the igloo settings panel. From here, you can update your igloo settings - there is no need to save your changes or restart igloo as any alterations will take place immediately. igloo currently has the following data regarding your account:<br /><br />- username: ' + mw.config.get('wgUserName') + '<br />- is an admin: ' + iglooUserSettings.mesysop + '<br /></div>';
+					break;
+
+				case 'general':
+					cont = document.createElement('div');
+					tabcont.innerHTML = ''; // blank
+						
+					cont.style.padding = '10px';
+					cont.innerHTML = '';
+					cont.innerHTML += '<div style="padding: 10px;">';
+					cont.innerHTML += 'Change general igloo settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
+
+						$(cont).append(me.createOption('<b>Connect to Remote Server <span style="border-bottom: 1px dotted" title="igloo only stores settings and a session key- No IP adresses/personal info">?</a></b>', 'remoteConnect', {
+							type: "checkbox",
+							checked: igloo.remoteConnect ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("remoteConnect", el.prop('checked'), function (res) {
+									if (!res) {
+										el.attr('checked', !el.prop('checked'));
+										alert('It seems like igloo is still processing your last settings change. Please wait a moment and then try again.');
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('RC Ticker Update Time', 'updateTime', {
+							type: "text",
+							value: iglooUserSettings.updateTime,
+							onchange: function () {
+								var el = $(this);
+								if (isNaN(parseInt(el.val(), 10))) {
 									el.val(iglooUserSettings.updateTime);
-								}
-							});
-						}
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Update Quantity', 'updateQuantity', {
-					type: "text",
-					value: iglooUserSettings.updateQuantity,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.updateQuantity);
-						} else {
-							igloo.cogs.set("updateQuantity", el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.updateQuantity = parseInt(el.val(), 10);
 								} else {
+									iglooF('cogs').set("updateTime", el.val(), function (res) {
+										if (res) {
+											iglooUserSettings.updateTime = parseInt(el.val(), 10);
+										} else {
+											el.val(iglooUserSettings.updateTime);
+										}
+									});
+								}
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Update Quantity', 'updateQuantity', {
+							type: "text",
+							value: iglooUserSettings.updateQuantity,
+							onchange: function () {
+								var el = $(this);
+								if (isNaN(parseInt(el.val(), 10))) {
 									el.val(iglooUserSettings.updateQuantity);
-								}
-							});
-						}
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Prompt on self revert', 'promptRevertSelf', {
-					type: "checkbox",
-					checked: iglooUserSettings.promptRevertSelf ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("promptRevertSelf", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.promptRevertSelf = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Enable profanity highlighting', 'profFilter', {
-					type: "checkbox",
-					checked: iglooUserSettings.profFilter ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("profFilter", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.profFilter = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Use keyboard shortcuts', 'useKeys', {
-					type: "checkbox",
-					checked: iglooUserSettings.useKeys ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("useKeys", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.useKeys = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Hide Own edits from the RC Feed', 'hideOwn', {
-					type: "checkbox",
-					checked: iglooUserSettings.hideOwn ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("hideOwn", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.hideOwn = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Log CSD tags (not deletes)', 'logCSD', {
-					type: "checkbox",
-					checked: iglooUserSettings.logCSD ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("logCSD", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.logCSD = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Use the up and down arrow keys to browse the RC ticker', 'upDownKeys', {
-					type: "checkbox",
-					checked: iglooUserSettings.upDownKeys ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("upDownKeys", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.upDownKeys = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Hide Bot edits', 'hideBot', {
-					type: "checkbox",
-					checked: iglooUserSettings.hideBot ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("hideBot", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.hideBot = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Watch pages whose edits you revert', 'watchRollbacked', {
-					type: "checkbox",
-					checked: iglooUserSettings.watchRollbacked ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("watchRollbacked", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.watchRollbacked = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Watch pages you tag for deletion', 'watchTagged', {
-					type: "checkbox",
-					checked: iglooUserSettings.watchTagged ? true : false,
-					onchange: function () {
-						var el = $(this);
-						igloo.cogs.set("watchTagged", el.prop('checked'), function (res) {
-							if (res) {
-								iglooUserSettings.watchTagged = el.prop('checked');
-							} else {
-								el.attr('checked', !el.prop('checked'));
-							}
-						});
-					}
-				}));
-
-			cont.innerHTML += '</table></div>';
-			
-			tabcont.appendChild(cont);
-			break;
-					
-		case 'interface':
-			cont = document.createElement('div');
-			tabcont.innerHTML = ''; // blank
-				
-			cont.style.padding = '10px';
-			cont.innerHTML = '';
-			cont.innerHTML += '<div style="padding: 10px;">';
-			cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
-
-				$(cont).append(me.createOption('Diff font size (px)', 'diffFontSize', {
-					type: "text",
-					value: iglooUserSettings.diffFontSize,
-					onchange: function () {
-						var el = $(this);
-						if (isNaN(parseInt(el.val(), 10))) {
-							el.val(iglooUserSettings.diffFontSize);
-						} else {
-							igloo.cogs.set("diffFontSize", el.val(), function (res) {
-								if (res) {
-									iglooUserSettings.diffFontSize = parseInt(el.val(), 10);
 								} else {
+									iglooF('cogs').set("updateQuantity", el.val(), function (res) {
+										if (res) {
+											iglooUserSettings.updateQuantity = parseInt(el.val(), 10);
+										} else {
+											el.val(iglooUserSettings.updateQuantity);
+										}
+									});
+								}
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Prompt on self revert', 'promptRevertSelf', {
+							type: "checkbox",
+							checked: iglooUserSettings.promptRevertSelf ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("promptRevertSelf", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.promptRevertSelf = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Enable profanity highlighting', 'profFilter', {
+							type: "checkbox",
+							checked: iglooUserSettings.profFilter ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("profFilter", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.profFilter = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Use keyboard shortcuts', 'useKeys', {
+							type: "checkbox",
+							checked: iglooUserSettings.useKeys ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("useKeys", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.useKeys = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Hide Own edits from the RC Feed', 'hideOwn', {
+							type: "checkbox",
+							checked: iglooUserSettings.hideOwn ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("hideOwn", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.hideOwn = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Log CSD tags (not deletes)', 'logCSD', {
+							type: "checkbox",
+							checked: iglooUserSettings.logCSD ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("logCSD", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.logCSD = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Use the up and down arrow keys to browse the RC ticker', 'upDownKeys', {
+							type: "checkbox",
+							checked: iglooUserSettings.upDownKeys ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("upDownKeys", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.upDownKeys = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Hide Bot edits', 'hideBot', {
+							type: "checkbox",
+							checked: iglooUserSettings.hideBot ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("hideBot", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.hideBot = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Watch pages whose edits you revert', 'watchRollbacked', {
+							type: "checkbox",
+							checked: iglooUserSettings.watchRollbacked ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("watchRollbacked", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.watchRollbacked = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Watch pages you tag for deletion', 'watchTagged', {
+							type: "checkbox",
+							checked: iglooUserSettings.watchTagged ? true : false,
+							onchange: function () {
+								var el = $(this);
+								iglooF('cogs').set("watchTagged", el.prop('checked'), function (res) {
+									if (res) {
+										iglooUserSettings.watchTagged = el.prop('checked');
+									} else {
+										el.attr('checked', !el.prop('checked'));
+									}
+								});
+							}
+						}));
+
+					cont.innerHTML += '</table></div>';
+					
+					tabcont.appendChild(cont);
+					break;
+							
+				case 'interface':
+					cont = document.createElement('div');
+					tabcont.innerHTML = ''; // blank
+						
+					cont.style.padding = '10px';
+					cont.innerHTML = '';
+					cont.innerHTML += '<div style="padding: 10px;">';
+					cont.innerHTML += 'Change igloo interface settings here.<br /><table style="background-color: #ccccff; border: none; margin-top: 5px; margin-left: 15px; width: 550px;">';
+
+						$(cont).append(me.createOption('Diff font size (px)', 'diffFontSize', {
+							type: "text",
+							value: iglooUserSettings.diffFontSize,
+							onchange: function () {
+								var el = $(this);
+								if (isNaN(parseInt(el.val(), 10))) {
 									el.val(iglooUserSettings.diffFontSize);
-								}
-							});
-						}
-					}
-	
-				}));
-
-				cont.innerHTML += "<br/>";
-
-				$(cont).append(me.createOption('Dropdown window timeout (seconds)', 'dropdownWinTimeout', {
-					type: "text",
-					value: iglooUserSettings.dropdownWinTimeout,
-					onchange: function () {
-						var el = this;
-						if (isNaN(parseFloat(el.value, 10))) {
-							el.value = iglooUserSettings.dropdownWinTimeout;
-						} else {
-							igloo.cogs.set("dropdownWinTimeout", el.value, function (res) {
-								if (res) {
-									iglooUserSettings.dropdownWinTimeout = parseFloat(el.value, 10);
 								} else {
-									el.value = iglooUserSettings.dropdownWinTimeout;
+									iglooF('cogs').set("diffFontSize", el.val(), function (res) {
+										if (res) {
+											iglooUserSettings.diffFontSize = parseInt(el.val(), 10);
+										} else {
+											el.val(iglooUserSettings.diffFontSize);
+										}
+									});
 								}
-							});
-						}
-					}
-				}));
-			cont.innerHTML += '</table></div>';
+							}
 			
-			tabcont.appendChild(cont);
-			break;
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Dropdown window timeout (seconds)', 'dropdownWinTimeout', {
+							type: "text",
+							value: iglooUserSettings.dropdownWinTimeout,
+							onchange: function () {
+								var el = this;
+								if (isNaN(parseFloat(el.value, 10))) {
+									el.value = iglooUserSettings.dropdownWinTimeout;
+								} else {
+									iglooF('cogs').set("dropdownWinTimeout", el.value, function (res) {
+										if (res) {
+											iglooUserSettings.dropdownWinTimeout = parseFloat(el.value, 10);
+										} else {
+											el.value = iglooUserSettings.dropdownWinTimeout;
+										}
+									});
+								}
+							}
+						}));
+					cont.innerHTML += '</table></div>';
 					
-		case 'close':
-			me.hidedisplay();
-			break;
-				
-		default:
-			igloo.log('igloo: unexpected settings call, tab content undefined');
-			break;
-	}
-};
+					tabcont.appendChild(cont);
+					break;
+							
+				case 'close':
+					me.hidedisplay();
+					break;
+						
+				default:
+					igloo.log('igloo: unexpected settings call, tab content undefined');
+					break;
+			}
+		},
 
-iglooSettings.prototype.createOption = function (description, id, properties) {
-	var opt = document.createElement('tr'),
-		main = document.createElement('td'),
-		change = document.createElement('input');
-	
-	opt.style.marginLeft = '15px';
-	opt.innerHTML = '';
-	if (properties.type === "text") opt.innerHTML += '<td>'+ description + '</td>';
+		createOption: function (description, id, properties) {
+			var opt = document.createElement('tr'),
+				main = document.createElement('td'),
+				change = document.createElement('input');
+			
+			opt.style.marginLeft = '15px';
+			opt.innerHTML = '';
+			if (properties.type === "text") opt.innerHTML += '<td>'+ description + '</td>';
 
-	for (var i in properties) {
-		if (i === "onchange") {
-			var strfunc = '' + properties[i];
-			$(change).attr(i,  strfunc.substring(13, strfunc.length - 1));
-		} else {
-			$(change).attr(i, properties[i]);
+			for (var i in properties) {
+				if (i === "onchange") {
+					var strfunc = '' + properties[i];
+					$(change).attr(i,  strfunc.substring(13, strfunc.length - 1));
+				} else {
+					$(change).attr(i, properties[i]);
+				}
+			}
+
+			main.appendChild(change);
+			opt.appendChild(main);
+			if (properties.type !== "text") opt.innerHTML += '<td>'+ description + '</td>';
+
+			return opt;
 		}
-	}
 
-	main.appendChild(change);
-	opt.appendChild(main);
-	if (properties.type !== "text") opt.innerHTML += '<td>'+ description + '</td>';
-
-	return opt;
-};
+	};
+});
 
 //Class iglooActions- misc actions
 function iglooActions () {
@@ -1951,7 +1995,7 @@ iglooActions.prototype.getRevInfo = function (page, revId, cb) {
 
 //Loads a page
 iglooActions.prototype.loadPage = function (page, revId) {
-	if (igloo.actions.stopActions) return false;
+	if (iglooF('actions').stopActions) return false;
 
 	this.getRevInfo(page, revId, function (data) {
 		var p = new iglooPage(new iglooRevision(data));
@@ -2071,7 +2115,7 @@ function iglooArchive () {
 	this.goBack = function (count) {
 		var doView;
 
-		if (this.archives.length <= 0 || igloo.actions.stopActions) return false;
+		if (this.archives.length <= 0 || iglooF('actions').stopActions) return false;
 
 		if (!count) count = 1;
 
@@ -2083,7 +2127,7 @@ function iglooArchive () {
  
 		doView = this.archives[this.archivePosition];
 		this.canAddtoArchives = false;
-		igloo.actions.loadPage(doView.title, doView.revId);
+		iglooF('actions').loadPage(doView.title, doView.revId);
 
 		return true;
 	};
@@ -2092,7 +2136,7 @@ function iglooArchive () {
 	this.goForward = function(count) {
 		var doView;
 
-		if (this.archivePosition < 0 || igloo.actions.stopActions) return false;
+		if (this.archivePosition < 0 || iglooF('actions').stopActions) return false;
 
 		if (!count) count = 1;
  
@@ -2105,7 +2149,7 @@ function iglooArchive () {
 		doView = this.archives[this.archivePosition];
 
 		this.canAddtoArchives = false;
-		igloo.actions.loadPage(doView.title, doView.revId);
+		iglooF('actions').loadPage(doView.title, doView.revId);
 
 		return true;
 	};
@@ -2113,11 +2157,11 @@ function iglooArchive () {
 
 //Class iglooSearch- brings up a requested, specific page
 function iglooSearch () {
-	igloo.piano.register('enter', 'search', function () {
-		igloo.detective.search();
+	iglooF('piano').register('enter', 'search', function () {
+		iglooF('detective').search();
 	});
 
-	igloo.piano.register('f5', 'search', function () {
+	iglooF('piano').register('f5', 'search', function () {
 		var keyCheck = confirm('You just pressed the F5 key. By default, this causes the page to refresh in most browsers. To prevent you losing your work, igloo therefore agressively blocks this key. Do you wish to reload the page?');
 		if (keyCheck === true) {
 			window.location.reload(true);
@@ -2125,73 +2169,77 @@ function iglooSearch () {
 	});
 }
 
-iglooSearch.prototype.buildInterface = function () {
-	var search = document.createElement('div'), 
-		browsePos = (62 * 2) - 15,
-		error = document.createElement('div');
+igloo.extendProto(iglooSearch, function () {
+	return {
+		buildInterface: function () {
+			var search = document.createElement('div'), 
+				browsePos = (62 * 2) - 15,
+				error = document.createElement('div');
 
-	search.innerHTML = '<input placeholder="Search" id="igloo-search-to" class="mousetrap" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.fileHost + 'images/igloo-go.png" onclick="igloo.detective.search();" />';
-	error.innerHTML = '';
+			search.innerHTML = '<input placeholder="Search" id="igloo-search-to" class="mousetrap" type="text" style="width: 200px; height: 14px;" /><img style="position: relative; top: -3px; cursor: pointer;" src="' + iglooConfiguration.fileHost + 'images/igloo-go.png" onclick="iglooF(\'detective\').search();" />';
+			error.innerHTML = '';
 
-	error.id = 'igloo-search-error';
+			error.id = 'igloo-search-error';
 
-	$(search).css({
-		'position': 'relative',
-		'float': 'left',
-		'height': '20px',
-		'left': '-' + browsePos + 'px',
-		'margin-top': '60px',
-		'margin-left': '5px',
-		'cursor': 'pointer'
-	});
+			$(search).css({
+				'position': 'relative',
+				'float': 'left',
+				'height': '20px',
+				'left': '-' + browsePos + 'px',
+				'margin-top': '60px',
+				'margin-left': '5px',
+				'cursor': 'pointer'
+			});
 
-	$(error).css({
-		'font-size': '14px',
-		'color': 'red',
-		'cursor': 'auto'
-	});
+			$(error).css({
+				'font-size': '14px',
+				'color': 'red',
+				'cursor': 'auto'
+			});
 
-	igloo.toolPane.panel.appendChild(search);
-	search.appendChild(error);
+			igloo.toolPane.panel.appendChild(search);
+			search.appendChild(error);
 
-	$('#igloo-search-to').focus(function() {
-		igloo.piano.mode = 'search';
-	});
+			$('#igloo-search-to').focus(function() {
+				iglooF('piano').mode = 'search';
+			});
 
-	$('#igloo-search-to').blur(function() {
-		if (igloo.cogs.isOpen) {
-			igloo.piano.mode = 'settings';
-		} else {
-			igloo.piano.mode = 'default';
-		}
-	});
-};
+			$('#igloo-search-to').blur(function() {
+				if (iglooF('cogs').isOpen) {
+					iglooF('piano').mode = 'settings';
+				} else {
+					iglooF('piano').mode = 'default';
+				}
+			});
+		},
 
-iglooSearch.prototype.search = function () {
-	var browseTo = $('#igloo-search-to').val();
+		search: function () {
+			var browseTo = $('#igloo-search-to').val();
 
-	$('#igloo-search-to').val('');
-	$('#igloo-search-error').html('');
+			$('#igloo-search-to').val('');
+			$('#igloo-search-error').html('');
 
-	if (browseTo.toLowerCase().indexOf('special:') === 0) {
-		$('#igloo-search-error').html('Error: You can\'t open special pages in Igloo');
-		return;
-	}
-
-	var search = new iglooRequest({
-		module: 'getPage',
-		params: { targ: browseTo, revisions: 1, properties: 'ids|user' },
-		callback: function (data) {
-			if (data !== false) {
-				igloo.justice.reversionEnabled = 'pause';
-				igloo.actions.loadPage(browseTo, data[0].ids.revid);
-			} else {
-				$('#igloo-search-error').html('Error: '+ browseTo + ' doesn\'t exist');
+			if (browseTo.toLowerCase().indexOf('special:') === 0) {
+				$('#igloo-search-error').html('Error: You can\'t open special pages in Igloo');
+				return;
 			}
+
+			var search = new iglooRequest({
+				module: 'getPage',
+				params: { targ: browseTo, revisions: 1, properties: 'ids|user' },
+				callback: function (data) {
+					if (data !== false) {
+						iglooF('justice').reversionEnabled = 'pause';
+						iglooF('actions').loadPage(browseTo, data[0].ids.revid);
+					} else {
+						$('#igloo-search-error').html('Error: '+ browseTo + ' doesn\'t exist');
+					}
+				}
+			}, 0, true, true);
+			search.run();
 		}
-	}, 0, true, true);
-	search.run();
-};
+	};
+});
 
 //Class iglooDelete- sets up iglooCSD
 function iglooDelete () {
@@ -2206,77 +2254,81 @@ function iglooDelete () {
 	});
 }
 
-iglooDelete.prototype.buildInterface = function () {
-	var deleteButton = document.createElement('div'),
-		reasons = {
-			"g1": "Patent Nonsense",
-			"g2": "Test Page",
-			"g3": "Vandalism",
-			"g4": "Recreation of Deleted Content",
-			"g5": "Created by banned user",
-			"g6": "Maintenence",
-			"g7": "Blanked or requested by creator",
-			"g10": "Attack Page",
-			"g11": "Advertising",
-			"g12": "Copyvio",
-			"a1": "No context",
-			"a2": "Wrong Project",
-			"a3": "No Content",
-			"a5": "Transwikied Article",
-			"a7": "Importance not asserted",
-			"a9": "Song/Music Article Lacking Artist's article",
-			"r3": "Implausible typos in redirect"
-		};
+igloo.extendProto(iglooDelete, function () {
+	return {
+		buildInterface: function () {
+			var deleteButton = document.createElement('div'),
+				reasons = {
+					"g1": "Patent Nonsense",
+					"g2": "Test Page",
+					"g3": "Vandalism",
+					"g4": "Recreation of Deleted Content",
+					"g5": "Created by banned user",
+					"g6": "Maintenence",
+					"g7": "Blanked or requested by creator",
+					"g10": "Attack Page",
+					"g11": "Advertising",
+					"g12": "Copyvio",
+					"a1": "No context",
+					"a2": "Wrong Project",
+					"a3": "No Content",
+					"a5": "Transwikied Article",
+					"a7": "Importance not asserted",
+					"a9": "Song/Music Article Lacking Artist's article",
+					"r3": "Implausible typos in redirect"
+				};
 
-	deleteButton.id = 'igloo-delete';
-	deleteButton.innerHTML = '<img title="Tag page for CSD" style="margin-left:7px; width:63px; height:63px;" src= "' + iglooConfiguration.fileHost + 'images/igloo-delete.png">';
+			deleteButton.id = 'igloo-delete';
+			deleteButton.innerHTML = '<img title="Tag page for CSD" style="margin-left:7px; width:63px; height:63px;" src= "' + iglooConfiguration.fileHost + 'images/igloo-delete.png">';
 
-	this.dropdown = new iglooDropdown('igloo-delete', "igloo.trash", reasons, 'igDel',  {
-		top: 113,
-		left: '335px',
-		where: 'left'
-	}, '');
+			this.dropdown = new iglooDropdown('igloo-delete', "trash", reasons, 'igDel',  {
+				top: 113,
+				left: '335px',
+				where: 'left'
+			}, '');
 
-	$(deleteButton).css({
-		'position': 'relative',
-		'float': 'left',
-		'width': '73px',
-		'height': '73px',
-		'margin-top': '17px',
-		'margin-left': '5px',
-		'cursor': 'pointer'
-	});
+			$(deleteButton).css({
+				'position': 'relative',
+				'float': 'left',
+				'width': '73px',
+				'height': '73px',
+				'margin-top': '17px',
+				'margin-left': '5px',
+				'cursor': 'pointer'
+			});
 
-	igloo.toolPane.panel.appendChild(deleteButton);
-	this.dropdown.buildInterface();
-};
+			igloo.toolPane.panel.appendChild(deleteButton);
+			this.dropdown.buildInterface();
+		},
 
-iglooDelete.prototype.go = function (csdtype) {
-	var me = this;
+		go: function (csdtype) {
+			var me = this;
 
-	if (me.pageTitle !== '') {
-		//If the page has at least 10 revisions, we shouldnt be tagging it for csd
-		var getPageRevisions = new iglooRequest({
-			module: 'getPage',
-			params: { targ: me.pageTitle, revisions: 10 },
-			callback: function (data) {
-				var revs = 1;
-				for (var key in data) {
-					if (data.hasOwnProperty(key)) revs++;
-				}
-				
-				if (revs >= 9) {
-					//We shouldn't be tagging this for deletion
-					igloo.statusLog.addStatus('This page has at least 10 revisions. Please consider submitting a PROD request outside of igloo instead');
-				} else {
-					me.csd = new iglooCSD(me.pageTitle, csdtype);
-					me.csd.doCSD();
-				}
+			if (me.pageTitle !== '') {
+				//If the page has at least 10 revisions, we shouldnt be tagging it for csd
+				var getPageRevisions = new iglooRequest({
+					module: 'getPage',
+					params: { targ: me.pageTitle, revisions: 10 },
+					callback: function (data) {
+						var revs = 1;
+						for (var key in data) {
+							if (data.hasOwnProperty(key)) revs++;
+						}
+						
+						if (revs >= 9) {
+							//We shouldn't be tagging this for deletion
+							iglooF('statusLog').addStatus('This page has at least 10 revisions. Please consider submitting a PROD request outside of igloo instead');
+						} else {
+							me.csd = new iglooCSD(me.pageTitle, csdtype);
+							me.csd.doCSD();
+						}
+					}
+				}, 0, true, true);
+				getPageRevisions.run();
 			}
-		}, 0, true, true);
-		getPageRevisions.run();
-	}
-};
+		}
+	};
+});
 
 //iglooCSD- tags page for CSD or deletes page under csd criteria
 function iglooCSD (page, csdtype) {
@@ -2284,144 +2336,148 @@ function iglooCSD (page, csdtype) {
 	this.csdtype = csdtype;
 }
 
-iglooCSD.prototype.doCSD = function (callback) {
-	var me = this;
-	switch (callback) {
-		default: case 0:
-			var csdsummary;
-			if(iglooUserSettings.mesysop === true) {
-				csdsummary = iglooConfiguration.csdSummary.admin;
-				csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
+igloo.extendProto(iglooCSD, function () {
+	return {
+		doCSD: function (callback) {
+			var me = this;
+			switch (callback) {
+				default: case 0:
+					var csdsummary;
+					if(iglooUserSettings.mesysop === true) {
+						csdsummary = iglooConfiguration.csdSummary.admin;
+						csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
 
-				var deleteConfirm = confirm('Are you sure you wish to delete ' + me.pageTitle + ' ?');
+						var deleteConfirm = confirm('Are you sure you wish to delete ' + me.pageTitle + ' ?');
 
-				if (deleteConfirm !== true) return;
+						if (deleteConfirm !== true) return;
 
-				var deletePage = new iglooRequest({
-					module: 'delete',
-					params: { targ: me.pageTitle, summary: csdsummary },
-					callback: function (data) { 
-						igloo.statusLog.addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!');
+						var deletePage = new iglooRequest({
+							module: 'delete',
+							params: { targ: me.pageTitle, summary: csdsummary },
+							callback: function (data) { 
+								iglooF('statusLog').addStatus('Successfully deleted <strong>' + me.pageTitle + '</strong>!');
+							}
+						}, 0, true, true);
+						deletePage.run();
+					} else {
+						var csdmessage = iglooConfiguration.csdTemplate.replace('%CSDTYPE%', me.csdtype) + '\n\n';
+						
+						csdsummary = iglooConfiguration.csdSummary.user;
+
+						var tagCSD = new iglooRequest({
+							module: 'edit',
+							params: { targ: me.pageTitle, isMinor: false, text: csdmessage, summary: csdsummary, where: 'prependtext' },
+							callback: function (data) {
+								iglooF('statusLog').addStatus('Successfully issued a csd tag on <strong>' + me.pageTitle + '</strong>!');
+								if (iglooUserSettings.watchTagged) {
+									me.doCSD(1);
+								} else {
+									iglooF('statusLog').addStatus('Notifying page creator...');
+									me.notifyUser();
+								}			
+							}
+						}, 0, true, true);
+						tagCSD.run();
 					}
-				}, 0, true, true);
-				deletePage.run();
-			} else {
-				var csdmessage = iglooConfiguration.csdTemplate.replace('%CSDTYPE%', me.csdtype) + '\n\n';
-				
-				csdsummary = iglooConfiguration.csdSummary.user;
+					break;
 
-				var tagCSD = new iglooRequest({
-					module: 'edit',
-					params: { targ: me.pageTitle, isMinor: false, text: csdmessage, summary: csdsummary, where: 'prependtext' },
-					callback: function (data) {
-						igloo.statusLog.addStatus('Successfully issued a csd tag on <strong>' + me.pageTitle + '</strong>!');
-						if (iglooUserSettings.watchTagged) {
-							me.doCSD(1);
-						} else {
-							igloo.statusLog.addStatus('Notifying page creator...');
-							me.notifyUser();
-						}			
-					}
-				}, 0, true, true);
-				tagCSD.run();
-			}
-			break;
-
-		case 1:
-			igloo.statusLog.addStatus('Adding <strong>' + me.pageTitle + '</strong> to watchlist...');
-			// watch tagged page
-			var watchCSD = new iglooRequest({
-				module: 'watch',
-				params: { targ: me.pageTitle },
-				callback: function (data) {
-					igloo.statusLog.addStatus('Added <strong>' + me.pageTitle + '</strong> to watchlist!');
-					me.notifyUser();
-				}
-			}, 0, true, true);
-			watchCSD.run();
-			break;
-	}
-};
- 
-iglooCSD.prototype.notifyUser = function () {
-	var me = this;
-	var getPageCreator = new iglooRequest({
-		module: 'getCreator',
-		params: { targ: me.pageTitle },
-		callback: function (data) {
-			var csduser = data;
-			if (csduser !== false) {
-				var csdMessage = iglooConfiguration.csdMessage,
-					csdSummary = iglooConfiguration.csdSummary.notify;
-
-				csdMessage = csdMessage.replace('%CSDPAGE%', me.pageTitle);
-				csdMessage = csdMessage.replace('%CSDTYPE%', me.csdtype);
-
-				csdSummary = csdSummary.replace('%CSDPAGE%', me.pageTitle);
-				csdSummary = csdSummary.replace('%CSDUSER%', csduser);
-
-				var alertUser = new iglooRequest({
-					module: 'edit',
-					params: { targ: 'User_Talk:'+csduser, isMinor: false, text: csdMessage, summary: csdSummary, where: 'appendtext' },
-					callback: function (data) {
-						igloo.statusLog.addStatus('Successfully notified '+ csduser +' about the csd tag on <strong>'+ me.pageTitle +'</strong>!');
-						if (iglooUserSettings.logCSD && !iglooUserSettings.mesysop && me.csdtype !== 'g7') {
-							igloo.statusLog.addStatus('Adding tag to csd log...');
-							me.saveLog(csduser);
-						}
-					}
-				}, 0, true, true);
-				alertUser.run();
-			} else {
-				igloo.statusLog.addStatus('Could not notify user because igloo could not find the page creator');
-			}
-		}
-	}, 0, true, true);
-	getPageCreator.run();
-};
- 
-iglooCSD.prototype.saveLog = function(csduser) {
-	/* Credit for pretty much the entire concept of this goes to Twinkle */
-	/* Converted to work for igloo by Kangaroopower */
-	var me = this;
-	var isPageCreated = new iglooRequest({
-		module: 'exists',
-		params: { targ: iglooConfiguration.csdLogPage },
-		callback: function (data) {
-			var text = '',
-				csdlogSummary = iglooConfiguration.csdSummary.log.replace('%CSDPAGE%', me.pageTitle),
-				date = new Date(),
-				exists = data,
-				headerRe = new RegExp("^==+\\s*" + date.getUTCMonthName() + "\\s+" + date.getUTCFullYear() + "\\s*==+", "m");
-
-			if (exists === false) {
-				text += "This is a log of all [[WP:CSD|speedy deletion]] nominations made by this user using [[WP:GLOO|Igloo]]'s CSD module. \n\nIf you no longer wish to keep this log, you can turn it off in igloo settings and request it deleted under CSD U1.";
-			}
-
-			var getLogText = new iglooRequest({
-				module: 'getPage',
-				params: { targ: iglooConfiguration.csdLogPage, revisions: 1 },
-				callback: function (data) {
-					var logContent = exists === false ? text : data[0].content;
-					if (!headerRe.exec(logContent)) text += "\n\n=== " + date.getUTCMonthName() + " " + date.getUTCFullYear() + " ===\n\n";
-
-					text += "# [[:" + me.pageTitle + "]]: [[WP:CSD#" + me.csdtype.toUpperCase() + "|CSD " + me.csdtype.toUpperCase() + "]] ({" + "{tl|db-" + me.csdtype + "}" + "}); notified {" + "{user|" + csduser + "}" + "}";
-
-					var logCSD = new iglooRequest({
-						module: 'edit',
-						params: { targ: iglooConfiguration.csdLogPage, isMinor: false, text: text, summary: csdlogSummary, where: 'appendtext' },
+				case 1:
+					iglooF('statusLog').addStatus('Adding <strong>' + me.pageTitle + '</strong> to watchlist...');
+					// watch tagged page
+					var watchCSD = new iglooRequest({
+						module: 'watch',
+						params: { targ: me.pageTitle },
 						callback: function (data) {
-							igloo.statusLog.addStatus('Successfully logged csd tagging on <strong>' + me.pageTitle + '</strong>!');
+							iglooF('statusLog').addStatus('Added <strong>' + me.pageTitle + '</strong> to watchlist!');
+							me.notifyUser();
 						}
 					}, 0, true, true);
-					logCSD.run();
+					watchCSD.run();
+					break;
+			}
+		},
+		 
+		notifyUser: function () {
+			var me = this;
+			var getPageCreator = new iglooRequest({
+				module: 'getCreator',
+				params: { targ: me.pageTitle },
+				callback: function (data) {
+					var csduser = data;
+					if (csduser !== false) {
+						var csdMessage = iglooConfiguration.csdMessage,
+							csdSummary = iglooConfiguration.csdSummary.notify;
+
+						csdMessage = csdMessage.replace('%CSDPAGE%', me.pageTitle);
+						csdMessage = csdMessage.replace('%CSDTYPE%', me.csdtype);
+
+						csdSummary = csdSummary.replace('%CSDPAGE%', me.pageTitle);
+						csdSummary = csdSummary.replace('%CSDUSER%', csduser);
+
+						var alertUser = new iglooRequest({
+							module: 'edit',
+							params: { targ: 'User_Talk:'+csduser, isMinor: false, text: csdMessage, summary: csdSummary, where: 'appendtext' },
+							callback: function (data) {
+								iglooF('statusLog').addStatus('Successfully notified '+ csduser +' about the csd tag on <strong>'+ me.pageTitle +'</strong>!');
+								if (iglooUserSettings.logCSD && !iglooUserSettings.mesysop && me.csdtype !== 'g7') {
+									iglooF('statusLog').addStatus('Adding tag to csd log...');
+									me.saveLog(csduser);
+								}
+							}
+						}, 0, true, true);
+						alertUser.run();
+					} else {
+						iglooF('statusLog').addStatus('Could not notify user because igloo could not find the page creator');
+					}
 				}
 			}, 0, true, true);
-			getLogText.run();
+			getPageCreator.run();
+		},
+		 
+		saveLog: function(csduser) {
+			/* Credit for pretty much the entire concept of this goes to Twinkle */
+			/* Converted to work for igloo by Kangaroopower */
+			var me = this;
+			var isPageCreated = new iglooRequest({
+				module: 'exists',
+				params: { targ: iglooConfiguration.csdLogPage },
+				callback: function (data) {
+					var text = '',
+						csdlogSummary = iglooConfiguration.csdSummary.log.replace('%CSDPAGE%', me.pageTitle),
+						date = new Date(),
+						exists = data,
+						headerRe = new RegExp("^==+\\s*" + date.getUTCMonthName() + "\\s+" + date.getUTCFullYear() + "\\s*==+", "m");
+
+					if (exists === false) {
+						text += "This is a log of all [[WP:CSD|speedy deletion]] nominations made by this user using [[WP:GLOO|Igloo]]'s CSD module. \n\nIf you no longer wish to keep this log, you can turn it off in igloo settings and request it deleted under CSD U1.";
+					}
+
+					var getLogText = new iglooRequest({
+						module: 'getPage',
+						params: { targ: iglooConfiguration.csdLogPage, revisions: 1 },
+						callback: function (data) {
+							var logContent = exists === false ? text : data[0].content;
+							if (!headerRe.exec(logContent)) text += "\n\n=== " + date.getUTCMonthName() + " " + date.getUTCFullYear() + " ===\n\n";
+
+							text += "# [[:" + me.pageTitle + "]]: [[WP:CSD#" + me.csdtype.toUpperCase() + "|CSD " + me.csdtype.toUpperCase() + "]] ({" + "{tl|db-" + me.csdtype + "}" + "}); notified {" + "{user|" + csduser + "}" + "}";
+
+							var logCSD = new iglooRequest({
+								module: 'edit',
+								params: { targ: iglooConfiguration.csdLogPage, isMinor: false, text: text, summary: csdlogSummary, where: 'appendtext' },
+								callback: function (data) {
+									iglooF('statusLog').addStatus('Successfully logged csd tagging on <strong>' + me.pageTitle + '</strong>!');
+								}
+							}, 0, true, true);
+							logCSD.run();
+						}
+					}, 0, true, true);
+					getLogText.run();
+				}
+			}, 0, true, true);
+			isPageCreated.run();
 		}
-	}, 0, true, true);
-	isPageCreated.run();
-};
+	};
+});
 
 //Class iglooPast- sets up iglooHist
 function iglooPast () {
@@ -2442,7 +2498,7 @@ function iglooPast () {
 		histButton.id = "igloo-hist";
 		histButton.innerHTML = '<img title="Page History" src= "' + iglooConfiguration.fileHost + 'images/igloo-hist.png">';
 
-		this.dropdown = new iglooDropdown('igloo-hist', "igloo.past", {}, 'igPast',  {
+		this.dropdown = new iglooDropdown('igloo-hist', "past", {}, 'igPast',  {
 			top: 113,
 			right: '35px',
 			where: 'right'
@@ -2477,43 +2533,47 @@ function iglooHist (pageTitle) {
 	this.pageTitle = pageTitle;
 }
 
-iglooHist.prototype.getHistory = function (callback, data) {
-	// the get history module retrieves a page history and displays it to the user
-	var me = this;
+igloo.extendProto(iglooHist, function () {
+	return {
+		getHistory: function (callback, data) {
+			// the get history module retrieves a page history and displays it to the user
+			var me = this;
 
-	switch (callback) {
-		default: case 0:
-			$(igloo.past.dropdown.dropDisplay).css('display', 'block');
-			$(igloo.past.dropdown.name + '-note').css('display', 'block');
+			switch (callback) {
+				default: case 0:
+					$(iglooF('past').dropdown.dropDisplay).css('display', 'block');
+					$(iglooF('past').dropdown.name + '-note').css('display', 'block');
 
-			// get the page history
-			var pageHist = new iglooRequest({
-				module: 'getPage',
-				params: { targ: me.pageTitle, revisions: 15, properties: 'ids|user' },
-				callback: function (data) {  me.getHistory (1, data); }
-			}, 0, true, true);
-			pageHist.run();
+					// get the page history
+					var pageHist = new iglooRequest({
+						module: 'getPage',
+						params: { targ: me.pageTitle, revisions: 15, properties: 'ids|user' },
+						callback: function (data) {  me.getHistory (1, data); }
+					}, 0, true, true);
+					pageHist.run();
 
-			break;
- 
-		case 1:
-			$(igloo.past.dropdown.name + '-note').css('display', 'none');
- 
-			var pageHistory = '';
-			for (var i in data) {
-				if (i === "title") continue;
+					break;
+		 
+				case 1:
+					$(iglooF('past').dropdown.name + '-note').css('display', 'none');
+		 
+					var pageHistory = '';
+					for (var i in data) {
+						if (i === "title") continue;
 
-				var rev = data[i];
- 
-				pageHistory += '<li id="'+igloo.past.dropdown.itemPrefix+rev.ids.revid+'" onclick="igloo.actions.loadPage(\''+me.pageTitle.replace('\'', '\\\'')+'\',  \''+rev.ids.revid+'\');" onmouseover="this.style.backgroundColor = \''+jin.Colour.LIGHT_GREY+'\';" onmouseout="this.style.backgroundColor = \''+jin.Colour.WHITE+'\';" style="cursor: pointer; width: 186px; padding: 2px; border-bottom: 1px solid #000000; list-style-type: none; list-style-image: none; marker-offset: 0px; background-color: '+jin.Colour.WHITE+';">'+rev.user+'</li>';
+						var rev = data[i];
+		 
+						pageHistory += '<li id="iglooF(\'past\').dropdown.itemPrefix'+rev.ids.revid+'" onclick="iglooF(\'actions\').loadPage(\''+me.pageTitle.replace('\'', '\\\'')+'\',  \''+rev.ids.revid+'\');" onmouseover="this.style.backgroundColor = \''+jin.Colour.LIGHT_GREY+'\';" onmouseout="this.style.backgroundColor = \''+jin.Colour.WHITE+'\';" style="cursor: pointer; width: 186px; padding: 2px; border-bottom: 1px solid #000000; list-style-type: none; list-style-image: none; marker-offset: 0px; background-color: '+jin.Colour.WHITE+';">'+rev.user+'</li>';
+					}
+					
+					pageHistory += '<li style="width: 100%; list-style-type: none; list-style-image: none; text-align: center;"><a target="_blank" href="'+ mw.util.wikiScript('index') +'?title=' + me.pageTitle + '&action=history">- full history -</a></li>';
+					$(iglooF('past').dropdown.dropCont).html(pageHistory);
+		 
+					break;
 			}
-			
-			pageHistory += '<li style="width: 100%; list-style-type: none; list-style-image: none; text-align: center;"><a target="_blank" href="'+ mw.util.wikiScript('index') +'?title=' + me.pageTitle + '&action=history">- full history -</a></li>';
-			$(igloo.past.dropdown.dropCont).html(pageHistory);
- 
-			break;
-	}
-};
+		}
+	};
+});
 
 //Class iglooBan- sets up iglooBlock
 function iglooBan () {
@@ -2533,62 +2593,66 @@ function iglooBan () {
 	});
 }
 
-iglooBan.prototype.buildInterface = function () {
-	var banButton = document.createElement('div'),
-		me = this;
+igloo.extendProto(iglooBan, function () {
+	return {
+		buildInterface: function () {
+			var banButton = document.createElement('div'),
+				me = this;
 
-	banButton.id = 'igloo-block';
-	banButton.innerHTML = '<img title="Block User whose edit you\'re currently viewing" style="margin-left:7px; width:63px; height:63px;" src= "' + iglooConfiguration.fileHost + 'images/igloo-block.png">';
-	
-	$(banButton).click(function () {
-		if (me.pageTitle !== '') {
-			me.go();
-		}
-	});
-
-	$(banButton).css({
-		'position': 'relative',
-		'float': 'left',
-		'width': '73px',
-		'height': '73px',
-		'left': '-109px',
-		'margin-top': '17px',
-		'margin-left': '5px',
-		'cursor': 'pointer'
-	});
-
-	igloo.toolPane.panel.appendChild(banButton);
-};
-
-iglooBan.prototype.go = function (callback, data) {
-	var me = this;
-
-	// this helper function is called when a user who already has a final warning is reverted. It decides what to do based on the user settings, and
-	// is able to prompt for input if it is unsure.
-	switch (callback) {
-		default: case 0:
-			// If we reach a final warning, remember that no further action is required if the user is already blocked!
-			var blockCheck = new iglooRequest({
-				module: 'question',
-				params: '?action=query&list=blocks&bkusers=' + me.user,
-				callback: function (data) {
-					me.go(1, data);
-				}
-			}, 0, true, true);
-			blockCheck.run();
-			break;
+			banButton.id = 'igloo-block';
+			banButton.innerHTML = '<img title="Block User whose edit you\'re currently viewing" style="margin-left:7px; width:63px; height:63px;" src= "' + iglooConfiguration.fileHost + 'images/igloo-block.png">';
 			
-		case 1:
-			// If already blocked, tell and exit.
-			if (data.query.blocks.length !== 0) {
-				igloo.statusLog.addStatus( 'igloo will take no further action because <strong>' + me.user + '</strong> is currently blocked.' );
-				return false;
-			}
+			$(banButton).click(function () {
+				if (me.pageTitle !== '') {
+					me.go();
+				}
+			});
 
-			me.block.setUpBlock();
-			break;
-	}
-};
+			$(banButton).css({
+				'position': 'relative',
+				'float': 'left',
+				'width': '73px',
+				'height': '73px',
+				'left': '-109px',
+				'margin-top': '17px',
+				'margin-left': '5px',
+				'cursor': 'pointer'
+			});
+
+			igloo.toolPane.panel.appendChild(banButton);
+		},
+
+		go: function (callback, data) {
+			var me = this;
+
+			// this helper function is called when a user who already has a final warning is reverted. It decides what to do based on the user settings, and
+			// is able to prompt for input if it is unsure.
+			switch (callback) {
+				default: case 0:
+					// If we reach a final warning, remember that no further action is required if the user is already blocked!
+					var blockCheck = new iglooRequest({
+						module: 'question',
+						params: '?action=query&list=blocks&bkusers=' + me.user,
+						callback: function (data) {
+							me.go(1, data);
+						}
+					}, 0, true, true);
+					blockCheck.run();
+					break;
+					
+				case 1:
+					// If already blocked, tell and exit.
+					if (data.query.blocks.length !== 0) {
+						iglooF('statusLog').addStatus( 'igloo will take no further action because <strong>' + me.user + '</strong> is currently blocked.' );
+						return false;
+					}
+
+					me.block.setUpBlock();
+					break;
+			}
+		}
+	};
+});
 
 //Class iglooBlock- blocks users
 function iglooBlock (user) {
@@ -2597,289 +2661,293 @@ function iglooBlock (user) {
 	this.checked = {};
 }
 
-iglooBlock.prototype.startBlock = function (callback, details) {
-	var me = this;
+igloo.extendProto(iglooBlock, function () {
+	return {
+		startBlock: function (callback, details) {
+			var me = this;
 
-	// handle blocking of users
-	if (iglooUserSettings.mesysop === false) return false;
-	
-	switch (callback) {
-		default: case 0:
-			// notify user
-			igloo.statusLog.addStatus('Attempting to block <strong>' + me.currentUser + '</strong> for vandalism after final warning...');
+			// handle blocking of users
+			if (iglooUserSettings.mesysop === false) return false;
 			
-			// analyze user
-			var getBlocks = new iglooRequest({
-				module: 'question',
-				params: '?action=query&list=logevents&letype=block&letitle=User:' + me.currentUser,
+			switch (callback) {
+				default: case 0:
+					// notify user
+					iglooF('statusLog').addStatus('Attempting to block <strong>' + me.currentUser + '</strong> for vandalism after final warning...');
+					
+					// analyze user
+					var getBlocks = new iglooRequest({
+						module: 'question',
+						params: '?action=query&list=logevents&letype=block&letitle=User:' + me.currentUser,
+						callback: function (data) {
+							me.startBlock(1, data);
+						}
+					}, 0, true, true);
+					getBlocks.run();
+					break;
+					
+				case 1:
+					// we now have access to the talk page data and the block log - redirect depending on whether we're autoblocking or not.
+					if (iglooUserSettings.blockAction === 'standard') {
+						me.setUpBlock('userlock'); 
+						break;
+					}
+					
+					if (iglooF('actions').isIp !== true) {
+						me.checked = {'auto': 'checked ','talk': '','anon': '','email': '','create': 'checked '};
+						me.useduration = 'indefinite';
+						me.usetemplate = 'subst:uw-voablock|time=%DURATION%|sig=yes';
+						me.blockReason = '[[WP:Vandalism-only account|Vandalism-only account]]';
+						me.setUpBlock('userlock');
+						break;
+					}
+					me.autoBlock(details);
+					break;
+			}
+		},
+					
+		autoBlock: function (details) {
+			// autoblocking - decide on the best warning
+			// pick the best warning length
+			var lastlength = 'neverblocked', me = this;
+			me.useduration = iglooConfiguration.blockIncrement[iglooConfiguration.blockDefault];
+			if (details.query.logevents !== null) {
+				if (details.query.logevents.length === 1) {
+					// one result
+					if (details.query.logevents[0].action === 'block') {
+						lastlength = details.query.logevents[0].block.duration;
+					}
+				} else {
+					// many results
+					for (var i = 0, l = details.query.logevents.length; i < l; i++) {
+						if (details.query.logevents[i].action === 'block') break;
+					}
+
+					if (i === l) { 
+						me.setUpBlock('error');
+						return;
+					}
+
+					lastlength = details.query.logevents[i].block.duration;
+				}
+			}
+			
+			if (lastlength !== 'neverblocked') {
+				var u = iglooConfiguration.blockIncrement.getPosition(lastlength);
+				if (u !== false) {
+					if (u < iglooConfiguration.blockDefault) { 
+						me.useduration = iglooConfiguration.blockIncrement[iglooConfiguration.blockDefault];
+					} else {
+						if (u >= (iglooConfiguration.blockIncrement.length - 1)) u = iglooConfiguration.blockIncrement.length - 2;
+							me.useduration = iglooConfiguration.blockIncrement[++u];
+					}
+				} else {
+					me.setUpBlock('error');
+					return;
+				}
+			}
+
+			// check for relevant templates on the user page
+			me.usetemplate = iglooConfiguration.blockTypes['default'];
+			me.lastlength = lastlength;
+			me.blockReason = '[[WP:Vandalism|Vandalism]]';
+			
+			for (var i in iglooConfiguration.blockTypes) {
+				if (typeof i !== 'string') continue;
+				
+				var regTest = new RegExp ('{{ *' + i, 'ig');
+				if (typeof me.userTalk !== 'undefined' && regTest.test(me.userTalk) === true && (i !== 'default' /* just in case there's a weird default template O_o */)) {
+					// show an error is misconfigured OR if the duration doesn't exist and hasn't caused an error yet
+					if (iglooConfiguration.blockIncrement.getPosition(me.useduration) === false || iglooConfiguration.blockIncrement.getPosition(iglooConfiguration.blockSpecTemp) === false) {
+						me.setUpBlock('error');
+						return;
+					}
+
+					if (iglooConfiguration.blockIncrement.getPosition(me.useduration) >= iglooConfiguration.blockIncrement.getPosition(iglooConfiguration.blockSpecTemp)) {
+						me.usetemplate = iglooConfiguration.blockTypes[i]; 
+						if (me.usetemplate.indexOf('|') > -1)  {
+							me.blockReason = '{{' + me.usetemplate.substr(0, me.usetemplate.indexOf('|')) + '}}';
+						} else {
+							me.blockReason = '{{' + me.usetemplate + '}}';
+						}
+						break;
+					}
+				}
+			}
+				
+			// manage the prompt
+			var message = 'This user has already received a final warning. igloo intends to block the user with the following settings:<br /><br /> ' +
+					'<span style="padding-left: 10px;">user: ' + me.currentUser + '<br />duration: ' + me.useduration + ' (last blocked for: ' + lastlength + ')<br />block template: ' + me.usetemplate +
+					'</span><br /><br /><span id="igloo-just-do-block" style="cursor: pointer;">perform this block (recommended)</span> | <span id="igloo-adjust-block" style="cursor: pointer;">adjust block settings</span> | <span id="igloo-abort-block" style="cursor: pointer;">abort block (report user)</span>',
+				autoBlockPopup = new iglooPopup('<div><span style="width: 100%; border-bottom: 1px solid #000;"><strong>igloo needs your permission to continue...</strong></span><br /><div style="text-align: left; margin-left: 10px; width: 90%; color: #222222;">' + message + '</div></div>', 500, 130);
+			
+			autoBlockPopup.buildInterface();
+			autoBlockPopup.show();
+			iglooF('actions').stopActions = true;
+			
+			// set the functions
+			document.getElementById('igloo-just-do-block').onclick = function () {
+				iglooF('actions').stopActions = false;
+				autoBlockPopup.hide();
+				me.doBlock();
+			};
+			document.getElementById('igloo-adjust-block').onclick = function () {
+				iglooF('actions').stopActions = false;
+				autoBlockPopup.hide();
+				me.setUpBlock('adjusting');
+				iglooF('statusLog').addStatus('Adjusting block of <strong>' + me.currentUser + '</strong>: launching block interface...');
+			};
+			document.getElementById('igloo-abort-block').onclick = function () {
+				iglooF('actions').stopActions = false;
+				autoBlockPopup.hide();
+				iglooF('justice').rollback.reportUser();
+				iglooF('statusLog').addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: user aborted! Will now report...');
+			};
+		},
+
+		setUpBlock: function (details) {
+			var me = this;
+
+			if (details === 'error') {
+				// something went wrong. Abort and report user.
+				iglooF('statusLog').addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: an error occurred! Will now report...');
+				iglooF('justice').rollback.reportUser(); 
+				return;
+			}
+			
+			// nothing went wrong. Display the adjust block system.
+			// generate the dipaly elements
+			var disabled = '',
+				duration = '',
+				lastlength = '';
+
+			if (details === 'adjusting') {
+				disabled = 'disabled';
+				lastlength = ' (last blocked for <strong>' + me.lastlength + '</strong>)';
+				me.checked = { 'auto': '','talk': '','anon': 'checked','email': '','create': 'checked' };
+			} else {
+				if (typeof me.useduration === 'undefined') me.useduration = '';
+				if (typeof me.usetemplate === 'undefined') me.usetemplate = 'subst:uw-block|time=%DURATION%|sig=yes';
+				if (typeof me.blockReason === 'undefined') me.blockReason = '[[WP:Vandalism|Vandalism]]';
+			}
+			if (details === 'userlock') disabled = 'disabled';
+			
+			var t = '', t2; // duration select
+			for (var i = 0; i < iglooConfiguration.blockIncrement.length; i ++) {
+				t += '<option ';
+				if (iglooConfiguration.blockIncrement [i] === me.useduration) t += 'selected ';
+				t += 'value="' + iglooConfiguration.blockIncrement [i] + '">' + iglooConfiguration.blockIncrement [i] + '</option>';
+			}
+
+			if (typeof me.checked === 'undefined') {
+				me.checked = { 'auto': '','talk': '','anon': '','email': '','create': '' };
+			}
+			
+			// output the display
+			var content = '';
+			content += '<div style="padding-left: 15px;"><span style="width: 100%; border-bottom: 1px solid #000; font-size: 16px; font-weight: bold;">Block user</span><br />You are blocking a user - select the block options from below. Remember that you are responsible for all blocks made using your account.';
+			content += '<br /><br />';
+			//content += '<div style="float: right; width: 200px; height: 100px;">' + t2 + '</div>';
+			content += '<table style="border: none; width: 700px;>';
+			content += '<tr><td width="140px">Username:</td><td><input id="iglooBlock-username" style="width: 200px;" type="text" ' + disabled + ' value="' + me.user + '" />' + lastlength + '</td></tr>';
+			content += '<tr><td width="140px">Duration:</td><td><select style="width: 205px;" id="iglooBlock-duration-a">' + t + '</select> (or type) <input id="iglooBlock-duration-b" style="width: 200px;" type="text" /></td></tr>';
+			content += '<tr><td width="140px">Reason:</td><td><input id="iglooBlock-reason" style="width: 200px;" type="text" value="' + me.blockReason + '" /></td></tr>';
+			content += '<tr><td width="140px">Notify with template (igloo will automatically add \'{{\' and \'}}\'): </td><td><input id="iglooBlock-template" style="width: 200px;" type="text" value="' + me.usetemplate + '" /></td></tr>';
+			content += '<tr><td colspan="2" height="30px" style="margin-top: 30px; font-weight: bold;">Details:</td></tr>';
+			content += '<tr><td colspan="2">';
+				content += '<table width="150px" style="margin-left: 10px;"><tr>';
+				content += '<td width="120px">Autoblock: </td><td><input  ' + me.checked.auto + ' id="iglooBlock-autoblock" type="checkbox" /></td></tr><tr><td width="120px">Anon only: </td><td><input  ' + me.checked.anon + ' id="iglooBlock-anononly" type="checkbox" /></td></tr><tr><td width="120px">Block acc create: </td><td><input  ' + me.checked.create + ' id="iglooBlock-blockcreate" type="checkbox" /></td></tr><tr>';
+				content += '<td width="120px">Block talk: </td><td><input  ' + me.checked.talk + ' id="iglooBlock-blocktalk" type="checkbox" /></td></tr><tr><td width="120px">Block email: </td><td><input  ' + me.checked.email + ' id="iglooBlock-blockemail" type="checkbox" /></td>';
+				content += '</tr></table>';
+			content += '</td></tr>';
+			content += '<tr><td colspan="2" height="50px" style="margin-top: 50px; font-weight: bold;"><input id="igloo-finish-block" type="button" value="Block" /> | <input id="igloo-block-cancel" type="button" value="Cancel" /></td></tr>';
+			content += '</table></span>';
+
+			var blockInfoPopup = new iglooPopup(content);
+				blockInfoPopup.buildInterface();
+				blockInfoPopup.show();
+
+			$('#igloo-block-cancel').click(function () {
+				blockInfoPopup.hide();
+				iglooF('piano').mode = 'default';
+			});
+			
+			$('#igloo-finish-block').click(function () { 
+				// set settings
+				if (document.getElementById ('iglooBlock-duration-b').value === '') {
+					me.useduration = document.getElementById ('iglooBlock-duration-a').value;
+				} else {
+					me.useduration = document.getElementById ('iglooBlock-duration-b').value;
+				}
+				me.currentUser = document.getElementById ('iglooBlock-username').value;
+				me.usetemplate = document.getElementById ('iglooBlock-template').value;
+				me.blockReason = document.getElementById ('iglooBlock-reason').value;
+				
+				me.customsettings = {};
+				if (document.getElementById ('iglooBlock-autoblock').checked === true) me.customsettings.autoblock = true;
+				if (document.getElementById ('iglooBlock-blocktalk').checked !== true) me.customsettings.allowTalk = true ;
+				if (document.getElementById ('iglooBlock-anononly').checked === true) me.customsettings.onlyanon = true;
+				if (document.getElementById ('iglooBlock-blockemail').checked === true) me.customsettings.noemail = true;
+				if (document.getElementById ('iglooBlock-blockcreate').checked === true) me.customsettings.nocreate = true;
+
+				blockInfoPopup.hide();
+				iglooF('piano').mode = 'default';
+				
+				me.doBlock();
+				return; // done!
+			});	
+		},
+					
+		doBlock: function () {
+			// DO THE BLOCK! Note that this function can be called even without reverting any page.
+			var me = this;
+			if (!me.useduration || !me.usetemplate || !me.currentUser) {
+				if (!me.currentUser) me.currentUser = 'no user supplied';
+				iglooF('statusLog').addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: an error occurred!'); 
+				return;
+			}
+
+			if ($.isEmptyObject(me.customsettings)) { // the block 'settings' haven't been altered (e.g. autoblock, block talk etc.), so use the default block settings.
+				me.customsettings = (iglooF('actions').isIp === true) ? iglooConfiguration.anonBlockSettings : iglooConfiguration.userBlockSettings;
+			}
+					
+			// do the actual block!
+			iglooF('statusLog').addStatus('Performing block of <strong>' + me.currentUser + '</strong>...');
+			var blockParams = $.extend({targ: me.currentUser, expire: me.useduration, summary: me.blockReason}, me.customsettings),
+				doBlock = new iglooRequest({
+					module: 'block',
+					params: blockParams,
+					callback: function (data) {
+						if (typeof data.error === 'undefined') { // success
+							iglooF('statusLog').addStatus('Successfully blocked <strong>' + me.currentUser + '</strong>!');
+							me.notifyUser(); //notify user
+						} else { // failure
+							iglooF('statusLog').addStatus('Failed to block <strong>' + me.currentUser + '</strong> - reason: ' + data.error.info);
+						}
+					}
+				}, 0, true, true);
+				doBlock.run();			
+		},
+
+		notifyUser: function () {
+			var me = this,
+				summary = 'Notifying user of block ' + glooSig,
+				message = me.usetemplate;
+				message = message.replace(/%DURATION%/g, me.useduration);			
+				message = '\n\n{{' + message + '}}';
+
+			iglooF('statusLog').addStatus ( 'Notifying <strong>' + me.currentUser + '</strong> of block (duration: ' + me.useduration + ')...' );
+
+			var notifyBlock = new iglooRequest({
+				module: 'edit',
+				params: { targ: 'User_talk:' + me.currentUser, isMinor: false, text: message, summary: summary, where: 'appendtext' },
 				callback: function (data) {
-					me.startBlock(1, data);
+					iglooF('statusLog').addStatus ( 'Successfully notified <strong>' + me.currentUser + '</strong> of block!' );
 				}
 			}, 0, true, true);
-			getBlocks.run();
-			break;
-			
-		case 1:
-			// we now have access to the talk page data and the block log - redirect depending on whether we're autoblocking or not.
-			if (iglooUserSettings.blockAction === 'standard') {
-				me.setUpBlock('userlock'); 
-				break;
-			}
-			
-			if (igloo.actions.isIp !== true) {
-				me.checked = {'auto': 'checked ','talk': '','anon': '','email': '','create': 'checked '};
-				me.useduration = 'indefinite';
-				me.usetemplate = 'subst:uw-voablock|time=%DURATION%|sig=yes';
-				me.blockReason = '[[WP:Vandalism-only account|Vandalism-only account]]';
-				me.setUpBlock('userlock');
-				break;
-			}
-			me.autoBlock(details);
-			break;
-	}
-};
-			
-iglooBlock.prototype.autoBlock = function (details) {
-	// autoblocking - decide on the best warning
-	// pick the best warning length
-	var lastlength = 'neverblocked', me = this;
-	me.useduration = iglooConfiguration.blockIncrement[iglooConfiguration.blockDefault];
-	if (details.query.logevents !== null) {
-		if (details.query.logevents.length === 1) {
-			// one result
-			if (details.query.logevents[0].action === 'block') {
-				lastlength = details.query.logevents[0].block.duration;
-			}
-		} else {
-			// many results
-			for (var i = 0, l = details.query.logevents.length; i < l; i++) {
-				if (details.query.logevents[i].action === 'block') break;
-			}
-
-			if (i === l) { 
-				me.setUpBlock('error');
-				return;
-			}
-
-			lastlength = details.query.logevents[i].block.duration;
+			notifyBlock.run();
 		}
-	}
-	
-	if (lastlength !== 'neverblocked') {
-		var u = iglooConfiguration.blockIncrement.getPosition(lastlength);
-		if (u !== false) {
-			if (u < iglooConfiguration.blockDefault) { 
-				me.useduration = iglooConfiguration.blockIncrement[iglooConfiguration.blockDefault];
-			} else {
-				if (u >= (iglooConfiguration.blockIncrement.length - 1)) u = iglooConfiguration.blockIncrement.length - 2;
-					me.useduration = iglooConfiguration.blockIncrement[++u];
-			}
-		} else {
-			me.setUpBlock('error');
-			return;
-		}
-	}
-
-	// check for relevant templates on the user page
-	me.usetemplate = iglooConfiguration.blockTypes['default'];
-	me.lastlength = lastlength;
-	me.blockReason = '[[WP:Vandalism|Vandalism]]';
-	
-	for (var i in iglooConfiguration.blockTypes) {
-		if (typeof i !== 'string') continue;
-		
-		var regTest = new RegExp ('{{ *' + i, 'ig');
-		if (typeof me.userTalk !== 'undefined' && regTest.test(me.userTalk) === true && (i !== 'default' /* just in case there's a weird default template O_o */)) {
-			// show an error is misconfigured OR if the duration doesn't exist and hasn't caused an error yet
-			if (iglooConfiguration.blockIncrement.getPosition(me.useduration) === false || iglooConfiguration.blockIncrement.getPosition(iglooConfiguration.blockSpecTemp) === false) {
-				me.setUpBlock('error');
-				return;
-			}
-
-			if (iglooConfiguration.blockIncrement.getPosition(me.useduration) >= iglooConfiguration.blockIncrement.getPosition(iglooConfiguration.blockSpecTemp)) {
-				me.usetemplate = iglooConfiguration.blockTypes[i]; 
-				if (me.usetemplate.indexOf('|') > -1)  {
-					me.blockReason = '{{' + me.usetemplate.substr(0, me.usetemplate.indexOf('|')) + '}}';
-				} else {
-					me.blockReason = '{{' + me.usetemplate + '}}';
-				}
-				break;
-			}
-		}
-	}
-		
-	// manage the prompt
-	var message = 'This user has already received a final warning. igloo intends to block the user with the following settings:<br /><br /> ' +
-			'<span style="padding-left: 10px;">user: ' + me.currentUser + '<br />duration: ' + me.useduration + ' (last blocked for: ' + lastlength + ')<br />block template: ' + me.usetemplate +
-			'</span><br /><br /><span id="igloo-just-do-block" style="cursor: pointer;">perform this block (recommended)</span> | <span id="igloo-adjust-block" style="cursor: pointer;">adjust block settings</span> | <span id="igloo-abort-block" style="cursor: pointer;">abort block (report user)</span>',
-		autoBlockPopup = new iglooPopup('<div><span style="width: 100%; border-bottom: 1px solid #000;"><strong>igloo needs your permission to continue...</strong></span><br /><div style="text-align: left; margin-left: 10px; width: 90%; color: #222222;">' + message + '</div></div>', 500, 130);
-	
-	autoBlockPopup.buildInterface();
-	autoBlockPopup.show();
-	igloo.actions.stopActions = true;
-	
-	// set the functions
-	document.getElementById('igloo-just-do-block').onclick = function () {
-		igloo.actions.stopActions = false;
-		autoBlockPopup.hide();
-		me.doBlock();
 	};
-	document.getElementById('igloo-adjust-block').onclick = function () {
-		igloo.actions.stopActions = false;
-		autoBlockPopup.hide();
-		me.setUpBlock('adjusting');
-		igloo.statusLog.addStatus('Adjusting block of <strong>' + me.currentUser + '</strong>: launching block interface...');
-	};
-	document.getElementById('igloo-abort-block').onclick = function () {
-		igloo.actions.stopActions = false;
-		autoBlockPopup.hide();
-		igloo.justice.rollback.reportUser();
-		igloo.statusLog.addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: user aborted! Will now report...');
-	};
-};
-
-iglooBlock.prototype.setUpBlock = function (details) {
-	var me = this;
-
-	if (details === 'error') {
-		// something went wrong. Abort and report user.
-		igloo.statusLog.addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: an error occurred! Will now report...');
-		igloo.justice.rollback.reportUser(); 
-		return;
-	}
-	
-	// nothing went wrong. Display the adjust block system.
-	// generate the dipaly elements
-	var disabled = '',
-		duration = '',
-		lastlength = '';
-
-	if (details === 'adjusting') {
-		disabled = 'disabled';
-		lastlength = ' (last blocked for <strong>' + me.lastlength + '</strong>)';
-		me.checked = { 'auto': '','talk': '','anon': 'checked','email': '','create': 'checked' };
-	} else {
-		if (typeof me.useduration === 'undefined') me.useduration = '';
-		if (typeof me.usetemplate === 'undefined') me.usetemplate = 'subst:uw-block|time=%DURATION%|sig=yes';
-		if (typeof me.blockReason === 'undefined') me.blockReason = '[[WP:Vandalism|Vandalism]]';
-	}
-	if (details === 'userlock') disabled = 'disabled';
-	
-	var t = '', t2; // duration select
-	for (var i = 0; i < iglooConfiguration.blockIncrement.length; i ++) {
-		t += '<option ';
-		if (iglooConfiguration.blockIncrement [i] === me.useduration) t += 'selected ';
-		t += 'value="' + iglooConfiguration.blockIncrement [i] + '">' + iglooConfiguration.blockIncrement [i] + '</option>';
-	}
-
-	if (typeof me.checked === 'undefined') {
-		me.checked = { 'auto': '','talk': '','anon': '','email': '','create': '' };
-	}
-	
-	// output the display
-	var content = '';
-	content += '<div style="padding-left: 15px;"><span style="width: 100%; border-bottom: 1px solid #000; font-size: 16px; font-weight: bold;">Block user</span><br />You are blocking a user - select the block options from below. Remember that you are responsible for all blocks made using your account.';
-	content += '<br /><br />';
-	//content += '<div style="float: right; width: 200px; height: 100px;">' + t2 + '</div>';
-	content += '<table style="border: none; width: 700px;>';
-	content += '<tr><td width="140px">Username:</td><td><input id="iglooBlock-username" style="width: 200px;" type="text" ' + disabled + ' value="' + me.user + '" />' + lastlength + '</td></tr>';
-	content += '<tr><td width="140px">Duration:</td><td><select style="width: 205px;" id="iglooBlock-duration-a">' + t + '</select> (or type) <input id="iglooBlock-duration-b" style="width: 200px;" type="text" /></td></tr>';
-	content += '<tr><td width="140px">Reason:</td><td><input id="iglooBlock-reason" style="width: 200px;" type="text" value="' + me.blockReason + '" /></td></tr>';
-	content += '<tr><td width="140px">Notify with template (igloo will automatically add \'{{\' and \'}}\'): </td><td><input id="iglooBlock-template" style="width: 200px;" type="text" value="' + me.usetemplate + '" /></td></tr>';
-	content += '<tr><td colspan="2" height="30px" style="margin-top: 30px; font-weight: bold;">Details:</td></tr>';
-	content += '<tr><td colspan="2">';
-		content += '<table width="150px" style="margin-left: 10px;"><tr>';
-		content += '<td width="120px">Autoblock: </td><td><input  ' + me.checked.auto + ' id="iglooBlock-autoblock" type="checkbox" /></td></tr><tr><td width="120px">Anon only: </td><td><input  ' + me.checked.anon + ' id="iglooBlock-anononly" type="checkbox" /></td></tr><tr><td width="120px">Block acc create: </td><td><input  ' + me.checked.create + ' id="iglooBlock-blockcreate" type="checkbox" /></td></tr><tr>';
-		content += '<td width="120px">Block talk: </td><td><input  ' + me.checked.talk + ' id="iglooBlock-blocktalk" type="checkbox" /></td></tr><tr><td width="120px">Block email: </td><td><input  ' + me.checked.email + ' id="iglooBlock-blockemail" type="checkbox" /></td>';
-		content += '</tr></table>';
-	content += '</td></tr>';
-	content += '<tr><td colspan="2" height="50px" style="margin-top: 50px; font-weight: bold;"><input id="igloo-finish-block" type="button" value="Block" /> | <input id="igloo-block-cancel" type="button" value="Cancel" /></td></tr>';
-	content += '</table></span>';
-
-	var blockInfoPopup = new iglooPopup(content);
-		blockInfoPopup.buildInterface();
-		blockInfoPopup.show();
-
-	$('#igloo-block-cancel').click(function () {
-		blockInfoPopup.hide();
-		igloo.piano.mode = 'default';
-	});
-	
-	$('#igloo-finish-block').click(function () { 
-		// set settings
-		if (document.getElementById ('iglooBlock-duration-b').value === '') {
-			me.useduration = document.getElementById ('iglooBlock-duration-a').value;
-		} else {
-			me.useduration = document.getElementById ('iglooBlock-duration-b').value;
-		}
-		me.currentUser = document.getElementById ('iglooBlock-username').value;
-		me.usetemplate = document.getElementById ('iglooBlock-template').value;
-		me.blockReason = document.getElementById ('iglooBlock-reason').value;
-		
-		me.customsettings = {};
-		if (document.getElementById ('iglooBlock-autoblock').checked === true) me.customsettings.autoblock = true;
-		if (document.getElementById ('iglooBlock-blocktalk').checked !== true) me.customsettings.allowTalk = true ;
-		if (document.getElementById ('iglooBlock-anononly').checked === true) me.customsettings.onlyanon = true;
-		if (document.getElementById ('iglooBlock-blockemail').checked === true) me.customsettings.noemail = true;
-		if (document.getElementById ('iglooBlock-blockcreate').checked === true) me.customsettings.nocreate = true;
-
-		blockInfoPopup.hide();
-		igloo.piano.mode = 'default';
-		
-		me.doBlock();
-		return; // done!
-	});	
-};
-			
-iglooBlock.prototype.doBlock = function () {
-	// DO THE BLOCK! Note that this function can be called even without reverting any page.
-	var me = this;
-	if (!me.useduration || !me.usetemplate || !me.currentUser) {
-		if (!me.currentUser) me.currentUser = 'no user supplied';
-		igloo.statusLog.addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: an error occurred!'); 
-		return;
-	}
-
-	if ($.isEmptyObject(me.customsettings)) { // the block 'settings' haven't been altered (e.g. autoblock, block talk etc.), so use the default block settings.
-		me.customsettings = (igloo.actions.isIp === true) ? iglooConfiguration.anonBlockSettings : iglooConfiguration.userBlockSettings;
-	}
-			
-	// do the actual block!
-	igloo.statusLog.addStatus('Performing block of <strong>' + me.currentUser + '</strong>...');
-	var blockParams = $.extend({targ: me.currentUser, expire: me.useduration, summary: me.blockReason}, me.customsettings),
-		doBlock = new iglooRequest({
-			module: 'block',
-			params: blockParams,
-			callback: function (data) {
-				if (typeof data.error === 'undefined') { // success
-					igloo.statusLog.addStatus('Successfully blocked <strong>' + me.currentUser + '</strong>!');
-					me.notifyUser(); //notify user
-				} else { // failure
-					igloo.statusLog.addStatus('Failed to block <strong>' + me.currentUser + '</strong> - reason: ' + data.error.info);
-				}
-			}
-		}, 0, true, true);
-		doBlock.run();			
-};
-
-iglooBlock.prototype.notifyUser = function () {
-	var me = this,
-		summary = 'Notifying user of block ' + glooSig,
-		message = me.usetemplate;
-		message = message.replace(/%DURATION%/g, me.useduration);			
-		message = '\n\n{{' + message + '}}';
-
-	igloo.statusLog.addStatus ( 'Notifying <strong>' + me.currentUser + '</strong> of block (duration: ' + me.useduration + ')...' );
-
-	var notifyBlock = new iglooRequest({
-		module: 'edit',
-		params: { targ: 'User_talk:' + me.currentUser, isMinor: false, text: message, summary: summary, where: 'appendtext' },
-		callback: function (data) {
-			igloo.statusLog.addStatus ( 'Successfully notified <strong>' + me.currentUser + '</strong> of block!' );
-		}
-	}, 0, true, true);
-	notifyBlock.run();
-};
+});
 
 //Class iglooReversion- sets up iglooRollback
 function iglooReversion () {
@@ -2900,94 +2968,98 @@ function iglooReversion () {
 		me.rollback = new iglooRollback(data.pageTitle, data.user, data.revId);
 	});
 
-	igloo.piano.register('q', 'default', function () {
+	iglooF('piano').register('q', 'default', function () {
 		if (me.pageTitle !== '') {
 			me.rollback.go();
 		}
 	});
 
-	igloo.piano.register('g', 'default', function () {
+	iglooF('piano').register('g', 'default', function () {
 		if (me.pageTitle !== '') {
 			me.rollback.go('agf', false);
 		}
 	});	
 }
 
-iglooReversion.prototype.buildInterface = function () {
-	var revertButton = document.createElement('div'),
-		me = this,
-		summaries = {
-			'vandalism': 'Vandalism',
-			'spam': 'Spam',
-			'rmcontent': 'Removal of Content',
-			'attacks': 'Personal Attacks',
-			'errors': 'Factual Errors',
-			'agf': 'AGF',
-			'custom': 'Custom Summary'
-		};
+igloo.extendProto(iglooReversion, function () {
+	return {
+		buildInterface: function () {
+			var revertButton = document.createElement('div'),
+				me = this,
+				summaries = {
+					'vandalism': 'Vandalism',
+					'spam': 'Spam',
+					'rmcontent': 'Removal of Content',
+					'attacks': 'Personal Attacks',
+					'errors': 'Factual Errors',
+					'agf': 'AGF',
+					'custom': 'Custom Summary'
+				};
 
-	revertButton.id = 'igloo-revert';
-	revertButton.innerHTML = '<img title="Revert Edit" src= "' + iglooConfiguration.fileHost + 'images/igloo-revert.png">';
+			revertButton.id = 'igloo-revert';
+			revertButton.innerHTML = '<img title="Revert Edit" src= "' + iglooConfiguration.fileHost + 'images/igloo-revert.png">';
 
-	this.dropdown = new iglooDropdown('igloo-revert', "igloo.justice", summaries, 'igRevert',  {
-		top: 113,
-		left: '265px',
-		where: 'left'
-	}, '');
-	
-	$(revertButton).click(function () {
-		if (me.pageTitle !== '') {
-			me.rollback.go();
-		}
-	});
-
-	$(revertButton).css({
-		'position': 'relative',
-		'float': 'left',
-		'width': '73px',
-		'height': '73px',
-		'margin-top': '17px',
-		'margin-left': '5px',
-		'cursor': 'pointer'
-	});
-
-	igloo.toolPane.panel.appendChild(revertButton);
-	this.dropdown.buildInterface();
-};
-
-iglooReversion.prototype.go = function (summary) {
-	var me = this;
-
-	if (igloo.actions.stopActions) return false;
-
-	var userGroupCheck = new iglooRequest({
-		module: 'getUserGroups',
-		params: { user: me.user, groups: 'sysop' },
-		callback: function (data) {
-			var confirmRevert = true;
-
-			if (data === true) {
-				confirmRevert = confirm('The edit you are about to revert was made by an admin. Do you wish to continue?');
-			}
-
-			if (confirmRevert === true) {
+			this.dropdown = new iglooDropdown('igloo-revert', "justice", summaries, 'igRevert',  {
+				top: 113,
+				left: '265px',
+				where: 'left'
+			}, '');
+			
+			$(revertButton).click(function () {
 				if (me.pageTitle !== '') {
-					if (summary === 'custom') {
-						var customSummary = prompt('What\'s your custom sumary (A summary is required)?');
-						if (customSummary !== null || customSummary !== "") {
-							me.rollback.go(customSummary.toLowerCase(), true);
+					me.rollback.go();
+				}
+			});
+
+			$(revertButton).css({
+				'position': 'relative',
+				'float': 'left',
+				'width': '73px',
+				'height': '73px',
+				'margin-top': '17px',
+				'margin-left': '5px',
+				'cursor': 'pointer'
+			});
+
+			igloo.toolPane.panel.appendChild(revertButton);
+			this.dropdown.buildInterface();
+		},
+
+		go: function (summary) {
+			var me = this;
+
+			if (iglooF('actions').stopActions) return false;
+
+			var userGroupCheck = new iglooRequest({
+				module: 'getUserGroups',
+				params: { user: me.user, groups: 'sysop' },
+				callback: function (data) {
+					var confirmRevert = true;
+
+					if (data === true) {
+						confirmRevert = confirm('The edit you are about to revert was made by an admin. Do you wish to continue?');
+					}
+
+					if (confirmRevert === true) {
+						if (me.pageTitle !== '') {
+							if (summary === 'custom') {
+								var customSummary = prompt('What\'s your custom sumary (A summary is required)?');
+								if (customSummary !== null || customSummary !== "") {
+									me.rollback.go(customSummary.toLowerCase(), true);
+								}
+							} else {
+								me.rollback.go('' + summary.toLowerCase(), false);
+							}
 						}
 					} else {
-						me.rollback.go('' + summary.toLowerCase(), false);
+						iglooF('statusLog').addStatus('Rollback aborted');
 					}
 				}
-			} else {
-				igloo.statusLog.addStatus('Rollback aborted');
-			}
+			}, 0, true, true);
+			userGroupCheck.run();
 		}
-	}, 0, true, true);
-	userGroupCheck.run();
-};
+	};
+});
 
 //class iglooRollback - does Rollback
 function iglooRollback (page, user, revId) {
@@ -3001,423 +3073,427 @@ function iglooRollback (page, user, revId) {
 	this.warningLevel = false;
 }
 
-iglooRollback.prototype.go = function (type, isCustom) {
-	var me = this;
+igloo.extendProto(iglooRollback, function () {
+	return {
+		go: function (type, isCustom) {
+			var me = this;
 
-	this.revType = type || 'vandalism';
-	this.isCustom = isCustom;
+			this.revType = type || 'vandalism';
+			this.isCustom = isCustom;
 
-	// checks
-	if (this.pageTitle === '') {
-		return;
-	} else if (this.revertUser === mw.config.get('wgUserName') && iglooUserSettings.promptRevertSelf) {
-		var sameUserCheck = confirm('You are attempting to revert yourself. Ensure you wish to perform this action. igloo will not warn or report users who are reverting themselves.');
-		if (sameUserCheck === true) {
-			me.shouldWarn = false;
-			me.performRollback();
-		} else {
-			igloo.statusLog.addStatus('Rollback aborted');
-		}
-	} else if (igloo.currentView.changedSinceDisplay === true) {
-		var alreadyRevertedCheck = confirm('The page you are viewing has changed since it was first loaded. Ensure that the change you were reverting has not already been fixed.');
-		if (alreadyRevertedCheck === true) {
-			me.performRollback();
-		} else {
-			igloo.statusLog.addStatus('Rollback aborted');
-		}
-	} else { 
-		this.performRollback(); 
-	}
-};
-
-iglooRollback.prototype.performRollback = function (callback, details) {
-	var thisRevert = this;
-
-	switch (callback) {
-		default: case 0: 
-			var noMessage = 'You cannot revert this edit to ' + this.pageTitle + ', ',
-				summary = '';
-
-			// check that reversion is switched on
-			if (igloo.justice.reversionEnabled === 'no') { 
-				alert(noMessage + 'because you made it using igloo');  
-				return false; 
-			}
-
-			if (igloo.justice.reversionEnabled === 'pause') { 
-				alert(noMessage + 'because a diff is still loading'); 
-				return false; 
-			}
-
-			// notify user
-			igloo.statusLog.addStatus('Attempting to revert the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>...');
-
-			// prevent interference with this page while we are reverting it
-			igloo.justice.reversionEnabled = 'pause';
-							
-			// let the user know we're working...
-			document.getElementById('iglooPageTitle').innerHTML = document.getElementById('iglooPageTitle').innerHTML + ' - reverting edit...';
-
-			// build the reversion summary
-			summary = (thisRevert.isCustom === true) ? (thisRevert.revType + ' ' + glooSig) : iglooConfiguration.rollbackSummary[thisRevert.revType];
-							
-			// attempt the actual rollback
-			var thisReversion = new iglooRequest({
-				module: 'rollback',
-				params: { targ: thisRevert.pageTitle, user: thisRevert.revertUser, summary: summary },
-				callback: function (data) {
-					if (typeof data.error !== "undefined") {
-						igloo.statusLog.addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because another user has already done so.');
-						if (thisRevert.pageTitle === igloo.justice.pageTitle) {
-							igloo.justice.reversionEnabled = 'no';
-						}
-					} else {
-						igloo.statusLog.addStatus('Successfully reverted the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>!');
-						thisRevert.performRollback(1);
-					}
+			// checks
+			if (this.pageTitle === '') {
+				return;
+			} else if (this.revertUser === mw.config.get('wgUserName') && iglooUserSettings.promptRevertSelf) {
+				var sameUserCheck = confirm('You are attempting to revert yourself. Ensure you wish to perform this action. igloo will not warn or report users who are reverting themselves.');
+				if (sameUserCheck === true) {
+					me.shouldWarn = false;
+					me.performRollback();
+				} else {
+					iglooF('statusLog').addStatus('Rollback aborted');
 				}
-			}, 0, true, true);
-			thisReversion.run();
+			} else if (igloo.currentView.changedSinceDisplay === true) {
+				var alreadyRevertedCheck = confirm('The page you are viewing has changed since it was first loaded. Ensure that the change you were reverting has not already been fixed.');
+				if (alreadyRevertedCheck === true) {
+					me.performRollback();
+				} else {
+					iglooF('statusLog').addStatus('Rollback aborted');
+				}
+			} else { 
+				this.performRollback(); 
+			}
+		},
 
-			break;
+		performRollback: function (callback, details) {
+			var thisRevert = this;
 
-		case 1:
-			if (iglooUserSettings.watchRollbacked) {
-				// watch rollbacked page
-				var pageWatch = new iglooRequest({
-					module: 'watch',
-					params: { targ: thisRevert.pageTitle },
-					callback: function (data) {
-						igloo.statusLog.addStatus('Added <strong>' + thisRevert.pageTitle + '</strong> to watchlist!');
+			switch (callback) {
+				default: case 0: 
+					var noMessage = 'You cannot revert this edit to ' + this.pageTitle + ', ',
+						summary = '';
+
+					// check that reversion is switched on
+					if (iglooF('justice').reversionEnabled === 'no') { 
+						alert(noMessage + 'because you made it using igloo');  
+						return false; 
+					}
+
+					if (iglooF('justice').reversionEnabled === 'pause') { 
+						alert(noMessage + 'because a diff is still loading'); 
+						return false; 
+					}
+
+					// notify user
+					iglooF('statusLog').addStatus('Attempting to revert the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>...');
+
+					// prevent interference with this page while we are reverting it
+					iglooF('justice').reversionEnabled = 'pause';
+									
+					// let the user know we're working...
+					document.getElementById('iglooPageTitle').innerHTML = document.getElementById('iglooPageTitle').innerHTML + ' - reverting edit...';
+
+					// build the reversion summary
+					summary = (thisRevert.isCustom === true) ? (thisRevert.revType + ' ' + glooSig) : iglooConfiguration.rollbackSummary[thisRevert.revType];
+									
+					// attempt the actual rollback
+					var thisReversion = new iglooRequest({
+						module: 'rollback',
+						params: { targ: thisRevert.pageTitle, user: thisRevert.revertUser, summary: summary },
+						callback: function (data) {
+							if (typeof data.error !== "undefined") {
+								iglooF('statusLog').addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because another user has already done so.');
+								if (thisRevert.pageTitle === iglooF('justice').pageTitle) {
+									iglooF('justice').reversionEnabled = 'no';
+								}
+							} else {
+								iglooF('statusLog').addStatus('Successfully reverted the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>!');
+								thisRevert.performRollback(1);
+							}
+						}
+					}, 0, true, true);
+					thisReversion.run();
+
+					break;
+
+				case 1:
+					if (iglooUserSettings.watchRollbacked) {
+						// watch rollbacked page
+						var pageWatch = new iglooRequest({
+							module: 'watch',
+							params: { targ: thisRevert.pageTitle },
+							callback: function (data) {
+								iglooF('statusLog').addStatus('Added <strong>' + thisRevert.pageTitle + '</strong> to watchlist!');
+								thisRevert.warnUser();
+							}
+						}, 0, true, true);
+						pageWatch.run();
+					} else {
 						thisRevert.warnUser();
 					}
-				}, 0, true, true);
-				pageWatch.run();
-			} else {
-				thisRevert.warnUser();
+
+					break;
 			}
+		},
+				
+		warnUser: function(callback, details) {
+			var thisRevert = this;
 
-			break;
-	}
-};
-		
-iglooRollback.prototype.warnUser = function(callback, details) {
-	var thisRevert = this;
+			switch (callback) {
+				default: case 0:
+					var warnReason;
 
-	switch (callback) {
-		default: case 0:
-			var warnReason;
-
-			// don't warn self/on agf
-			if (thisRevert.shouldWarn === false || thisRevert.revType === 'agf') {
-				document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
-				break;
-			}
-
-			document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle + ' - warning user';
-
-			// notify user
-			warnReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];					
-			igloo.statusLog.addStatus('Attempting to warn <strong>' + thisRevert.revertUser + '</strong> for ' + warnReason + ' on <strong>' + thisRevert.pageTitle + '</strong>...');
-
-			// get the user talk page
-			var getUserPage = new iglooRequest({
-				module: 'getPage',
-				params: { targ: 'User_talk:' + thisRevert.revertUser, revisions: 1, properties: 'content' },
-				callback: function (data) { thisRevert.warnUser(1, data); }
-			}, 0, true, true);
-			getUserPage.run();
-			
-			break;
-
-		case 1:
-			// set up the time management systems
-			var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-				currentDate = new Date(),
-				currentMonth = currentDate.getMonth(),
-				currentYear = currentDate.getFullYear(),
-				currentTime = currentDate.getTime(),
-				header;
-					
-			// check for warnings on the user's talk page
-			var warnings = [], useWarning;
-
-			// if the page already exists, we must analyse it for warnings
-			if (details !== false) {
-				var pageData = details[0].content,
-					regTest = /<!-- ?(?:template:?)?uw-([a-z]+?)([0-9](?:im)?)? ?-->(?:.+?([0-9]{2}):([0-9]{2}), ([0-9]{1,2}) ([a-z]+?) ([0-9]{4}))?/gi,
-					i = 0;
-
-				// get all the warnings on the page
-				while (true) {
-					var t = regTest.exec(pageData);
-					
-					if (t === null) break;
-					
-					warnings[i] = [
-						t[1], //template
-						t[2], //level
-						t[3], //hour
-						t[4], //minute
-						t[5], //day
-						t[6], //month
-						t[7] //year
-					];
-
-					i++;
-				}
-
-				// we are only interested in the latest one
-				if (typeof warnings[0] === 'undefined') { 
-					warnings[0] = []; 
-					warnings[0][0] = false; 
-					warnings[0][1] = 0; 
-				}
-
-				useWarning = warnings.length - 1;
-
-				if (typeof warnings[useWarning][0] === 'string') {
-					var tmplate = warnings[useWarning][0];
-					if (tmplate.indexOf('block') > -1) {
-						useWarning--; 
-						warnings[useWarning][1] = 0; 
+					// don't warn self/on agf
+					if (thisRevert.shouldWarn === false || thisRevert.revType === 'agf') {
+						document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
+						break;
 					}
-				}
-						
-				// check when this warning was given
-				for (var compareMonth = 0; compareMonth < months.length; compareMonth++) {
-					if (months[compareMonth] === warnings[useWarning][5]) break;
-				}
 
-				var compareDate = new Date();
-					compareDate.setFullYear(parseInt(warnings[useWarning][6], 10), compareMonth, parseInt(warnings[useWarning][4], 10));
-					compareDate.setHours(parseInt(warnings[useWarning][2], 10));
-					compareDate.setMinutes(parseInt(warnings[useWarning][3], 10));
-						
-				var compareTime = compareDate.getTime();
-						
-				// check if it is old enough to ignore for the purposes of incremental warnings
-				var timeDiff = (currentTime + (currentDate.getTimezoneOffset () * 60 * 1000)) - compareTime;
-				if (timeDiff > (iglooConfiguration.warningsOldAfter * 24 * 60 * 60 * 1000)) { 
-					warnings[useWarning][1] = 0;
-				}
-					
-				// check whether a header already exists for the current month. if not, create one
-				var currentHeader = new RegExp('={2,4} *' + months[currentMonth] + ' *' + currentYear + ' *={2,4}', 'gi');
-				if (currentHeader.test(pageData) !== true) { 
-					header = '== '+months[currentMonth]+' '+currentYear+' =='; 
-				} else { 
-					header = false; 
-				}
-			} else {
-				// if the page does not  exist, we can simply set warnings at the default (lowest) levels
-				// set up the warning and date header for addition to the user's page
-				warnings[0] = []; 
-				warnings[0][0] = false; 
-				warnings[0][1] = 0;
-				useWarning = 0;
-				header = '== '+months[currentMonth]+' '+currentYear+' ==';
-			}
-					
-			// decide upon which warning level to issue
-			var currentWarning = parseInt(warnings[useWarning][1], 10);
-			if (currentWarning === 4) {
-				igloo.statusLog.addStatus('Will not warn <strong>' + thisRevert.revertUser + '</strong> because they have already recieved a final warning.');
-				this.handleFinalWarning();
-				this.warningLevel = false;
-			} else if (currentWarning < 4 && currentWarning > 0) {
-				this.warningLevel = currentWarning + 1;
-			} else {
-				this.warningLevel = 1;
-			}
-					
-			// add the message to their talk page... or don't if we're gonna report them to AIV
-			if (this.warningLevel === false) return false;
-					
-			var userPage = 'User_talk:' + this.revertUser, summary;
-			var message = '\n\n' + iglooConfiguration.warningMessage;
-				message = message.replace (/%LEVEL%/g, this.warningLevel);
-				message = message.replace (/%PAGE%/g, this.pageTitle);
-				message = message.replace (/%DIFF%/g, mw.config.get('wgServer') + mw.config.get('wgScript') + '?diff=' + this.revId + '');
+					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle + ' - warning user';
 
-			if (thisRevert.isCustom === true) {
-				message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate.custom);
-				summary = iglooConfiguration.warningSummary.custom;
-			} else {
-				message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate[thisRevert.revType]);
-				summary = iglooConfiguration.warningSummary[thisRevert.revType];
-			}
+					// notify user
+					warnReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];					
+					iglooF('statusLog').addStatus('Attempting to warn <strong>' + thisRevert.revertUser + '</strong> for ' + warnReason + ' on <strong>' + thisRevert.pageTitle + '</strong>...');
 
-			summary = summary.replace (/%LEVEL%/g, this.warningLevel);
-			summary = summary.replace (/%PAGE%/g, this.pageTitle);
+					// get the user talk page
+					var getUserPage = new iglooRequest({
+						module: 'getPage',
+						params: { targ: 'User_talk:' + thisRevert.revertUser, revisions: 1, properties: 'content' },
+						callback: function (data) { thisRevert.warnUser(1, data); }
+					}, 0, true, true);
+					getUserPage.run();
+					
+					break;
+
+				case 1:
+					// set up the time management systems
+					var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+						currentDate = new Date(),
+						currentMonth = currentDate.getMonth(),
+						currentYear = currentDate.getFullYear(),
+						currentTime = currentDate.getTime(),
+						header;
+							
+					// check for warnings on the user's talk page
+					var warnings = [], useWarning;
+
+					// if the page already exists, we must analyse it for warnings
+					if (details !== false) {
+						var pageData = details[0].content,
+							regTest = /<!-- ?(?:template:?)?uw-([a-z]+?)([0-9](?:im)?)? ?-->(?:.+?([0-9]{2}):([0-9]{2}), ([0-9]{1,2}) ([a-z]+?) ([0-9]{4}))?/gi,
+							i = 0;
+
+						// get all the warnings on the page
+						while (true) {
+							var t = regTest.exec(pageData);
+							
+							if (t === null) break;
+							
+							warnings[i] = [
+								t[1], //template
+								t[2], //level
+								t[3], //hour
+								t[4], //minute
+								t[5], //day
+								t[6], //month
+								t[7] //year
+							];
+
+							i++;
+						}
+
+						// we are only interested in the latest one
+						if (typeof warnings[0] === 'undefined') { 
+							warnings[0] = []; 
+							warnings[0][0] = false; 
+							warnings[0][1] = 0; 
+						}
+
+						useWarning = warnings.length - 1;
+
+						if (typeof warnings[useWarning][0] === 'string') {
+							var tmplate = warnings[useWarning][0];
+							if (tmplate.indexOf('block') > -1) {
+								useWarning--; 
+								warnings[useWarning][1] = 0; 
+							}
+						}
+								
+						// check when this warning was given
+						for (var compareMonth = 0; compareMonth < months.length; compareMonth++) {
+							if (months[compareMonth] === warnings[useWarning][5]) break;
+						}
+
+						var compareDate = new Date();
+							compareDate.setFullYear(parseInt(warnings[useWarning][6], 10), compareMonth, parseInt(warnings[useWarning][4], 10));
+							compareDate.setHours(parseInt(warnings[useWarning][2], 10));
+							compareDate.setMinutes(parseInt(warnings[useWarning][3], 10));
+								
+						var compareTime = compareDate.getTime();
+								
+						// check if it is old enough to ignore for the purposes of incremental warnings
+						var timeDiff = (currentTime + (currentDate.getTimezoneOffset () * 60 * 1000)) - compareTime;
+						if (timeDiff > (iglooConfiguration.warningsOldAfter * 24 * 60 * 60 * 1000)) { 
+							warnings[useWarning][1] = 0;
+						}
+							
+						// check whether a header already exists for the current month. if not, create one
+						var currentHeader = new RegExp('={2,4} *' + months[currentMonth] + ' *' + currentYear + ' *={2,4}', 'gi');
+						if (currentHeader.test(pageData) !== true) { 
+							header = '== '+months[currentMonth]+' '+currentYear+' =='; 
+						} else { 
+							header = false; 
+						}
+					} else {
+						// if the page does not  exist, we can simply set warnings at the default (lowest) levels
+						// set up the warning and date header for addition to the user's page
+						warnings[0] = []; 
+						warnings[0][0] = false; 
+						warnings[0][1] = 0;
+						useWarning = 0;
+						header = '== '+months[currentMonth]+' '+currentYear+' ==';
+					}
+							
+					// decide upon which warning level to issue
+					var currentWarning = parseInt(warnings[useWarning][1], 10);
+					if (currentWarning === 4) {
+						iglooF('statusLog').addStatus('Will not warn <strong>' + thisRevert.revertUser + '</strong> because they have already recieved a final warning.');
+						this.handleFinalWarning();
+						this.warningLevel = false;
+					} else if (currentWarning < 4 && currentWarning > 0) {
+						this.warningLevel = currentWarning + 1;
+					} else {
+						this.warningLevel = 1;
+					}
+							
+					// add the message to their talk page... or don't if we're gonna report them to AIV
+					if (this.warningLevel === false) return false;
+							
+					var userPage = 'User_talk:' + this.revertUser, summary;
+					var message = '\n\n' + iglooConfiguration.warningMessage;
+						message = message.replace (/%LEVEL%/g, this.warningLevel);
+						message = message.replace (/%PAGE%/g, this.pageTitle);
+						message = message.replace (/%DIFF%/g, mw.config.get('wgServer') + mw.config.get('wgScript') + '?diff=' + this.revId + '');
+
+					if (thisRevert.isCustom === true) {
+						message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate.custom);
+						summary = iglooConfiguration.warningSummary.custom;
+					} else {
+						message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate[thisRevert.revType]);
+						summary = iglooConfiguration.warningSummary[thisRevert.revType];
+					}
+
+					summary = summary.replace (/%LEVEL%/g, this.warningLevel);
+					summary = summary.replace (/%PAGE%/g, this.pageTitle);
+						
+					if (header !== false) message = '\n\n' + header + message;
+
+					var userReport = new iglooRequest({
+						module: 'edit',
+						params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
+						callback: function (data) {
+							var revertReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];
+							iglooF('statusLog').addStatus('Successfully issued a level <strong>' + thisRevert.warningLevel + '</strong> warning to <strong>' + thisRevert.revertUser + '</strong> for ' + revertReason + ' on <strong>' + thisRevert.pageTitle + '</strong>!');
+						}
+					}, 0, true, true);
+					userReport.run();
+					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
+
+					break;
+			}
+		},
+
+		reportUser: function(callback, details) {
+			var thisRevert = this;
+
+			// handle reporting of the user to AIV
+			switch (callback) {
+				default: case 0:
+					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle + ' - warning user';
+
+					// notify user
+					iglooF('statusLog').addStatus('Attempting to report <strong>' + thisRevert.revertUser + '</strong> to <strong>' + iglooConfiguration.aiv + '</strong> for vandalism after final warning...');
 				
-			if (header !== false) message = '\n\n' + header + message;
+					// get the aiv page
+					var getAivPage = new iglooRequest({
+						module: 'getPage',
+						params: { targ: iglooConfiguration.aiv.replace(/ /g, '_'), revisions: 1, properties: 'content' },
+						callback: function (data) { thisRevert.reportUser (1, data); }
+					}, 0, true, true);
+					getAivPage.run();
 
-			var userReport = new iglooRequest({
-				module: 'edit',
-				params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
-				callback: function (data) {
-					var revertReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];
-					igloo.statusLog.addStatus('Successfully issued a level <strong>' + thisRevert.warningLevel + '</strong> warning to <strong>' + thisRevert.revertUser + '</strong> for ' + revertReason + ' on <strong>' + thisRevert.pageTitle + '</strong>!');
-				}
-			}, 0, true, true);
-			userReport.run();
-			document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
+					break;
+							
+				case 1:
+					var pageData = details[0].content,
+						template = iglooF('actions').isIp ? iglooConfiguration.aivIp : iglooConfiguration.aivUser,
+						aivLink,
+						myReport,
+						mySummary;
 
-			break;
-	}
-};
+					//check if page for AIV exists
+					if (details === false) {
+						iglooF('statusLog').addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because the report page does not appear to exist.');
+						return false; // error
+					}
 
-iglooRollback.prototype.reportUser = function(callback, details) {
-	var thisRevert = this;
+					// check whether they are already reported
+					if (pageData.indexOf ('|' + thisRevert.revertUser + '}}') > -1) {
+						iglooF('statusLog').addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because they have already been reported.');
+						return false; // error
+					}
+							
+					// build page link
+					aivLink = iglooConfiguration.aiv.replace (/ /g, '_');
+							
+					// build the report
+					myReport = iglooConfiguration.aivMessage;
+						myReport = myReport.replace(/%TEMPLATE%/g, template); 
+						myReport = myReport.replace(/%USER%/g, thisRevert.revertUser);
+							
+					// build the summary
+					mySummary = iglooConfiguration.aivSummary.replace(/%USER%/g, thisRevert.revertUser);
+							
+					// perform the edit
+					var userReport = new iglooRequest({
+						module: 'edit',
+						params: { targ: aivLink, isMinor: false, text: myReport, summary: mySummary, where: iglooConfiguration.aivWhere },
+						callback: function (data) { iglooF('statusLog').addStatus('Successfully reported <strong>' + thisRevert.revertUser + '</strong> to AIV!'); }
+					}, 0, true, true);
+					userReport.run();
 
-	// handle reporting of the user to AIV
-	switch (callback) {
-		default: case 0:
-			document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle + ' - warning user';
+					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
 
-			// notify user
-			igloo.statusLog.addStatus('Attempting to report <strong>' + thisRevert.revertUser + '</strong> to <strong>' + iglooConfiguration.aiv + '</strong> for vandalism after final warning...');
-		
-			// get the aiv page
-			var getAivPage = new iglooRequest({
-				module: 'getPage',
-				params: { targ: iglooConfiguration.aiv.replace(/ /g, '_'), revisions: 1, properties: 'content' },
-				callback: function (data) { thisRevert.reportUser (1, data); }
-			}, 0, true, true);
-			getAivPage.run();
-
-			break;
-					
-		case 1:
-			var pageData = details[0].content,
-				template = igloo.actions.isIp ? iglooConfiguration.aivIp : iglooConfiguration.aivUser,
-				aivLink,
-				myReport,
-				mySummary;
-
-			//check if page for AIV exists
-			if (details === false) {
-				igloo.statusLog.addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because the report page does not appear to exist.');
-				return false; // error
+					break;
 			}
+		},
 
-			// check whether they are already reported
-			if (pageData.indexOf ('|' + thisRevert.revertUser + '}}') > -1) {
-				igloo.statusLog.addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because they have already been reported.');
-				return false; // error
-			}
+		handleFinalWarning: function (callback, data) {
+			var thisRevert = this;
+
+			// this helper function is called when a user who already has a final warning is reverted. It decides what to do based on the user settings, and
+			// is able to prompt for input if it is unsure.
+			switch (callback) {
+				default: case 0:
+					// If we reach a final warning, remember that no further action is required if the user is already blocked!
+					var blockCheck = new iglooRequest({
+						module: 'question',
+						params: '?action=query&list=blocks&bkusers=' + thisRevert.revertUser,
+						callback: function (data) {
+							thisRevert.handleFinalWarning(1, data);
+						}
+					}, 0, true, true);
+					blockCheck.run();
+					break;
 					
-			// build page link
-			aivLink = iglooConfiguration.aiv.replace (/ /g, '_');
-					
-			// build the report
-			myReport = iglooConfiguration.aivMessage;
-				myReport = myReport.replace(/%TEMPLATE%/g, template); 
-				myReport = myReport.replace(/%USER%/g, thisRevert.revertUser);
-					
-			// build the summary
-			mySummary = iglooConfiguration.aivSummary.replace(/%USER%/g, thisRevert.revertUser);
-					
-			// perform the edit
-			var userReport = new iglooRequest({
-				module: 'edit',
-				params: { targ: aivLink, isMinor: false, text: myReport, summary: mySummary, where: iglooConfiguration.aivWhere },
-				callback: function (data) { igloo.statusLog.addStatus('Successfully reported <strong>' + thisRevert.revertUser + '</strong> to AIV!'); }
-			}, 0, true, true);
-			userReport.run();
+				case 1:
+					// If already blocked, tell and exit.
+					if (data.query.blocks[0] !== "undefined") {
+						iglooF('statusLog').addStatus( 'igloo will take no further action because <strong>' + thisRevert.revertUser + '</strong> is currently blocked.' );
+						return false;
+					}
 
-			document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
-
-			break;
-	}
-};
-
-iglooRollback.prototype.handleFinalWarning = function (callback, data) {
-	var thisRevert = this;
-
-	// this helper function is called when a user who already has a final warning is reverted. It decides what to do based on the user settings, and
-	// is able to prompt for input if it is unsure.
-	switch (callback) {
-		default: case 0:
-			// If we reach a final warning, remember that no further action is required if the user is already blocked!
-			var blockCheck = new iglooRequest({
-				module: 'question',
-				params: '?action=query&list=blocks&bkusers=' + thisRevert.revertUser,
-				callback: function (data) {
-					thisRevert.handleFinalWarning(1, data);
-				}
-			}, 0, true, true);
-			blockCheck.run();
-			break;
-			
-		case 1:
-			// If already blocked, tell and exit.
-			if (data.query.blocks[0] !== "undefined") {
-				igloo.statusLog.addStatus( 'igloo will take no further action because <strong>' + thisRevert.revertUser + '</strong> is currently blocked.' );
-				return false;
-			}
-
-			// If you're not an admin, igloo won't let you choose. :) Also report if that's the preferred setting.
-			if (!iglooUserSettings.mesysop || iglooUserSettings.blockAction === 'report') {
-				thisRevert.reportUser();
-				return true;
-			}
-
-			// handle settings
-			if (iglooUserSettings.blockAction === 'prompt') {
-				iglooUserSettings.blockAction = 'report'; // temporarily, so we don't see this screen again this session
-
-				// manage the prompt
-				var title = 'igloo needs you to choose your block settings',
-					message = 'Because you are an administrator, igloo can automatically block users on your behalf when you revert someone who has received a final warning. ' +
-					'The igloo autoblocker will automatically choose and block with the most appropriate settings based on the user in question (you will still be prompted for permission to continue). ' +
-					'If you want more control, the standard block setting will show you relevant data about the user and allow you to make the block yourself. Alternatively, igloo can simply report the user to AIV. What do you want to do?<br /><br />' +
-					'&gt;&gt; <span id="igloo-set-block-auto" style="cursor: pointer;">igloo autoblock (recommended)</span> | <span id="igloo-set-block-standard" style="cursor: pointer;">standard block</span> | <span id="igloo-set-block-report" style="cursor: pointer;">report</span>',
-					blockPopup = new iglooPopup('<div><span style="width: 100%; border-bottom: 1px solid #000;"><strong>' + title + '</strong></span><br /><div style="text-align: left; margin-left: 10px; width: 90%; color: #222222;">' + message + '</div></div>', 500, 130);
-				
-				blockPopup.show();
-
-				igloo.actions.stopActions = true;
-
-				// set the functions
-				document.getElementById('igloo-set-block-auto').onclick = function () {
-					igloo.actions.stopActions = false;
-					blockPopup.hide();
-					igloo.cogs.set('blockAction', 'auto', function (res) {
-						iglooUserSettings.blockAction = 'auto';
-						igloo.hammer.startBlock();
-					});
-				};
-
-				document.getElementById('igloo-set-block-standard').onclick = function () {
-					igloo.actions.stopActions = false;
-					blockPopup.hide();
-					igloo.cogs.set('blockAction', 'standard', function (res) {
-						iglooUserSettings.blockAction = 'standard';
-						igloo.hammer.startBlock(0, 'standard');
-					});
-				};
-
-				document.getElementById('igloo-set-block-report').onclick = function () {
-					igloo.actions.stopActions = false;
-					blockPopup.hide();
-					igloo.cogs.set('blockAction', 'report', function (res) {
-						iglooUserSettings.blockAction = 'report';
+					// If you're not an admin, igloo won't let you choose. :) Also report if that's the preferred setting.
+					if (!iglooUserSettings.mesysop || iglooUserSettings.blockAction === 'report') {
 						thisRevert.reportUser();
-					});
-				};		
-			} else if (iglooUserSettings.blockAction === 'standard') {
-				igloo.hammer.startBlock(0, 'standard');
-				return true;
-			} else if (iglooUserSettings.blockAction === 'auto') {
-				igloo.hammer.startBlock();
-				return true;
-			}
+						return true;
+					}
 
-			return false;
-	}
-};
+					// handle settings
+					if (iglooUserSettings.blockAction === 'prompt') {
+						iglooUserSettings.blockAction = 'report'; // temporarily, so we don't see this screen again this session
+
+						// manage the prompt
+						var title = 'igloo needs you to choose your block settings',
+							message = 'Because you are an administrator, igloo can automatically block users on your behalf when you revert someone who has received a final warning. ' +
+							'The igloo autoblocker will automatically choose and block with the most appropriate settings based on the user in question (you will still be prompted for permission to continue). ' +
+							'If you want more control, the standard block setting will show you relevant data about the user and allow you to make the block yourself. Alternatively, igloo can simply report the user to AIV. What do you want to do?<br /><br />' +
+							'&gt;&gt; <span id="igloo-set-block-auto" style="cursor: pointer;">igloo autoblock (recommended)</span> | <span id="igloo-set-block-standard" style="cursor: pointer;">standard block</span> | <span id="igloo-set-block-report" style="cursor: pointer;">report</span>',
+							blockPopup = new iglooPopup('<div><span style="width: 100%; border-bottom: 1px solid #000;"><strong>' + title + '</strong></span><br /><div style="text-align: left; margin-left: 10px; width: 90%; color: #222222;">' + message + '</div></div>', 500, 130);
+						
+						blockPopup.show();
+
+						iglooF('actions').stopActions = true;
+
+						// set the functions
+						document.getElementById('igloo-set-block-auto').onclick = function () {
+							iglooF('actions').stopActions = false;
+							blockPopup.hide();
+							iglooF('cogs').set('blockAction', 'auto', function (res) {
+								iglooUserSettings.blockAction = 'auto';
+								iglooF('hammer').startBlock();
+							});
+						};
+
+						document.getElementById('igloo-set-block-standard').onclick = function () {
+							iglooF('actions').stopActions = false;
+							blockPopup.hide();
+							iglooF('cogs').set('blockAction', 'standard', function (res) {
+								iglooUserSettings.blockAction = 'standard';
+								iglooF('hammer').startBlock(0, 'standard');
+							});
+						};
+
+						document.getElementById('igloo-set-block-report').onclick = function () {
+							iglooF('actions').stopActions = false;
+							blockPopup.hide();
+							iglooF('cogs').set('blockAction', 'report', function (res) {
+								iglooUserSettings.blockAction = 'report';
+								thisRevert.reportUser();
+							});
+						};		
+					} else if (iglooUserSettings.blockAction === 'standard') {
+						iglooF('hammer').startBlock(0, 'standard');
+						return true;
+					} else if (iglooUserSettings.blockAction === 'auto') {
+						iglooF('hammer').startBlock();
+						return true;
+					}
+
+					return false;
+			}
+		}
+	};
+});
 
 //iglooStatus- Displays and maintains a log of igloo's actions
 function iglooStatus () {
@@ -3507,144 +3583,148 @@ function iglooDropdown (name, module, list, prefix, position, endtext, loadText,
 	this.dropdownClosed = true;
 	this.timer = null;
 
-	igloo.dropManager.add(this);
+	iglooF('dropManager').add(this);
 }
 
-iglooDropdown.prototype.buildInterface = function () {
-	var me = this;
+igloo.extendProto(iglooDropdown, function () {
+	return {
+		buildInterface: function () {
+			var me = this;
 
-	this.dropDisplay = document.createElement('div');
-	this.dropCont = document.createElement('ul');
+			this.dropDisplay = document.createElement('div');
+			this.dropCont = document.createElement('ul');
 
-	this.dropDisplay.id = this.name + "-display";
-	this.dropCont.id = this.name + "-cont";
-	
+			this.dropDisplay.id = this.name + "-display";
+			this.dropCont.id = this.name + "-cont";
+			
 
-	$(this.dropDisplay).css({
-		top: me.position.top + 'px',
-		width: '170px',
-		backgroundColor: '' +jin.Colour.GREY,
-		border: '1px solid '+ jin.Colour.BLACK,
-		padding: '2px',
-		'font-size': '10px',
-		cursor: 'pointer',
-		display: 'none',
-		'float': me.position.where,
-		'position':'fixed',
-		'z-index': 999999999999
-	});
+			$(this.dropDisplay).css({
+				top: me.position.top + 'px',
+				width: '170px',
+				backgroundColor: '' +jin.Colour.GREY,
+				border: '1px solid '+ jin.Colour.BLACK,
+				padding: '2px',
+				'font-size': '10px',
+				cursor: 'pointer',
+				display: 'none',
+				'float': me.position.where,
+				'position':'fixed',
+				'z-index': 999999999999
+			});
 
-	$(this.dropDisplay).css(me.position.where, me.position[me.position.where]);
+			$(this.dropDisplay).css(me.position.where, me.position[me.position.where]);
 
-	$(this.dropCont).css({
-		top: '9px',
-		width: '100%',
-		height: '100%',
-		margin: '0px',
-		padding: '0px',
-		'overflow-x': 'hidden',
-		'overflow-y': 'auto',
-		display: 'none',
-		'float': me.position.where
-	});
+			$(this.dropCont).css({
+				top: '9px',
+				width: '100%',
+				height: '100%',
+				margin: '0px',
+				padding: '0px',
+				'overflow-x': 'hidden',
+				'overflow-y': 'auto',
+				display: 'none',
+				'float': me.position.where
+			});
 
-	$(this.dropDisplay).html('<div id="'+ me.name + '-note" style="width: 100%;">' + me.loadText + '</div>');
+			$(this.dropDisplay).html('<div id="'+ me.name + '-note" style="width: 100%;">' + me.loadText + '</div>');
 
-	$('#' + me.name).mouseover(function () {
-		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-			if (me.reloadList === true && me.dropdownClosed === true) {
-				igloo[me.module.split('.')[1]].reloadData();
+			$('#' + me.name).mouseover(function () {
+				if (iglooF(me.module).pageTitle !== '') {
+					if (me.reloadList === true && me.dropdownClosed === true) {
+						iglooF(me.module).reloadData();
+					}
+					if (Boolean(me.timer) === true) { 
+						clearTimeout(me.timer); 
+						me.timer = false; 
+					} else {
+						me.dropdownClosed = false;
+						iglooF('dropManager').opened(me.name);
+						$('#' + me.name + '-cont').css('display', 'block');
+						$('#' + me.name + '-display').css('display', 'block');
+					}
+				}
+			});
+
+			$('#' + me.name).mouseout(function () {
+				if (iglooF(me.module).pageTitle !== '') {
+					me.timer = setTimeout(function() {
+						$('#' + me.name + '-display').css('display', 'none');
+						me.dropdownClosed = true;
+						me.timer = false; 
+					}, iglooUserSettings.dropdownWinTimeout * 1000);
+				}
+			});
+		},
+
+		loadModule: function () {
+			var me = this,
+				dropHtml = '';
+
+			for (var item in me.list) {
+				dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="iglooF(\''+me.module+'\').go(\'' + item + '\')">'+ me.list[item] + '</li>';
 			}
-			if (Boolean(me.timer) === true) { 
-				clearTimeout(me.timer); 
-				me.timer = false; 
-			} else {
-				me.dropdownClosed = false;
-				igloo.dropManager.opened(me.name);
-				$('#' + me.name + '-cont').css('display', 'block');
-				$('#' + me.name + '-display').css('display', 'block');
-			}
-		}
-	});
 
-	$('#' + me.name).mouseout(function () {
-		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-			me.timer = setTimeout(function() {
+			$(me.dropCont).append(dropHtml);
+			this.dropDisplay.innerHTML = '';
+
+			$(this.dropDisplay).mouseover(function () {
+				if (iglooF(me.module).pageTitle !== '') {
+					if (me.reloadList === true && me.dropdownClosed === true) {
+						iglooF(me.module).reloadData();
+					}
+					if (Boolean(me.timer) === true) { 
+						clearTimeout(me.timer); 
+						me.timer = false; 
+					} else {
+						me.dropdownClosed = false;
+						iglooF('dropManager').opened(me.name);
+						$('#' + me.name + '-cont').css('display', 'block');
+						$('#' + me.name + '-display').css('display', 'block');
+					}
+				}
+			});
+
+			$(this.dropDisplay).mouseout(function () {
+				if (iglooF(me.module).pageTitle !== '') {
+					me.timer = setTimeout(function() {
+						$('#' + me.name + '-display').css('display', 'none');
+						me.dropdownClosed = true;
+						me.timer = false; 
+					}, iglooUserSettings.dropdownWinTimeout * 1000);
+				}
+			});
+
+			$(this.dropDisplay).append(this.dropCont);
+
+			igloo.diffContainer.panel.appendChild(this.dropDisplay);
+
+			$('.igDropdownLink').mouseover(function () {
+				$(this).css({backgroundColor: jin.Colour.LIGHT_GREY});
+			}).mouseout(function () {
+				$(this).css({backgroundColor: jin.Colour.WHITE});
+			});
+
+			$('.igDropdownLink').css({
+				cursor: 'pointer',
+				width: '186px',
+				padding: '2px',
+				'border-bottom': '1px solid #000000',
+				'list-style-type': 'none',
+				'marker-offset': '0px',
+				'background-color': jin.Colour.WHITE
+			});
+		},
+
+		close: function () {
+			var me = this;
+			if (iglooF(me.module).pageTitle !== '') {
 				$('#' + me.name + '-display').css('display', 'none');
 				me.dropdownClosed = true;
 				me.timer = false; 
-			}, iglooUserSettings.dropdownWinTimeout * 1000);
-		}
-	});
-};
-
-iglooDropdown.prototype.loadModule = function () {
-	var me = this,
-		dropHtml = '';
-
-	for (var item in me.list) {
-		dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="'+me.module+'.go(\'' + item + '\')">'+ me.list[item] + '</li>';
-	}
-
-	$(me.dropCont).append(dropHtml);
-	this.dropDisplay.innerHTML = '';
-
-	$(this.dropDisplay).mouseover(function () {
-		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-			if (me.reloadList === true && me.dropdownClosed === true) {
-				igloo[me.module.split('.')[1]].reloadData();
-			}
-			if (Boolean(me.timer) === true) { 
-				clearTimeout(me.timer); 
-				me.timer = false; 
-			} else {
-				me.dropdownClosed = false;
-				igloo.dropManager.opened(me.name);
-				$('#' + me.name + '-cont').css('display', 'block');
-				$('#' + me.name + '-display').css('display', 'block');
 			}
 		}
-	});
-
-	$(this.dropDisplay).mouseout(function () {
-		if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-			me.timer = setTimeout(function() {
-				$('#' + me.name + '-display').css('display', 'none');
-				me.dropdownClosed = true;
-				me.timer = false; 
-			}, iglooUserSettings.dropdownWinTimeout * 1000);
-		}
-	});
-
-	$(this.dropDisplay).append(this.dropCont);
-
-	igloo.diffContainer.panel.appendChild(this.dropDisplay);
-
-	$('.igDropdownLink').mouseover(function () {
-		$(this).css({backgroundColor: jin.Colour.LIGHT_GREY});
-	}).mouseout(function () {
-		$(this).css({backgroundColor: jin.Colour.WHITE});
-	});
-
-	$('.igDropdownLink').css({
-		cursor: 'pointer',
-		width: '186px',
-		padding: '2px',
-		'border-bottom': '1px solid #000000',
-		'list-style-type': 'none',
-		'marker-offset': '0px',
-		'background-color': jin.Colour.WHITE
-	});
-};
-
-iglooDropdown.prototype.close = function () {
-	var me = this;
-	if (igloo[me.module.split('.')[1]].pageTitle !== '') {
-		$('#' + me.name + '-display').css('display', 'none');
-		me.dropdownClosed = true;
-		me.timer = false; 
-	}
-};
+	};
+});
  
 //iglooPopup - creates a Popup
 function iglooPopup (content, width, height) {
@@ -3740,7 +3820,7 @@ iglooRequest.prototype.run = function () {
 		// If important, execute immediately.
 		if (this.flash === true) {
 			Flash(this.request.module).load(this.request.params).wait(this.request.callback).fail(function () {
-				igloo.statusLog.addStatus('<strong><span style="color:darkred;">Igloo was unable to connect with Wikipedia\'s servers. Please repeat your action. If you are seeing this more than once, please check your internet connection</span></strong>');
+				iglooF('statusLog').addStatus('<strong><span style="color:darkred;">Igloo was unable to connect with Wikipedia\'s servers. Please repeat your action. If you are seeing this more than once, please check your internet connection</span></strong>');
 			}).run();
 		}
 		this.requestItem = $.ajax(this.request);
@@ -3813,13 +3893,3 @@ Array.prototype.iglast = function () {
 /*
 	COMPLETE ==========================
 	*/
-// MAIN
-
-function iglooHandleLaunch (data) {
-	data = data || {};
-	if (typeof igloo === 'undefined')
-		igloo = new iglooMain();
-
-	igloo.load(data);
-	igloo.announce('core');
-}

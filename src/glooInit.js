@@ -176,12 +176,13 @@ function iglooInitControl() {
 			case '6':
 				igLauncher.runIglooInterface.addStatus('Loading complete! igloo will launch in a few seconds...');
 				setTimeout(function() {
-					iglooHandleLaunch({
+					var launchData = {
 						isFirstRun: firstRun,
 						doRemoteConnect: remoteConnect,
 						sessionId: sessionKey,
 						isDown: connectLocal
-					});
+					};
+					igLauncher.launch();
 				}, 1000);
 
 				break;
@@ -295,11 +296,21 @@ function iglooInit () {
 	this.runIglooInterface = new iglooInitInterface();
 	this.runIglooInit = new iglooInitControl();
 
-	this.launch = function () {
+	this.run = function () {
 		if (mw.config.get('wgPageName') !== 'Wikipedia:Igloo/run' || mw.config.get('wgAction') !== 'view') return;
 		this.runIglooInit.init();
+	};
+
+	this.launch = function (launchData) {
+		launchData = launchData || {};
+
+		if (typeof igloo !== 'undefined') return;
+
+		igloo = new iglooMain();
+		iglooF = igloo.fetchModule;
+		igloo.load(this.data);
 	};
 }
 
 var igLauncher = new iglooInit();
-igLauncher.launch();
+igLauncher.run();
