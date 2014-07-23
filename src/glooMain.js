@@ -2190,10 +2190,10 @@ function iglooArchive () {
 
 		if (!count) count = 1;
 
-		if ((this.archivePosition - count) < 0) { 
+		this.archivePosition -= count;
+
+		if (this.archivePosition < 0) { 
 			this.archivePosition = 0; 
-		} else {
-			this.archivePosition -= count; 
 		}
  
 		doView = this.archives[this.archivePosition];
@@ -2210,11 +2210,11 @@ function iglooArchive () {
 		if (this.archivePosition < 0 || iglooF('actions').stopActions) return false;
 
 		if (!count) count = 1;
+
+		this.archivePosition += count;
  
-		if ((this.archivePosition + count) > (this.archives.length - 1)) {
+		if (this.archivePosition > (this.archives.length - 1)) {
 			this.archivePosition = this.archives.length - 1;
-		} else {
-			this.archivePosition += count;
 		}
 
 		doView = this.archives[this.archivePosition];
