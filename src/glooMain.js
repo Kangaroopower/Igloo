@@ -44,7 +44,7 @@ var iglooConfiguration = {
 	defaultContentScore: 20,
 	fileHost: window.glooBase + '/', //Holds resources
 	remoteHost: '', //Actual remote server
-	version: "0.9 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Alpha") : "Alpha"),
+	version: "0.9 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Beta") : "Beta"),
 	limitRequests: 5,
 	flagColours: ['#ff8888', '#ffbbbb', '#ffffff', '#bbffbb', '#88ff88'],
 
@@ -678,7 +678,7 @@ function iglooRecentChanges () {
 		'height': '100%',
 		'list-style': 'none inherit none',
 		'overflow': 'auto',
-		'color': 'white',
+		'color': jin.Colour.WHITE,
 		'cursor': 'pointer'
 	});
 	$(me.renderResult).on ({
@@ -1475,8 +1475,8 @@ igloo.extendProto(iglooSettings, function () {
 				qActions = {
 					warn: "Warn User (no revert)",
 					report: "Report User",
-					talk: "Go to page talk on Wikipedia",
-					diff: "View diff on Wikipedia",
+					talk: ["Go to page talk on Wikipedia", mw.util.wikiScript('index') + "?title=Talk:", "actions", "currentPage", ""],
+					diff: ["View diff on Wikipedia", mw.util.wikiScript('index') + "?diff=", "actions", "revId", ""],
 					stats: "View basic user info"
 				},
 				me = this;
@@ -1488,7 +1488,7 @@ igloo.extendProto(iglooSettings, function () {
 				top: 113,
 				right: '5px',
 				where: 'right'
-			}, ''); 
+			}, '');
 
 			$(settingsButton).click(function () {
 				me.show();
@@ -1534,9 +1534,9 @@ igloo.extendProto(iglooSettings, function () {
 		go: function (action) {
 			/*qActions = {
 					warn: "Warn User (no revert)",
-					report: "Report User",
-					talk: "Go to page talk on Wikipedia",
-					diff: "View diff on Wikipedia",
+					report: "Report User", //done
+					talk: "Go to page talk on Wikipedia", //dont need function
+					diff: "View diff on Wikipedia", //dont need function
 					stats: "View basic user info"
 				},*/
 			var me = this;
@@ -1553,7 +1553,7 @@ igloo.extendProto(iglooSettings, function () {
 						wdText += optgroup;
 					}
 
-					wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ document.getElementById('glooWarn').value +'\'">Warn User</a>--</div>';
+					wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ document.getElementById('glooWarn').value +'\')">Warn User</a>--</div>';
 
 					me.dialogs.warn = new iglooPopup(wdText);
 					me.dialogs.warn.buildInterface();
@@ -1561,13 +1561,9 @@ igloo.extendProto(iglooSettings, function () {
 					break;
 				case 'report':
 					var makeSure = confirm('Are you sure you want to report this user to ARV');
-					iglooF('actions').reportUser();
-					break;
-				case 'talk':
-					iglooF('actions').gotoTalk();
-					break;
-				case 'diff':
-					iglooF('actions').gotoDiff();
+					if (makeSure) {
+						iglooF('actions').reportUser();
+					}
 					break;
 				case 'stats':
 					break;
@@ -2010,6 +2006,73 @@ iglooActions.prototype.loadPage = function (page, revId) {
 		p.display();
 	});
 };
+
+//Reports a user to AIV or whatever
+iglooActions.prototype.reportUser = function(callback, details) {
+	var me = this;
+
+	// handle reporting of the user to AIV
+	switch (callback) {
+		default: case 0:
+			document.getElementById('iglooPageTitle').innerHTML = me.currentPage + ' - warning user';
+
+			// notify user
+			iglooF('statusLog').addStatus('Attempting to report <strong>' + me.currentUser + '</strong> to <strong>' + iglooConfiguration.aiv + '</strong> for vandalism after final warning...');
+				
+			// get the aiv page
+			var getAivPage = new iglooRequest({
+				module: 'getPage',
+				params: { targ: iglooConfiguration.aiv.replace(/ /g, '_'), revisions: 1, properties: 'content' },
+				callback: function (data) { me.reportUser(1, data); }
+			}, 0, true, true);
+			getAivPage.run();
+
+			break;
+							
+		case 1:
+			var pageData = details[0].content,
+				template = iglooF('actions').isIp ? iglooConfiguration.aivIp : iglooConfiguration.aivUser,
+				aivLink,
+				myReport,
+				mySummary;
+
+			//check if page for AIV exists
+			if (details === false) {
+				iglooF('statusLog').addStatus('Will not report <strong>' + me.currentUser + '</strong> because the report page does not appear to exist.');
+				return false; // error
+			}
+
+			// check whether they are already reported
+			if (pageData.indexOf ('|' + me.currentUser + '}}') > -1) {
+				iglooF('statusLog').addStatus('Will not report <strong>' + me.currentUser + '</strong> because they have already been reported.');
+				return false; // error
+			}
+							
+			// build page link
+			aivLink = iglooConfiguration.aiv.replace (/ /g, '_');
+							
+			// build the report
+			myReport = iglooConfiguration.aivMessage;
+			myReport = myReport.replace(/%TEMPLATE%/g, template); 
+			myReport = myReport.replace(/%USER%/g, me.currentUser);
+							
+			// build the summary
+			mySummary = iglooConfiguration.aivSummary.replace(/%USER%/g, me.currentUser);
+							
+			// perform the edit
+			var userReport = new iglooRequest({
+				module: 'edit',
+				params: { targ: aivLink, isMinor: false, text: myReport, summary: mySummary, where: iglooConfiguration.aivWhere },
+				callback: function (data) { iglooF('statusLog').addStatus('Successfully reported <strong>' + me.currentUser + '</strong> to AIV!'); }
+			}, 0, true, true);
+			userReport.run();
+
+			document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
+
+			break;
+	}
+};
+
 
 // Class iglooArchive
 	/*
@@ -2574,7 +2637,7 @@ igloo.extendProto(iglooHist, function () {
 						pageHistory += '<li id="iglooF(\'past\').dropdown.itemPrefix'+rev.ids.revid+'" onclick="iglooF(\'actions\').loadPage(\''+me.pageTitle.replace('\'', '\\\'')+'\',  \''+rev.ids.revid+'\');" onmouseover="this.style.backgroundColor = \''+jin.Colour.LIGHT_GREY+'\';" onmouseout="this.style.backgroundColor = \''+jin.Colour.WHITE+'\';" style="cursor: pointer; width: 186px; padding: 2px; border-bottom: 1px solid #000000; list-style-type: none; list-style-image: none; marker-offset: 0px; background-color: '+jin.Colour.WHITE+';">'+rev.user+'</li>';
 					}
 					
-					pageHistory += '<li style="width: 100%; list-style-type: none; list-style-image: none; text-align: center;"><a target="_blank" href="'+ mw.util.wikiScript('index') +'?title=' + me.pageTitle + '&action=history">- full history -</a></li>';
+					pageHistory += '<li style="width: 100%; list-style-type: none; list-style-image: none; text-align: center;"><a style="target="_blank" href="'+ mw.util.wikiScript('index') +'?title=' + me.pageTitle + '&action=history">- full history -</a></li>';
 					$(iglooF('past').dropdown.dropCont).html(pageHistory);
 		 
 					break;
@@ -2807,7 +2870,7 @@ igloo.extendProto(iglooBlock, function () {
 			document.getElementById('igloo-abort-block').onclick = function () {
 				iglooF('actions').stopActions = false;
 				autoBlockPopup.hide();
-				iglooF('justice').rollback.reportUser();
+				iglooF('actions').reportUser();
 				iglooF('statusLog').addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: user aborted! Will now report...');
 			};
 		},
@@ -2818,7 +2881,7 @@ igloo.extendProto(iglooBlock, function () {
 			if (details === 'error') {
 				// something went wrong. Abort and report user.
 				iglooF('statusLog').addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: an error occurred! Will now report...');
-				iglooF('justice').rollback.reportUser(); 
+				iglooF('actions').reportUser(); 
 				return;
 			}
 			
@@ -3350,71 +3413,6 @@ igloo.extendProto(iglooRollback, function () {
 			}
 		},
 
-		reportUser: function(callback, details) {
-			var thisRevert = this;
-
-			// handle reporting of the user to AIV
-			switch (callback) {
-				default: case 0:
-					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle + ' - warning user';
-
-					// notify user
-					iglooF('statusLog').addStatus('Attempting to report <strong>' + thisRevert.revertUser + '</strong> to <strong>' + iglooConfiguration.aiv + '</strong> for vandalism after final warning...');
-				
-					// get the aiv page
-					var getAivPage = new iglooRequest({
-						module: 'getPage',
-						params: { targ: iglooConfiguration.aiv.replace(/ /g, '_'), revisions: 1, properties: 'content' },
-						callback: function (data) { thisRevert.reportUser (1, data); }
-					}, 0, true, true);
-					getAivPage.run();
-
-					break;
-							
-				case 1:
-					var pageData = details[0].content,
-						template = iglooF('actions').isIp ? iglooConfiguration.aivIp : iglooConfiguration.aivUser,
-						aivLink,
-						myReport,
-						mySummary;
-
-					//check if page for AIV exists
-					if (details === false) {
-						iglooF('statusLog').addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because the report page does not appear to exist.');
-						return false; // error
-					}
-
-					// check whether they are already reported
-					if (pageData.indexOf ('|' + thisRevert.revertUser + '}}') > -1) {
-						iglooF('statusLog').addStatus('Will not report <strong>' + thisRevert.revertUser + '</strong> because they have already been reported.');
-						return false; // error
-					}
-							
-					// build page link
-					aivLink = iglooConfiguration.aiv.replace (/ /g, '_');
-							
-					// build the report
-					myReport = iglooConfiguration.aivMessage;
-						myReport = myReport.replace(/%TEMPLATE%/g, template); 
-						myReport = myReport.replace(/%USER%/g, thisRevert.revertUser);
-							
-					// build the summary
-					mySummary = iglooConfiguration.aivSummary.replace(/%USER%/g, thisRevert.revertUser);
-							
-					// perform the edit
-					var userReport = new iglooRequest({
-						module: 'edit',
-						params: { targ: aivLink, isMinor: false, text: myReport, summary: mySummary, where: iglooConfiguration.aivWhere },
-						callback: function (data) { iglooF('statusLog').addStatus('Successfully reported <strong>' + thisRevert.revertUser + '</strong> to AIV!'); }
-					}, 0, true, true);
-					userReport.run();
-
-					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
-
-					break;
-			}
-		},
-
 		handleFinalWarning: function (callback, data) {
 			var thisRevert = this;
 
@@ -3422,6 +3420,12 @@ igloo.extendProto(iglooRollback, function () {
 			// is able to prompt for input if it is unsure.
 			switch (callback) {
 				default: case 0:
+					// If you're not an admin, igloo won't let you choose. :) Also report if that's the preferred setting.
+					if (!iglooUserSettings.mesysop || iglooUserSettings.blockAction === 'report') {
+						iglooF('actions').reportUser();
+						return true;
+					}
+
 					// If we reach a final warning, remember that no further action is required if the user is already blocked!
 					var blockCheck = new iglooRequest({
 						module: 'question',
@@ -3438,12 +3442,6 @@ igloo.extendProto(iglooRollback, function () {
 					if (data.query.blocks[0] !== "undefined") {
 						iglooF('statusLog').addStatus( 'igloo will take no further action because <strong>' + thisRevert.revertUser + '</strong> is currently blocked.' );
 						return false;
-					}
-
-					// If you're not an admin, igloo won't let you choose. :) Also report if that's the preferred setting.
-					if (!iglooUserSettings.mesysop || iglooUserSettings.blockAction === 'report') {
-						thisRevert.reportUser();
-						return true;
 					}
 
 					// handle settings
@@ -3486,7 +3484,7 @@ igloo.extendProto(iglooRollback, function () {
 							blockPopup.hide();
 							iglooF('cogs').set('blockAction', 'report', function (res) {
 								iglooUserSettings.blockAction = 'report';
-								thisRevert.reportUser();
+								iglooF('actions').reportUser();
 							});
 						};		
 					} else if (iglooUserSettings.blockAction === 'standard') {
@@ -3669,7 +3667,13 @@ igloo.extendProto(iglooDropdown, function () {
 				dropHtml = '';
 
 			for (var item in me.list) {
-				dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="iglooF(\''+me.module+'\').go(\'' + item + '\')">'+ me.list[item] + '</li>';
+				if (!$.isArray(me.list[item])) {
+					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="iglooF(\''+me.module+'\').go(\'' + item + '\')">'+ me.list[item] + '</li>';
+				} else {
+					for (var i = 0; i < me.list[item]; i++) {
+						dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" target="_blank" href=' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item[3]]] + me.list[item][4] + '>'+ me.list[item][0] + '</li>';
+					}
+				}
 			}
 
 			$(me.dropCont).append(dropHtml);
@@ -3713,13 +3717,15 @@ igloo.extendProto(iglooDropdown, function () {
 			});
 
 			$('.igDropdownLink').css({
+				color: jin.Colour.BLACK,
 				cursor: 'pointer',
 				width: '186px',
 				padding: '2px',
 				'border-bottom': '1px solid #000000',
 				'list-style-type': 'none',
 				'marker-offset': '0px',
-				'background-color': jin.Colour.WHITE
+				'background-color': jin.Colour.WHITE,
+				'text-underline': 'none !important'
 			});
 		},
 
