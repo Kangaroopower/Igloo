@@ -3670,7 +3670,7 @@ igloo.extendProto(iglooDropdown, function () {
 				if (!$.isArray(me.list[item])) {
 					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="iglooF(\''+me.module+'\').go(\'' + item + '\')">'+ me.list[item] + '</li>';
 				} else {
-					for (var i = 0; i < me.list[item]; i++) {
+					for (var i = 0; i < me.list[item].length; i++) {
 						dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" target="_blank" href=' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item[3]]] + me.list[item][4] + '>'+ me.list[item][0] + '</li>';
 					}
 				}
