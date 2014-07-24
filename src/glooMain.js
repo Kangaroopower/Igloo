@@ -1475,7 +1475,7 @@ igloo.extendProto(iglooSettings, function () {
 				qActions = {
 					warn: "Warn User (no revert)",
 					report: "Report User",
-					talk: ["Go to page talk on Wikipedia", mw.util.wikiScript('index') + "?title=Talk:", "actions", "currentPage", ""],
+					talk: ["Go to talk page on Wikipedia", mw.util.wikiScript('index') + "?title=Talk:", "actions", "currentPage", ""],
 					diff: ["View diff on Wikipedia", mw.util.wikiScript('index') + "?diff=", "actions", "currentRev", ""],
 					stats: "View basic user info"
 				},
@@ -1553,7 +1553,7 @@ igloo.extendProto(iglooSettings, function () {
 						wdText += optgroup;
 					}
 
-					wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ document.getElementById('glooWarn').value +'\')">Warn User</a>--</div>';
+					wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ $('#glooWarn').val() +'\')">Warn User</a>--</div>';
 
 					me.dialogs.warn = new iglooPopup(wdText);
 					me.dialogs.warn.buildInterface();
