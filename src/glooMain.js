@@ -1476,7 +1476,7 @@ igloo.extendProto(iglooSettings, function () {
 					warn: "Warn User (no revert)",
 					report: "Report User",
 					talk: ["Go to page talk on Wikipedia", mw.util.wikiScript('index') + "?title=Talk:", "actions", "currentPage", ""],
-					diff: ["View diff on Wikipedia", mw.util.wikiScript('index') + "?diff=", "actions", "revId", ""],
+					diff: ["View diff on Wikipedia", mw.util.wikiScript('index') + "?diff=", "actions", "currentRev", ""],
 					stats: "View basic user info"
 				},
 				me = this;
@@ -3670,7 +3670,7 @@ igloo.extendProto(iglooDropdown, function () {
 				if (!$.isArray(me.list[item])) {
 					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="iglooF(\''+me.module+'\').go(\'' + item + '\')">'+ me.list[item] + '</li>';
 				} else {
-					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink"><a id="igDropdownHref" target="_blank" href="' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item][3]] + me.list[item][4] + '"">'+ me.list[item][0] + '</a></li>';
+					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink"><a class="igDropdownHref" target="_blank" href="' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item][3]] + me.list[item][4] + '"">'+ me.list[item][0] + '</a></li>';
 				}
 			}
 
