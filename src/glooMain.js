@@ -3670,7 +3670,7 @@ igloo.extendProto(iglooDropdown, function () {
 				if (!$.isArray(me.list[item])) {
 					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="iglooF(\''+me.module+'\').go(\'' + item + '\')">'+ me.list[item] + '</li>';
 				} else {
-					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink"><a target="_blank" href=' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item][3]] + me.list[item][4] + '>'+ me.list[item][0] + '</a></li>';
+					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink"><a id="igDropdownHref" target="_blank" href="' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item][3]] + me.list[item][4] + '"">'+ me.list[item][0] + '</a></li>';
 				}
 			}
 
@@ -3722,13 +3722,13 @@ igloo.extendProto(iglooDropdown, function () {
 				'border-bottom': '1px solid #000000',
 				'list-style-type': 'none',
 				'marker-offset': '0px',
-				'background-color': jin.Colour.WHITE,
+				'background-color': jin.Colour.WHITE
 			});
 
-			$('.igDropdownLink a').css({
+			$('.igDropdownHref').css({
 				color: jin.Colour.BLACK,
 				'text-decoration': 'none !important'
-			})
+			});
 		},
 
 		close: function () {
