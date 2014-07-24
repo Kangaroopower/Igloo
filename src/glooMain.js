@@ -1542,18 +1542,18 @@ igloo.extendProto(iglooSettings, function () {
 			var me = this;
 			switch (action) {
 				case 'warn':
-					var wdText = '<div>Please select what you would like to warn the user for:</div><div><select id="glooWarn">';
+					var wdText = '<div>Please select what you would like to warn the user for:</div><div><center><select id="glooWarn">';
 
-					for (var og in iglooUserSettings.warnSummaries) {
-						var optgroup = '<optgroup label="' + iglooUserSettings.warnSummaries[og] + '">';
-						for (var opt in iglooUserSettings.warnSummaries[og]) {
-							optgroup += '<option value="' + opt + '">' + iglooUserSettings.warnSummaries[og][opt] + '</option>';
+					for (var og in iglooConfiguration.warnSummaries) {
+						var optgroup = '<optgroup label="' + iglooConfiguration.warnSummaries[og] + '">';
+						for (var opt in iglooConfiguration.warnSummaries[og]) {
+							optgroup += '<option value="' + opt + '">' + iglooConfiguration.warnSummaries[og][opt] + '</option>';
 						}
 
 						wdText += optgroup;
 					}
 
-					wdText += '</select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ $('#glooWarn').val() +'\')">Warn User</a>--</div>';
+					wdText += '</center></select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ $('#glooWarn').val() +'\')">Warn User</a>--</div>';
 
 					me.dialogs.warn = new iglooPopup(wdText);
 					me.dialogs.warn.buildInterface();
