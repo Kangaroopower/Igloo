@@ -3670,7 +3670,7 @@ igloo.extendProto(iglooDropdown, function () {
 				if (!$.isArray(me.list[item])) {
 					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink" onclick="iglooF(\''+me.module+'\').go(\'' + item + '\')">'+ me.list[item] + '</li>';
 				} else {
-					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink"><a class="igDropdownHref" target="_blank" href="' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item][3]] + me.list[item][4] + '"">'+ me.list[item][0] + '</a></li>';
+					dropHtml += '<li id="'+me.itemPrefix+'_'+item+'" class="igDropdownLink"><a class="igDropdownHref" target="_blank" href="' + me.list[item][1] + iglooF(me.list[item][2])[me.list[item][3]] + me.list[item][4] + '">'+ me.list[item][0] + '</a></li>';
 				}
 			}
 
@@ -3727,7 +3727,7 @@ igloo.extendProto(iglooDropdown, function () {
 
 			$('.igDropdownHref').css({
 				color: jin.Colour.BLACK,
-				'text-decoration': 'none !important'
+				'text-decoration': 'none'
 			});
 		},
 
