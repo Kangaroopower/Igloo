@@ -1366,7 +1366,9 @@ function iglooKeys () {
 					}
 				}
 
-				me.cbs[iglooF('piano').mode][input]();
+				if (typeof me.cbs[iglooF('piano').mode][input] !== 'undefined') {
+					me.cbs[iglooF('piano').mode][input]();
+				}
 			});
 			return true;
 		} else {
