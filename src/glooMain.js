@@ -85,7 +85,8 @@ var iglooConfiguration = {
 		agf: 'good faith edits',
 		custom: 'a custom reason'
 	},
-	warningsOldAfter: 2, // days after which warnings are considered irrelevant	aiv: 'Wikipedia:Administrator intervention against vandalism',
+	warningsOldAfter: 2, // days after which warnings are considered irrelevant
+	aiv: 'Wikipedia:Administrator intervention against vandalism',
 	aivWhere: 'appendtext',
 	aivIp: 'IPvandal',
 	aivUser: 'vandal',
@@ -1542,7 +1543,7 @@ igloo.extendProto(iglooSettings, function () {
 			var me = this;
 			switch (action) {
 				case 'warn':
-					var wdText = '<div>Please select what you would like to warn the user for:</div><div><center><select id="glooWarn">';
+					var wdText = '<div style="text-align:center; margin-bottom:10px;">Please select what you would like to warn the user for:</div><div><center><select id="glooWarn">';
 
 					for (var og in iglooConfiguration.warnSummaries) {
 						var optgroup = '<optgroup label="' + og + '">';
@@ -1555,7 +1556,7 @@ igloo.extendProto(iglooSettings, function () {
 
 					wdText += '</center></select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ $('#glooWarn').val() +'\')">Warn User</a>--</div>';
 
-					me.dialogs.warn = new iglooPopup(wdText, 300, 400);
+					me.dialogs.warn = new iglooPopup(wdText, 500, 70);
 					me.dialogs.warn.buildInterface();
 					me.dialogs.warn.show();
 					break;
