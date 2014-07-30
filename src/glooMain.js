@@ -116,48 +116,48 @@ var iglooConfiguration = {
 	//Warns w/o reverts
 	warnSummaries: { //Credit to Twinkle for compiling these
 		"Common warnings": {
-			"uw-vandalism": "Vandalism",
-			"uw-disruptive": "Disruptive editing",
-			"uw-test": "Editing tests",
-			"uw-delete": "Removal of content, blanking"
+			"vandalism": "Vandalism",
+			"disruptive": "Disruptive editing",
+			"test": "Editing tests",
+			"delete": "Removal of content, blanking"
 		},
 		"Behavior in articles": {
-			"uw-biog": "Adding unreferenced controversial information about living persons",
-			"uw-defam": "Addition of defamatory content",
-			"uw-error": "Introducing deliberate factual errors",
-			"uw-genre": "Frequent or mass changes to genres without consensus or references",
-			"uw-image": "Image-related vandalism in articles",
-			"uw-joke": "Using improper humor in articles",
-			"uw-nor": "Adding original research, including unpublished syntheses of sources",
-			"uw-notcensored": "Censorship of material",
-			"uw-own": "Ownership of articles",
-			"uw-tdel": "Removal of maintenance templates",
-			"uw-unsourced": "Addition of unsourced or improperly cited material"
+			"biog": "Adding unreferenced controversial information about living persons",
+			"defam": "Addition of defamatory content",
+			"error": "Introducing deliberate factual errors",
+			"genre": "Frequent or mass changes to genres without consensus or references",
+			"image": "Image-related vandalism in articles",
+			"joke": "Using improper humor in articles",
+			"nor": "Adding original research, including unpublished syntheses of sources",
+			"notcensored": "Censorship of material",
+			"own": "Ownership of articles",
+			"tdel": "Removal of maintenance templates",
+			"unsourced": "Addition of unsourced or improperly cited material"
 		},
 		"Promotions and spam": {
-			"uw-advert": "Using Wikipedia for advertising or promotion",
-			"uw-npov": "Not adhering to neutral point of view",
-			"uw-spam": "Adding spam links"
+			"advert": "Using Wikipedia for advertising or promotion",
+			"npov": "Not adhering to neutral point of view",
+			"spam": "Adding spam links"
 		},
 		"Behavior towards other editors": {
-			"uw-agf": "Not assuming good faith",
-			"uw-harass": "Harassment of other users",
-			"uw-npa": "Personal attack directed at a specific editor",
-			"uw-tempabuse": "Improper use of warning or blocking template"
+			"agf": "Not assuming good faith",
+			"harass": "Harassment of other users",
+			"npa": "Personal attack directed at a specific editor",
+			"tempabuse": "Improper use of warning or blocking template"
 		},
 		"Removal of deletion tags": {
-			"uw-afd": "Removing {{afd}} templates",
-			"uw-blpprod": "Removing {{blp prod}} templates",
-			"uw-idt": "Removing file deletion tags",
-			"uw-speedy": "Removing speedy deletion tags"
+			"afd": "Removing {{afd}} templates",
+			"blpprod": "Removing {{blp prod}} templates",
+			"idt": "Removing file deletion tags",
+			"speedy": "Removing speedy deletion tags"
 		},
 		"Other": {
-			"uw-chat": "Using talk page as forum",
-			"uw-create": "Creating inappropriate pages",
-			"uw-mos": "Manual of style",
-			"uw-move": "Page moves against naming conventions or consensus",
-			"uw-tpv": "Refactoring others' talk page comments",
-			"uw-upload": "Uploading unencyclopedic images"
+			"chat": "Using talk page as forum",
+			"create": "Creating inappropriate pages",
+			"mos": "Manual of style",
+			"move": "Page moves against naming conventions or consensus",
+			"tpv": "Refactoring others' talk page comments",
+			"upload": "Uploading unencyclopedic images"
 		}
 	}
 };
@@ -1556,11 +1556,29 @@ igloo.extendProto(iglooSettings, function () {
 						wdText += optgroup;
 					}
 
-					wdText += '</center></select><br/><div style="text-align:center;">--<a style="cursor:pointer;" onclick="iglooF(\'cogs\').dialogs.warn.hide(); iglooF(\'actions\').warnUser(\''+ $('#glooWarn').val() +'\')">Warn User</a>--</div>';
+					wdText += '</center></select><br/><div style="text-align:center;">--<a style="cursor:pointer;" id="glooWarnClick">Warn User</a>--</div>';
 
 					me.dialogs.warn = new iglooPopup(wdText, 500, 70);
 					me.dialogs.warn.buildInterface();
 					me.dialogs.warn.show();
+
+					$('#glooWarnClick').click(function () {
+						var conf = true;
+
+						iglooF('cogs').dialogs.warn.hide();
+
+						if (iglooF('actions').currentUser === mw.config.get('wgUserName')) {
+							conf = confirm("You seem to be warning yourself. Are you sure you want to do this?");
+						}
+
+						iglooF('actions').warnUser({
+							reason: $$('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].text,
+							shouldWarn: conf,
+							isCustom: false,
+							template: $('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].value
+						}, false);
+					});
+
 					break;
 				case 'report':
 					var makeSure = confirm('Are you sure you want to report this user to ARV');
@@ -2010,9 +2028,201 @@ iglooActions.prototype.loadPage = function (page, revId) {
 	});
 };
 
+//Warn a user w/o reverting them
+iglooActions.prototype.warnUser = function(details, withrevert, res, callback) {
+	var me = this;
+	//details {reason: something, template: something, isCustom: something, shouldWarn: something}
+
+	if (iglooF('actions').stopActions) return false;
+
+	switch (callback) {
+		default: case 0:
+			var warnReason;
+
+			// don't warn self/on agf
+			if (details.shouldWarn === false || details.reason === 'agf') {
+				document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
+				break;
+			}
+
+			document.getElementById('iglooPageTitle').innerHTML = me.currentPage + ' - warning user';
+			withrevert = typeof withrevert == 'undefined' ? true : withrevert;
+
+			// notify user
+			if (withrevert) {
+				warnReason = details.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[details.reason];					
+			} else {
+				warnReason = details.reason;
+			}
+
+			iglooF('statusLog').addStatus('Attempting to warn <strong>' + me.currentUser + '</strong> for ' + warnReason + ' on <strong>' + me.currentPage + '</strong>...');
+
+			// get the user talk page
+			var getUserPage = new iglooRequest({
+				module: 'getPage',
+				params: { targ: 'User_talk:' + me.currentUser, revisions: 1, properties: 'content' },
+				callback: function (data) { me.warnUser(details, withrevert, data, 1); }
+			}, 0, true, true);
+			getUserPage.run();
+					
+			break;
+
+		case 1:
+			// set up the time management systems
+			var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+				currentDate = new Date(),
+				currentMonth = currentDate.getMonth(),
+				currentYear = currentDate.getFullYear(),
+				currentTime = currentDate.getTime(),
+				warningLevel,
+				header;
+							
+			// check for warnings on the user's talk page
+			var warnings = [], useWarning;
+
+			// if the page already exists, we must analyse it for warnings
+			if (res !== false) {
+				var pageData = res[0].content,
+					regTest = /<!-- ?(?:template:?)?uw-([a-z]+?)([0-9](?:im)?)? ?-->(?:.+?([0-9]{2}):([0-9]{2}), ([0-9]{1,2}) ([a-z]+?) ([0-9]{4}))?/gi,
+					i = 0;
+
+				// get all the warnings on the page
+				while (true) {
+					var t = regTest.exec(pageData);
+							
+					if (t === null) break;
+	
+					warnings[i] = [
+						t[1], //template
+						t[2], //level
+						t[3], //hour
+						t[4], //minute
+						t[5], //day
+						t[6], //month
+						t[7] //year
+					];
+
+					i++;
+				}
+
+				// we are only interested in the latest one
+				if (typeof warnings[0] === 'undefined') { 
+					warnings[0] = []; 
+					warnings[0][0] = false; 
+					warnings[0][1] = 0; 
+				}
+
+				useWarning = warnings.length - 1;
+
+				if (typeof warnings[useWarning][0] === 'string') {
+					var tmplate = warnings[useWarning][0];
+					if (tmplate.indexOf('block') > -1) {
+						useWarning--; 
+						warnings[useWarning][1] = 0; 
+					}
+				}
+								
+				// check when this warning was given
+				for (var compareMonth = 0; compareMonth < months.length; compareMonth++) {
+					if (months[compareMonth] === warnings[useWarning][5]) break;
+				}
+
+				var compareDate = new Date();
+					compareDate.setFullYear(parseInt(warnings[useWarning][6], 10), compareMonth, parseInt(warnings[useWarning][4], 10));
+					compareDate.setHours(parseInt(warnings[useWarning][2], 10));
+					compareDate.setMinutes(parseInt(warnings[useWarning][3], 10));
+								
+				var compareTime = compareDate.getTime();
+								
+				// check if it is old enough to ignore for the purposes of incremental warnings
+				var timeDiff = (currentTime + (currentDate.getTimezoneOffset () * 60 * 1000)) - compareTime;
+				if (timeDiff > (iglooConfiguration.warningsOldAfter * 24 * 60 * 60 * 1000)) { 
+					warnings[useWarning][1] = 0;
+				}
+							
+				// check whether a header already exists for the current month. if not, create one
+				var currentHeader = new RegExp('={2,4} *' + months[currentMonth] + ' *' + currentYear + ' *={2,4}', 'gi');
+				if (currentHeader.test(pageData) !== true) { 
+					header = '== '+months[currentMonth]+' '+currentYear+' =='; 
+				} else { 
+					header = false; 
+				}
+			} else {
+				// if the page does not  exist, we can simply set warnings at the default (lowest) levels
+				// set up the warning and date header for addition to the user's page
+				warnings[0] = []; 
+				warnings[0][0] = false; 
+				warnings[0][1] = 0;
+				useWarning = 0;
+				header = '== '+months[currentMonth]+' '+currentYear+' ==';
+			}
+							
+			// decide upon which warning level to issue
+			var currentWarning = parseInt(warnings[useWarning][1], 10);
+			if (currentWarning === 4) {
+				iglooF('statusLog').addStatus('Will not warn <strong>' + me.currentUser + '</strong> because they have already recieved a final warning.');
+				iglooF('justice').rollback.handleFinalWarning();
+				warningLevel = false;
+			} else if (currentWarning < 4 && currentWarning > 0) {
+				warningLevel = currentWarning + 1;
+			} else {
+				warningLevel = 1;
+			}
+							
+			// add the message to their talk page... or don't if we're gonna report them to AIV
+			if (warningLevel === false) return false;
+							
+			var userPage = 'User_talk:' + me.currentUser, summary;
+			var message = '\n\n' + iglooConfiguration.warningMessage;
+				message = message.replace (/%LEVEL%/g, warningLevel);
+				message = message.replace (/%PAGE%/g, me.currentPage);
+				message = message.replace (/%DIFF%/g, mw.config.get('wgServer') + mw.config.get('wgScript') + '?diff=' + me.currentRev + '');
+
+			if (withrevert) {
+				if (details.isCustom === true) {
+					message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate.custom);
+					summary = iglooConfiguration.warningSummary.custom;
+				} else {
+					message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate[details.reason]);
+					summary = iglooConfiguration.warningSummary[details.reason];
+				}
+			} else {
+				message = message.replace(/%MESSAGE%/g, details.template);
+				summary = details.reason
+			}
+
+			summary = summary.replace (/%LEVEL%/g, warningLevel);
+			summary = summary.replace (/%PAGE%/g, me.currentPage);
+						
+			if (header !== false) message = '\n\n' + header + message;
+
+			var userReport = new iglooRequest({
+				module: 'edit',
+				params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
+				callback: function (data) {
+					var revertReason;
+
+					if (withrevert) {
+						details.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[details.reason];
+					} else {
+						revertReason = details.reason;
+					}
+
+					iglooF('statusLog').addStatus('Successfully issued a level <strong>' + warningLevel + '</strong> warning to <strong>' + me.currentUser + '</strong> for ' + revertReason + ' on <strong>' + me.currentPage + '</strong>!');
+				}
+			}, 0, true, true);
+			userReport.run();
+			document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
+
+			break;
+	}
+};
+
 //Reports a user to AIV or whatever
 iglooActions.prototype.reportUser = function(callback, details) {
 	var me = this;
+
+	if (iglooF('actions').stopActions) return false;
 
 	// handle reporting of the user to AIV
 	switch (callback) {
@@ -3144,7 +3354,6 @@ function iglooRollback (page, user, revId) {
 	this.isCustom = false;
 
 	this.shouldWarn = true;
-	this.warningLevel = false;
 }
 
 igloo.extendProto(iglooRollback, function () {
@@ -3237,180 +3446,21 @@ igloo.extendProto(iglooRollback, function () {
 							params: { targ: thisRevert.pageTitle },
 							callback: function (data) {
 								iglooF('statusLog').addStatus('Added <strong>' + thisRevert.pageTitle + '</strong> to watchlist!');
-								thisRevert.warnUser();
+								thisRevert.warnUser({
+									shouldWarn = thisRevert.shouldWarn,
+									reason: thisRevert.revType,
+									isCustom: thisRevert.isCustom
+								});
 							}
 						}, 0, true, true);
 						pageWatch.run();
 					} else {
-						thisRevert.warnUser();
+						thisRevert.warnUser({
+							shouldWarn = thisRevert.shouldWarn,
+							reason: thisRevert.revType,
+							isCustom: thisRevert.isCustom
+						});
 					}
-
-					break;
-			}
-		},
-				
-		warnUser: function(callback, details) {
-			var thisRevert = this;
-
-			switch (callback) {
-				default: case 0:
-					var warnReason;
-
-					// don't warn self/on agf
-					if (thisRevert.shouldWarn === false || thisRevert.revType === 'agf') {
-						document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
-						break;
-					}
-
-					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle + ' - warning user';
-
-					// notify user
-					warnReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];					
-					iglooF('statusLog').addStatus('Attempting to warn <strong>' + thisRevert.revertUser + '</strong> for ' + warnReason + ' on <strong>' + thisRevert.pageTitle + '</strong>...');
-
-					// get the user talk page
-					var getUserPage = new iglooRequest({
-						module: 'getPage',
-						params: { targ: 'User_talk:' + thisRevert.revertUser, revisions: 1, properties: 'content' },
-						callback: function (data) { thisRevert.warnUser(1, data); }
-					}, 0, true, true);
-					getUserPage.run();
-					
-					break;
-
-				case 1:
-					// set up the time management systems
-					var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
-						currentDate = new Date(),
-						currentMonth = currentDate.getMonth(),
-						currentYear = currentDate.getFullYear(),
-						currentTime = currentDate.getTime(),
-						header;
-							
-					// check for warnings on the user's talk page
-					var warnings = [], useWarning;
-
-					// if the page already exists, we must analyse it for warnings
-					if (details !== false) {
-						var pageData = details[0].content,
-							regTest = /<!-- ?(?:template:?)?uw-([a-z]+?)([0-9](?:im)?)? ?-->(?:.+?([0-9]{2}):([0-9]{2}), ([0-9]{1,2}) ([a-z]+?) ([0-9]{4}))?/gi,
-							i = 0;
-
-						// get all the warnings on the page
-						while (true) {
-							var t = regTest.exec(pageData);
-							
-							if (t === null) break;
-							
-							warnings[i] = [
-								t[1], //template
-								t[2], //level
-								t[3], //hour
-								t[4], //minute
-								t[5], //day
-								t[6], //month
-								t[7] //year
-							];
-
-							i++;
-						}
-
-						// we are only interested in the latest one
-						if (typeof warnings[0] === 'undefined') { 
-							warnings[0] = []; 
-							warnings[0][0] = false; 
-							warnings[0][1] = 0; 
-						}
-
-						useWarning = warnings.length - 1;
-
-						if (typeof warnings[useWarning][0] === 'string') {
-							var tmplate = warnings[useWarning][0];
-							if (tmplate.indexOf('block') > -1) {
-								useWarning--; 
-								warnings[useWarning][1] = 0; 
-							}
-						}
-								
-						// check when this warning was given
-						for (var compareMonth = 0; compareMonth < months.length; compareMonth++) {
-							if (months[compareMonth] === warnings[useWarning][5]) break;
-						}
-
-						var compareDate = new Date();
-							compareDate.setFullYear(parseInt(warnings[useWarning][6], 10), compareMonth, parseInt(warnings[useWarning][4], 10));
-							compareDate.setHours(parseInt(warnings[useWarning][2], 10));
-							compareDate.setMinutes(parseInt(warnings[useWarning][3], 10));
-								
-						var compareTime = compareDate.getTime();
-								
-						// check if it is old enough to ignore for the purposes of incremental warnings
-						var timeDiff = (currentTime + (currentDate.getTimezoneOffset () * 60 * 1000)) - compareTime;
-						if (timeDiff > (iglooConfiguration.warningsOldAfter * 24 * 60 * 60 * 1000)) { 
-							warnings[useWarning][1] = 0;
-						}
-							
-						// check whether a header already exists for the current month. if not, create one
-						var currentHeader = new RegExp('={2,4} *' + months[currentMonth] + ' *' + currentYear + ' *={2,4}', 'gi');
-						if (currentHeader.test(pageData) !== true) { 
-							header = '== '+months[currentMonth]+' '+currentYear+' =='; 
-						} else { 
-							header = false; 
-						}
-					} else {
-						// if the page does not  exist, we can simply set warnings at the default (lowest) levels
-						// set up the warning and date header for addition to the user's page
-						warnings[0] = []; 
-						warnings[0][0] = false; 
-						warnings[0][1] = 0;
-						useWarning = 0;
-						header = '== '+months[currentMonth]+' '+currentYear+' ==';
-					}
-							
-					// decide upon which warning level to issue
-					var currentWarning = parseInt(warnings[useWarning][1], 10);
-					if (currentWarning === 4) {
-						iglooF('statusLog').addStatus('Will not warn <strong>' + thisRevert.revertUser + '</strong> because they have already recieved a final warning.');
-						this.handleFinalWarning();
-						this.warningLevel = false;
-					} else if (currentWarning < 4 && currentWarning > 0) {
-						this.warningLevel = currentWarning + 1;
-					} else {
-						this.warningLevel = 1;
-					}
-							
-					// add the message to their talk page... or don't if we're gonna report them to AIV
-					if (this.warningLevel === false) return false;
-							
-					var userPage = 'User_talk:' + this.revertUser, summary;
-					var message = '\n\n' + iglooConfiguration.warningMessage;
-						message = message.replace (/%LEVEL%/g, this.warningLevel);
-						message = message.replace (/%PAGE%/g, this.pageTitle);
-						message = message.replace (/%DIFF%/g, mw.config.get('wgServer') + mw.config.get('wgScript') + '?diff=' + this.revId + '');
-
-					if (thisRevert.isCustom === true) {
-						message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate.custom);
-						summary = iglooConfiguration.warningSummary.custom;
-					} else {
-						message = message.replace (/%MESSAGE%/g, iglooConfiguration.vandalTemplate[thisRevert.revType]);
-						summary = iglooConfiguration.warningSummary[thisRevert.revType];
-					}
-
-					summary = summary.replace (/%LEVEL%/g, this.warningLevel);
-					summary = summary.replace (/%PAGE%/g, this.pageTitle);
-						
-					if (header !== false) message = '\n\n' + header + message;
-
-					var userReport = new iglooRequest({
-						module: 'edit',
-						params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
-						callback: function (data) {
-							var revertReason = thisRevert.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[thisRevert.revType];
-							iglooF('statusLog').addStatus('Successfully issued a level <strong>' + thisRevert.warningLevel + '</strong> warning to <strong>' + thisRevert.revertUser + '</strong> for ' + revertReason + ' on <strong>' + thisRevert.pageTitle + '</strong>!');
-						}
-					}, 0, true, true);
-					userReport.run();
-					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle;
 
 					break;
 			}
