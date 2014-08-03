@@ -1563,9 +1563,9 @@ igloo.extendProto(iglooSettings, function () {
 					me.dialogs.warn.show();
 
 					$('#glooWarnClick').click(function () {
-						var conf = true;
-
-						iglooF('cogs').dialogs.warn.hide();
+						var conf = true,
+							wReason = $('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].text,
+							wTemplate = $('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].value;
 
 						if (iglooF('actions').currentUser === mw.config.get('wgUserName')) {
 							conf = confirm("You seem to be warning yourself. Are you sure you want to do this?");
@@ -1573,11 +1573,13 @@ igloo.extendProto(iglooSettings, function () {
 							if (conf === false) return false;
 						}
 
+						iglooF('cogs').dialogs.warn.hide();
+
 						iglooF('actions').warnUser({
-							reason: $('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].text,
+							reason: wReason,
 							shouldWarn: conf,
 							isCustom: false,
-							template: $('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].value
+							template: wTemplate
 						}, false);
 					});
 
