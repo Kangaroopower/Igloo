@@ -3450,7 +3450,7 @@ igloo.extendProto(iglooRollback, function () {
 							params: { targ: thisRevert.pageTitle },
 							callback: function (data) {
 								iglooF('statusLog').addStatus('Added <strong>' + thisRevert.pageTitle + '</strong> to watchlist!');
-								thisRevert.warnUser({
+								iglooF('actions').warnUser({
 									shouldWarn: thisRevert.shouldWarn,
 									reason: thisRevert.revType,
 									isCustom: thisRevert.isCustom
@@ -3459,7 +3459,7 @@ igloo.extendProto(iglooRollback, function () {
 						}, 0, true, true);
 						pageWatch.run();
 					} else {
-						thisRevert.warnUser({
+						iglooF('actions').warnUser({
 							shouldWarn: thisRevert.shouldWarn,
 							reason: thisRevert.revType,
 							isCustom: thisRevert.isCustom
