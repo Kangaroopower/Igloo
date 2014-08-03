@@ -1569,10 +1569,12 @@ igloo.extendProto(iglooSettings, function () {
 
 						if (iglooF('actions').currentUser === mw.config.get('wgUserName')) {
 							conf = confirm("You seem to be warning yourself. Are you sure you want to do this?");
+
+							if (conf === false) return false;
 						}
 
 						iglooF('actions').warnUser({
-							reason: $$('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].text,
+							reason: $('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].text,
 							shouldWarn: conf,
 							isCustom: false,
 							template: $('#glooWarn')[0].options[$('#glooWarn')[0].selectedIndex].value
@@ -3447,7 +3449,7 @@ igloo.extendProto(iglooRollback, function () {
 							callback: function (data) {
 								iglooF('statusLog').addStatus('Added <strong>' + thisRevert.pageTitle + '</strong> to watchlist!');
 								thisRevert.warnUser({
-									shouldWarn = thisRevert.shouldWarn,
+									shouldWarn: thisRevert.shouldWarn,
 									reason: thisRevert.revType,
 									isCustom: thisRevert.isCustom
 								});
@@ -3456,7 +3458,7 @@ igloo.extendProto(iglooRollback, function () {
 						pageWatch.run();
 					} else {
 						thisRevert.warnUser({
-							shouldWarn = thisRevert.shouldWarn,
+							shouldWarn: thisRevert.shouldWarn,
 							reason: thisRevert.revType,
 							isCustom: thisRevert.isCustom
 						});
