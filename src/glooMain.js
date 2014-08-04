@@ -1545,7 +1545,7 @@ igloo.extendProto(iglooSettings, function () {
 			var me = this;
 			switch (action) {
 				case 'warn':
-					var wdText = '<div style="text-align:center; margin-bottom:10px;">Please select what you would like to warn the user for:</div><div><center><select id="glooWarn">';
+					var wdText = '<div style="text-align:center; margin-bottom:10px;">Please select what you would like to warn the user for:<span id="glooWarnClose" style="float:right; margin-right: 7px;"><img src="http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png"/></span></div><div><center><select id="glooWarn">';
 
 					for (var og in iglooConfiguration.warnSummaries) {
 						var optgroup = '<optgroup label="' + og + '">';
@@ -1581,6 +1581,10 @@ igloo.extendProto(iglooSettings, function () {
 							isCustom: false,
 							template: wTemplate
 						}, false);
+					});
+
+					$('#glooWarnClose').click(function () {
+						iglooF('cogs').dialogs.warn.hide();
 					});
 
 					break;
@@ -2202,7 +2206,7 @@ iglooActions.prototype.warnUser = function(details, withrevert, res, callback) {
 
 			var userReport = new iglooRequest({
 				module: 'edit',
-				params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
+				params: { targ: userPage, isMinor: false, text: message, summary: summary + ' ' + glooSig, where: 'appendtext' },
 				callback: function (data) {
 					var revertReason;
 
