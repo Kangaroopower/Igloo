@@ -1545,7 +1545,7 @@ igloo.extendProto(iglooSettings, function () {
 			var me = this;
 			switch (action) {
 				case 'warn':
-					var wdText = '<div style="text-align:center; margin-bottom:10px;">Please select what you would like to warn the user for:<span id="glooWarnClose" style="float:right; margin-right: 7px;"><img src="http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png"/></span></div><div><center><select id="glooWarn">';
+					var wdText = '<div style="text-align:center; margin-bottom:10px;">Please select what you would like to warn the user for:<span id="glooWarnClose" style="float:right; margin-right: 7px; cursor:pointer;"><img src="http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png"/></span></div><div><center><select id="glooWarn">';
 
 					for (var og in iglooConfiguration.warnSummaries) {
 						var optgroup = '<optgroup label="' + og + '">';
