@@ -1391,10 +1391,13 @@ function iglooSettings () {
 igloo.extendProto(iglooSettings, function () {
 	return {
 		retrieve: function () {
+			var didRemoteConnect = false;
+
 			if (igloo.remoteConnect && !igloo.connectLocal) {
 				iglooImport(iglooConfiguration.remoteHost + 'main.php?action=settings&me=' + encodeURIComponent(mw.config.get('wgUserName')) + '&do=get&session=' + igloo.sessionKey, true).onload = function () {
+					didRemoteConnect = true;
 					if (typeof iglooNetSettings !== "undefined") {
-						iglooUserSettings.firstRun = false;
+						igloo.firstRun = false;
 						$.extend(iglooUserSettings, iglooNetSettings);	
 						
 						for (var defaultSetting in iglooUserSettings) {
@@ -1425,7 +1428,11 @@ igloo.extendProto(iglooSettings, function () {
 			} else {
 				var stored = JSON.parse(mw.user.options.get('userjs-igloo'));
 				igloo.firstRun = false;
-				$.extend(iglooUserSettings, stored);
+
+				if (!didRemoteConnect) {
+					$.extend(iglooUserSettings, stored);
+				}
+
 				//and then if there's settings in iglooUserSettings that aren't in the stored settings
 				//merge them. This happens when we add a new key.
 				$.extend(stored, iglooUserSettings);
