@@ -1072,7 +1072,7 @@ igloo.extendProto(iglooRevision, function () {
 		loadRevision: function () {
 			var me = this;
 
-			iglooF('justice').reversionEnabled = 'pause';
+			iglooF('actions').actionsEnabled = 'pause';
 
 			if (this.revisionRequest === null) {
 				this.revisionRequest = new iglooRequest({
@@ -1096,7 +1096,7 @@ igloo.extendProto(iglooRevision, function () {
 		loadDiff: function () {
 			var me = this;
 
-			iglooF('justice').reversionEnabled = 'pause';
+			iglooF('actions').actionsEnabled = 'pause';
 
 			if (this.diffRequest === null) {
 				igloo.log('Attempted to show a diff, but we had no data so has to load it.');
@@ -1256,7 +1256,7 @@ igloo.extendProto(iglooRevision, function () {
 					});
 
 					// we can now revert this edit
-					if (iglooF('justice').reversionEnabled === 'pause') iglooF('justice').reversionEnabled = 'yes';
+					if (iglooF('actions').actionsEnabled === 'pause') iglooF('actions').actionsEnabled = 'yes';
 				});
 			}
 		},
@@ -1980,6 +1980,7 @@ igloo.extendProto(iglooSettings, function () {
 function iglooActions () {
 	//we should have the current page here
 	this.stopActions = false;
+	this.actionsEnabled = 'yes'; //stopActions deals with dialogs opening, this deals with page loading
 	this.currentPage = '';
 	this.currentUser = '';
 	this.currentRev = -1;
@@ -2609,7 +2610,7 @@ igloo.extendProto(iglooSearch, function () {
 				params: { targ: browseTo, revisions: 1, properties: 'ids|user' },
 				callback: function (data) {
 					if (data !== false) {
-						iglooF('justice').reversionEnabled = 'pause';
+						iglooF('actions').actionsEnabled = 'pause';
 						iglooF('actions').loadPage(browseTo, data[0].ids.revid);
 					} else {
 						$('#igloo-search-error').html('Error: '+ browseTo + ' doesn\'t exist');
@@ -3335,7 +3336,6 @@ function iglooReversion () {
 	this.revId = -2;
 	this.user = '';
 	this.rollback = null;
-	this.reversionEnabled = 'yes';
 
 	//Receives info for new diff
 	var me = this;
@@ -3343,7 +3343,7 @@ function iglooReversion () {
 		me.pageTitle = data.pageTitle;
 		me.revId = data.revId;
 		me.user = data.user;
-		me.reversionEnabled = 'yes';
+		iglooF('actions').actionsEnabled = 'yes';
 		me.rollback = new iglooRollback(data.pageTitle, data.user, data.revId);
 	});
 
@@ -3494,12 +3494,12 @@ igloo.extendProto(iglooRollback, function () {
 					if (iglooF('actions').stopActions) return;
 
 					// check that reversion is switched on
-					if (iglooF('justice').reversionEnabled === 'no') { 
+					if (iglooF('actions').actionsEnabled === 'no') { 
 						alert(noMessage + 'because someone has already done so.');  
 						return false; 
 					}
 
-					if (iglooF('justice').reversionEnabled === 'pause') { 
+					if (iglooF('actions').actionsEnabled === 'pause') { 
 						alert(noMessage + 'because a diff is still loading'); 
 						return false; 
 					}
@@ -3508,7 +3508,7 @@ igloo.extendProto(iglooRollback, function () {
 					iglooF('statusLog').addStatus('Attempting to revert the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>...');
 
 					// prevent interference with this page while we are reverting it
-					iglooF('justice').reversionEnabled = 'pause';
+					iglooF('actions').actionsEnabled = 'pause';
 									
 					// let the user know we're working...
 					document.getElementById('iglooPageTitle').innerHTML = document.getElementById('iglooPageTitle').innerHTML + ' - reverting edit...';
@@ -3524,7 +3524,7 @@ igloo.extendProto(iglooRollback, function () {
 							if (typeof data.error !== "undefined") {
 								iglooF('statusLog').addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because another user has already done so.');
 								if (thisRevert.pageTitle === iglooF('justice').pageTitle) {
-									iglooF('justice').reversionEnabled = 'no';
+									iglooF('actions').actionsEnabled = 'no';
 								}
 							} else {
 								iglooF('statusLog').addStatus('Successfully reverted the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>!');
