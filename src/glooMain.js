@@ -2301,6 +2301,87 @@ iglooActions.prototype.reportUser = function(callback, details) {
 	}
 };
 
+//Handle Final Warning
+iglooActions.prototype.handleFinalWarning =  function (callback, data) {
+	var me = this;
+
+	// this helper function is called when a user who already has a final warning is reverted. It decides what to do based on the user settings, and
+	// is able to prompt for input if it is unsure.
+	switch (callback) {
+		default: case 0:
+			// If you're not an admin, igloo won't let you choose. :) Also report if that's the preferred setting.
+			if (!iglooUserSettings.mesysop || iglooUserSettings.blockAction === 'report') {
+				iglooF('actions').reportUser();
+				return true;
+			}
+
+			// If we reach a final warning, remember that no further action is required if the user is already blocked!
+			var blockCheck = new iglooRequest({
+				module: 'question',
+				params: '?action=query&list=blocks&bkusers=' + me.currentUser,
+				callback: function (data) {
+					me.handleFinalWarning(1, data);
+				}
+			}, 0, true, true);
+			blockCheck.run();
+			break;
+					
+		case 1:
+			// If already blocked, tell and exit.
+			if (data.query.blocks[0] !== "undefined") {
+				iglooF('statusLog').addStatus( 'igloo will take no further action because <strong>' + me.currentUser + '</strong> is currently blocked.' );
+				return false;
+			}
+
+			// handle settings
+			if (iglooUserSettings.blockAction === 'prompt') {
+				iglooUserSettings.blockAction = 'report'; // temporarily, so we don't see this screen again this session
+
+				// manage the prompt
+				var title = 'igloo needs you to choose your block settings',
+					message = 'Because you are an administrator, igloo can automatically block users on your behalf when you revert someone who has received a final warning. ' +
+						'The igloo autoblocker will automatically choose and block with the most appropriate settings based on the user in question (you will still be prompted for permission to continue). ' +
+						'If you want more control, the standard block setting will show you relevant data about the user and allow you to make the block yourself. Alternatively, igloo can simply report the user to AIV. What do you want to do?<br /><br />' +
+						'&gt;&gt; <span id="igloo-set-block-auto" style="cursor: pointer;">igloo autoblock (recommended)</span> | <span id="igloo-set-block-standard" style="cursor: pointer;">standard block</span> | <span id="igloo-set-block-report" style="cursor: pointer;">report</span>',
+					blockPopup = new iglooPopup('<div><span style="width: 100%; border-bottom: 1px solid #000;"><strong>' + title + '</strong></span><br /><div style="text-align: left; margin-left: 10px; width: 90%; color: #222222;">' + message + '</div></div>', 500, 130);
+						
+					blockPopup.show();
+
+				// set the functions
+				document.getElementById('igloo-set-block-auto').onclick = function () {
+					blockPopup.hide();
+					iglooF('cogs').set('blockAction', 'auto', function (res) {
+						iglooUserSettings.blockAction = 'auto';
+						iglooF('hammer').startBlock();
+					});
+				};
+
+				document.getElementById('igloo-set-block-standard').onclick = function () {
+					blockPopup.hide();
+					iglooF('cogs').set('blockAction', 'standard', function (res) {
+						iglooUserSettings.blockAction = 'standard';
+						iglooF('hammer').startBlock(0, 'standard');
+					});
+				};
+
+				document.getElementById('igloo-set-block-report').onclick = function () {
+					blockPopup.hide();
+					iglooF('cogs').set('blockAction', 'report', function (res) {
+						iglooUserSettings.blockAction = 'report';
+						iglooF('actions').reportUser();
+					});
+				};		
+			} else if (iglooUserSettings.blockAction === 'standard') {
+				iglooF('hammer').startBlock(0, 'standard');
+				return true;
+			} else if (iglooUserSettings.blockAction === 'auto') {
+				iglooF('hammer').startBlock();
+				return true;
+			}
+
+			return false;
+	}
+};
 
 // Class iglooArchive
 	/*
@@ -3084,22 +3165,18 @@ igloo.extendProto(iglooBlock, function () {
 			
 			autoBlockPopup.buildInterface();
 			autoBlockPopup.show();
-			iglooF('actions').stopActions = true;
 			
 			// set the functions
 			document.getElementById('igloo-just-do-block').onclick = function () {
-				iglooF('actions').stopActions = false;
 				autoBlockPopup.hide();
 				me.doBlock();
 			};
 			document.getElementById('igloo-adjust-block').onclick = function () {
-				iglooF('actions').stopActions = false;
 				autoBlockPopup.hide();
 				me.setUpBlock('adjusting');
 				iglooF('statusLog').addStatus('Adjusting block of <strong>' + me.currentUser + '</strong>: launching block interface...');
 			};
 			document.getElementById('igloo-abort-block').onclick = function () {
-				iglooF('actions').stopActions = false;
 				autoBlockPopup.hide();
 				iglooF('actions').reportUser();
 				iglooF('statusLog').addStatus('Aborted block of <strong>' + me.currentUser + '</strong>: user aborted! Will now report...');
@@ -3418,7 +3495,7 @@ igloo.extendProto(iglooRollback, function () {
 
 					// check that reversion is switched on
 					if (iglooF('justice').reversionEnabled === 'no') { 
-						alert(noMessage + 'because you made it using igloo');  
+						alert(noMessage + 'because someone has already done so.');  
 						return false; 
 					}
 
@@ -3484,92 +3561,6 @@ igloo.extendProto(iglooRollback, function () {
 					}
 
 					break;
-			}
-		},
-
-		handleFinalWarning: function (callback, data) {
-			var thisRevert = this;
-
-			// this helper function is called when a user who already has a final warning is reverted. It decides what to do based on the user settings, and
-			// is able to prompt for input if it is unsure.
-			switch (callback) {
-				default: case 0:
-					// If you're not an admin, igloo won't let you choose. :) Also report if that's the preferred setting.
-					if (!iglooUserSettings.mesysop || iglooUserSettings.blockAction === 'report') {
-						iglooF('actions').reportUser();
-						return true;
-					}
-
-					// If we reach a final warning, remember that no further action is required if the user is already blocked!
-					var blockCheck = new iglooRequest({
-						module: 'question',
-						params: '?action=query&list=blocks&bkusers=' + thisRevert.revertUser,
-						callback: function (data) {
-							thisRevert.handleFinalWarning(1, data);
-						}
-					}, 0, true, true);
-					blockCheck.run();
-					break;
-					
-				case 1:
-					// If already blocked, tell and exit.
-					if (data.query.blocks[0] !== "undefined") {
-						iglooF('statusLog').addStatus( 'igloo will take no further action because <strong>' + thisRevert.revertUser + '</strong> is currently blocked.' );
-						return false;
-					}
-
-					// handle settings
-					if (iglooUserSettings.blockAction === 'prompt') {
-						iglooUserSettings.blockAction = 'report'; // temporarily, so we don't see this screen again this session
-
-						// manage the prompt
-						var title = 'igloo needs you to choose your block settings',
-							message = 'Because you are an administrator, igloo can automatically block users on your behalf when you revert someone who has received a final warning. ' +
-							'The igloo autoblocker will automatically choose and block with the most appropriate settings based on the user in question (you will still be prompted for permission to continue). ' +
-							'If you want more control, the standard block setting will show you relevant data about the user and allow you to make the block yourself. Alternatively, igloo can simply report the user to AIV. What do you want to do?<br /><br />' +
-							'&gt;&gt; <span id="igloo-set-block-auto" style="cursor: pointer;">igloo autoblock (recommended)</span> | <span id="igloo-set-block-standard" style="cursor: pointer;">standard block</span> | <span id="igloo-set-block-report" style="cursor: pointer;">report</span>',
-							blockPopup = new iglooPopup('<div><span style="width: 100%; border-bottom: 1px solid #000;"><strong>' + title + '</strong></span><br /><div style="text-align: left; margin-left: 10px; width: 90%; color: #222222;">' + message + '</div></div>', 500, 130);
-						
-						blockPopup.show();
-
-						iglooF('actions').stopActions = true;
-
-						// set the functions
-						document.getElementById('igloo-set-block-auto').onclick = function () {
-							iglooF('actions').stopActions = false;
-							blockPopup.hide();
-							iglooF('cogs').set('blockAction', 'auto', function (res) {
-								iglooUserSettings.blockAction = 'auto';
-								iglooF('hammer').startBlock();
-							});
-						};
-
-						document.getElementById('igloo-set-block-standard').onclick = function () {
-							iglooF('actions').stopActions = false;
-							blockPopup.hide();
-							iglooF('cogs').set('blockAction', 'standard', function (res) {
-								iglooUserSettings.blockAction = 'standard';
-								iglooF('hammer').startBlock(0, 'standard');
-							});
-						};
-
-						document.getElementById('igloo-set-block-report').onclick = function () {
-							iglooF('actions').stopActions = false;
-							blockPopup.hide();
-							iglooF('cogs').set('blockAction', 'report', function (res) {
-								iglooUserSettings.blockAction = 'report';
-								iglooF('actions').reportUser();
-							});
-						};		
-					} else if (iglooUserSettings.blockAction === 'standard') {
-						iglooF('hammer').startBlock(0, 'standard');
-						return true;
-					} else if (iglooUserSettings.blockAction === 'auto') {
-						iglooF('hammer').startBlock();
-						return true;
-					}
-
-					return false;
 			}
 		}
 	};
@@ -3875,11 +3866,13 @@ function iglooPopup (content, width, height) {
 	this.show = function () {
 		$(this.popupMenu).css({'display': 'block'});
 		$(this.popupMenuContent).css({'display': 'block'});
+		iglooF('actions').stopActions = true;
 	};
 
 	this.hide = function () {
 		$(this.popupMenu).remove();
 		$(this.popupMenuContent).remove();
+		iglooF('actions').stopActions = false;
 	};
 }
 
