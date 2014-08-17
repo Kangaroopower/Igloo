@@ -2642,6 +2642,9 @@ igloo.extendProto(iglooCSD, function () {
 			switch (callback) {
 				default: case 0:
 					var csdsummary;
+
+					if (iglooF('actions').stopActions) return;
+
 					if(iglooUserSettings.mesysop === true) {
 						csdsummary = iglooConfiguration.csdSummary.admin;
 						csdsummary = csdsummary.replace('%CSDTYPE%', me.csdtype);
@@ -2966,7 +2969,7 @@ igloo.extendProto(iglooBlock, function () {
 			var me = this;
 
 			// handle blocking of users
-			if (iglooUserSettings.mesysop === false) return false;
+			if (iglooUserSettings.mesysop === false || iglooF('stopActions')) return false;
 			
 			switch (callback) {
 				default: case 0:
@@ -3373,11 +3376,12 @@ function iglooRollback (page, user, revId) {
 
 igloo.extendProto(iglooRollback, function () {
 	return {
-		go: function (type, isCustom) {
+		go: function (type, isCustom, shouldWarn) {
 			var me = this;
 
 			this.revType = type || 'vandalism';
 			this.isCustom = isCustom;
+			this.shouldWarn = shouldWarn || true;
 
 			// checks
 			if (this.pageTitle === '') {
@@ -3409,6 +3413,8 @@ igloo.extendProto(iglooRollback, function () {
 				default: case 0: 
 					var noMessage = 'You cannot revert this edit to ' + this.pageTitle + ', ',
 						summary = '';
+
+					if (iglooF('actions').stopActions) return;
 
 					// check that reversion is switched on
 					if (iglooF('justice').reversionEnabled === 'no') { 
