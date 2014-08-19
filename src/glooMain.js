@@ -1488,9 +1488,9 @@ igloo.extendProto(iglooSettings, function () {
 				qActions = {
 					warn: "Warn User (no revert)",
 					report: "Report User",
-					talk: ["Go to talk page on Wikipedia", mw.util.wikiScript('index') + "?title=Talk:", "actions", "currentPage", ""],
+					page: ["Go to  page on Wikipedia", mw.util.wikiScript('index') + "?title=", "actions", "currentPage", ""],
 					diff: ["View diff on Wikipedia", mw.util.wikiScript('index') + "?diff=", "actions", "currentRev", ""],
-					stats: "View basic user info"
+					restore: "Restore this revision"
 				},
 				me = this;
 
@@ -1548,7 +1548,7 @@ igloo.extendProto(iglooSettings, function () {
 			/*qActions = {
 					warn: "Warn User (no revert)",
 					report: "Report User", //done
-					talk: "Go to page talk on Wikipedia", //dont need function
+					page: "Go to page on Wikipedia", //dont need function
 					diff: "View diff on Wikipedia", //dont need function
 					stats: "View basic user info"
 				},*/
@@ -1598,13 +1598,21 @@ igloo.extendProto(iglooSettings, function () {
 					});
 
 					break;
+
 				case 'report':
 					var makeSure = confirm('Are you sure you want to report this user to ARV');
 					if (makeSure) {
 						iglooF('actions').reportUser();
 					}
+
 					break;
-				case 'stats':
+
+				case 'restore':
+					var makeSure = confirm('Are you sure you want to restore this revision');
+					if (makeSure) {
+						iglooF('actions').restoreRevision();
+					}
+
 					break;
 			}
 		},
