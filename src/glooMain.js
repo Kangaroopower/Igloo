@@ -588,7 +588,7 @@ function iglooContentManager () {
 				if (--this.content[i].score === 0) {
 					igloo.log("an item reached a score of 0 and is ready for discard!");
 					this.discardable++;
-					alert(discardable);
+					alert(this.discardable);
 				}
 			}
 		}
