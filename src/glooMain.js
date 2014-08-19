@@ -1607,8 +1607,8 @@ igloo.extendProto(iglooSettings, function () {
 					break;
 
 				case 'restore':
-					var makeSure = confirm('Are you sure you want to restore this revision');
-					if (makeSure) {
+					var makeRestoreSure = confirm('Are you sure you want to restore this revision');
+					if (makeRestoreSure) {
 						iglooF('actions').restoreRevision();
 					}
 
@@ -2214,7 +2214,7 @@ iglooActions.prototype.warnUser = function(details, withrevert, res, callback) {
 				}
 			} else {
 				message = message.replace(/%MESSAGE%/g, details.template);
-				summary = details.reason
+				summary = details.reason;
 			}
 
 			summary = summary.replace (/%LEVEL%/g, warningLevel);
