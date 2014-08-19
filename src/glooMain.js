@@ -601,7 +601,7 @@ function iglooContentManager () {
 			igloo.log("GC removing items to fit limit (" + this.contentSize + "/" + iglooUserSettings.maxContentSize + ")");
 			var j = 0, lastZeroScore = null, gcVal = 0.3, gcStep = 0.05;
 			for (var i in this.content) {
-				if (igloo.getCurrentView().displaying.page.title === i.title) continue; //dont remove diplayed page from contentmanager
+				//if (igloo.getCurrentView().displaying.page.title === i.title) continue; //dont remove diplayed page from contentmanager
 
 				if (this.content[i].score !== 0 || this.content[i].isRecent !== false || this.content[i].page.displaying !== false) {
 					j++;
@@ -2050,6 +2050,17 @@ iglooActions.prototype.loadPage = function (page, revId) {
 
 	this.getRevInfo(page, revId, function (data) {
 		var p = new iglooPage(new iglooRevision(data));
+
+		for (var j = 0; j < iglooF('recentChanges').recentChanges.length; j++) {
+			if (data.title === this.recentChanges[j].info.pageTitle) {
+				p = iglooF('contentManager').getPage(data.title);
+				p.addRevision(new iglooRevision(data));
+				p.display();
+				return;
+			}
+		}
+
+		iglooF('contentManager').add(p);
 		p.display();
 	});
 };
