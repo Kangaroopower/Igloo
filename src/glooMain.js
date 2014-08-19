@@ -614,7 +614,7 @@ function iglooContentManager () {
 				if (j === this.contentSize - 1) {
 					if (lastZeroScore !== null) {
 						igloo.log("failed to randomly select item, discarding the last one seen");
-						this.content[lastZeroScore] = undefined;
+						delete this.content[lastZeroScore];
 						this.contentSize--;
 						this.discardable--;
 						break;
@@ -623,7 +623,7 @@ function iglooContentManager () {
 
 				if (this.content[i].score === 0 && this.content[i].page.isRecent === false /*&& Math.random() < gcVal */&& this.content[i].page.displaying === false) {
 					igloo.log("selected an item suitable for discard, discarding");
-					this.content[i] = undefined;
+					delete this.content[i];
 					this.contentSize--;
 					this.discardable--;
 					break;
