@@ -2052,7 +2052,7 @@ iglooActions.prototype.loadPage = function (page, revId) {
 		var p = new iglooPage(new iglooRevision(data));
 
 		for (var j = 0; j < iglooF('recentChanges').recentChanges.length; j++) {
-			if (data.title === this.recentChanges[j].info.pageTitle) {
+			if (data.title === iglooF('recentChanges').recentChanges[j].info.pageTitle) {
 				p = iglooF('contentManager').getPage(data.title);
 				p.addRevision(new iglooRevision(data));
 				p.display();
