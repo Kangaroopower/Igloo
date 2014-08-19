@@ -555,7 +555,7 @@ function iglooContentManager () {
 	this.content = {};
 
 	this.add = function (page) {
-		this.decrementScores();
+		if (this.contentSize > 0) this.decrementScores();
 		this.contentSize++;
 		this.content[page.info.pageTitle] = {
 			exists: true,
