@@ -2952,11 +2952,11 @@ igloo.extendProto(iglooHist, function () {
 				case 1:
 					$(iglooF('past').dropdown.name + '-note').css('display', 'none');
 		 
-					var pageHistory = '';
-					for (var i in data) {
-						if (i === "title") continue;
+					var pageHistory = '',
+						rev;
 
-						var rev = data[i];
+					for (var i in data) {
+						rev = data[i];
 		 
 						pageHistory += '<li id="iglooF(\'past\').dropdown.itemPrefix'+rev.ids.revid+'" onclick="iglooF(\'actions\').loadPage(\''+me.pageTitle.replace('\'', '\\\'')+'\',  \''+rev.ids.revid+'\');" onmouseover="this.style.backgroundColor = \''+jin.Colour.LIGHT_GREY+'\';" onmouseout="this.style.backgroundColor = \''+jin.Colour.WHITE+'\';" style="cursor: pointer; width: 186px; padding: 2px; border-bottom: 1px solid #000000; list-style-type: none; list-style-image: none; marker-offset: 0px; background-color: '+jin.Colour.WHITE+';">'+rev.user+'</li>';
 					}
