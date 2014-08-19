@@ -745,8 +745,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 				// Check if we already have information about this page.
 				for (var j = 0; j < l2; j++) {
-					var displayedPage = iglooF('actions').currentPage && (data[i].title === iglooF('actions').currentPage.title);
-					if (data[i].title === this.recentChanges[j].info.pageTitle || displayedPage) {
+					if (data[i].title === this.recentChanges[j].info.pageTitle || data[i].title === iglooF('actions').currentPage) {
 						p = iglooF('contentManager').getPage(data[i].title);
 						p.addRevision(new iglooRevision(data[i]));
 						p.hold = true;
