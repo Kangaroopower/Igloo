@@ -563,7 +563,7 @@ function iglooContentManager () {
 			hold: true,
 			timeAdded: new Date(),
 			timeTouched: new Date(),
-			score: iglooConfiguration.defaultContentScore
+			score: iglooUserSettings.maxContentSize //iglooConfiguration.defaultContentScore
 		};
 
 		igloo.log("Added a page to the content manager. Size: " + this.contentSize);
@@ -621,7 +621,7 @@ function iglooContentManager () {
 					}
 				}
 
-				if (this.content[i].score === 0 && this.content[i].isRecent === false && Math.random() < gcVal && this.content[i].page.displaying === false) {
+				if (this.content[i].score === 0 /*&& this.content[i].isRecent === false && Math.random() < gcVal */&& this.content[i].page.displaying === false) {
 					igloo.log("selected an item suitable for discard, discarding");
 					this.content[i] = undefined;
 					this.contentSize--;
