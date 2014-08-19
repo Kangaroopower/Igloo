@@ -3348,6 +3348,7 @@ function iglooReversion () {
 	this.revId = -2;
 	this.user = '';
 	this.rollback = null;
+	this.customDialog = null;
 
 	//Receives info for new diff
 	var me = this;
@@ -3433,10 +3434,27 @@ igloo.extendProto(iglooReversion, function () {
 					if (confirmRevert === true) {
 						if (me.pageTitle !== '') {
 							if (summary === 'custom') {
-								var customSummary = prompt('What\'s your custom sumary (A summary is required)?');
-								if (customSummary !== null || customSummary !== "") {
-									me.rollback.go(customSummary.toLowerCase(), true);
-								}
+								var customText = '<div style="text-align:center; margin-bottom:10px;">Custom Summary<span id="glooCustomClose" style="float:right; margin-right: 7px; cursor:pointer;"><img src="http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png"/></span></div>';
+									customText += '<div><center><input type="text" id="glooCustomSummary"/></div><div><input type="checkbox" id="glooCustomShouldWarn" /></div></center><br/><div style="text-align:center;">--<a style="cursor:pointer;" id="glooCustomClick">Revert Edit</a>--</div>';
+
+								me.customDialog = new iglooPopup(customText, 500, 70);
+								me.customDialog.buildInterface();
+								me.customDialog.show();
+
+								$('#glooCustomClick').click(function () {
+									var customReason = $('#glooCustomSummary').val(),
+										customShouldWarn = $('#glooCustomShouldWarn').prop("checked");
+
+									iglooF('justice').customDialog.hide();
+
+									if (customReason !== null || customReason !== "") {
+										me.rollback.go(customReason.toLowerCase(), true, customShouldWarn);
+									}
+								});
+
+								$('#glooCustomClose').click(function () {
+									iglooF('justice').customDialog.hide();
+								});	
 							} else {
 								me.rollback.go('' + summary.toLowerCase(), false);
 							}
@@ -3469,7 +3487,7 @@ igloo.extendProto(iglooRollback, function () {
 
 			this.revType = type || 'vandalism';
 			this.isCustom = isCustom;
-			this.shouldWarn = shouldWarn || true;
+			this.shouldWarn = typeof shouldWarn !== 'undefined' ? shouldWarn : true;
 
 			// checks
 			if (this.pageTitle === '') {
