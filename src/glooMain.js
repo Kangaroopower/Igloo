@@ -555,7 +555,7 @@ function iglooContentManager () {
 	this.content = {};
 
 	this.add = function (page) {
-		if (this.contentSize > 0) this.decrementScores();
+		this.decrementScores();
 		this.contentSize++;
 		this.content[page.info.pageTitle] = {
 			exists: true,
@@ -563,7 +563,7 @@ function iglooContentManager () {
 			hold: true,
 			timeAdded: new Date(),
 			timeTouched: new Date(),
-			score: iglooUserSettings.maxContentSize //iglooConfiguration.defaultContentScore
+			score: iglooConfiguration.defaultContentScore
 		};
 
 		igloo.log("Added a page to the content manager. Size: " + this.contentSize);
@@ -588,6 +588,7 @@ function iglooContentManager () {
 				if (--this.content[i].score === 0) {
 					igloo.log("an item reached a score of 0 and is ready for discard!");
 					this.discardable++;
+					alert(discardable);
 				}
 			}
 		}
