@@ -602,6 +602,7 @@ function iglooContentManager () {
 			var j = 0, lastZeroScore = null, gcVal = 0.3, gcStep = 0.05;
 			for (var i in this.content) {
 				if (igloo.getCurrentView().displaying.page.title === i.title) continue; //dont remove diplayed page from contentmanager
+
 				if (this.content[i].score !== 0 || this.content[i].isRecent !== false || this.content[i].page.displaying !== false) {
 					j++;
 					gcVal += gcStep;
@@ -876,7 +877,7 @@ function iglooView () {
 	// Hook to relevant events
 	igloo.hookEvent('core', 'displayed-page-changed', function (data) {
 		if (me.displaying) {
-			if (data.page === me.displaying.page && !iglooF('actions').stopActions) {
+			if (data.page === me.displaying.page) {
 				me.changedSinceDisplay = true;
 				me.displaying = data;
 				me.displaying.show();
@@ -3095,6 +3096,7 @@ igloo.extendProto(iglooBlock, function () {
 			// autoblocking - decide on the best warning
 			// pick the best warning length
 			var lastlength = 'neverblocked', me = this;
+
 			me.useduration = iglooConfiguration.blockIncrement[iglooConfiguration.blockDefault];
 			if (details.query.logevents !== null) {
 				if (details.query.logevents.length === 1) {
@@ -3345,7 +3347,6 @@ function iglooReversion () {
 		me.pageTitle = data.pageTitle;
 		me.revId = data.revId;
 		me.user = data.user;
-		iglooF('actions').actionsEnabled = 'yes';
 		me.rollback = new iglooRollback(data.pageTitle, data.user, data.revId);
 	});
 
