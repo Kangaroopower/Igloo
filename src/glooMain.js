@@ -601,6 +601,7 @@ function iglooContentManager () {
 			igloo.log("GC removing items to fit limit (" + this.contentSize + "/" + iglooUserSettings.maxContentSize + ")");
 			var j = 0, lastZeroScore = null, gcVal = 0.3, gcStep = 0.05;
 			for (var i in this.content) {
+				if (igloo.getCurrentView().displaying.page.title === i.title) continue; //dont remove diplayed page from contentmanager
 				if (this.content[i].score !== 0 || this.content[i].isRecent !== false || this.content[i].page.displaying !== false) {
 					j++;
 					gcVal += gcStep;
@@ -743,7 +744,8 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 				// Check if we already have information about this page.
 				for (var j = 0; j < l2; j++) {
-					if (data[i].title === this.recentChanges[j].info.pageTitle) {
+					var displayedPage = iglooF('actions').currentPage && (data[i].title === iglooF('actions').currentPage.title);
+					if (data[i].title === this.recentChanges[j].info.pageTitle || displayedPage) {
 						p = iglooF('contentManager').getPage(data[i].title);
 						p.addRevision(new iglooRevision(data[i]));
 						p.hold = true;
