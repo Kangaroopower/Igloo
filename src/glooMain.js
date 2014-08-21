@@ -566,7 +566,7 @@ function iglooContentManager () {
 			score: iglooConfiguration.defaultContentScore
 		};
 
-		igloo.log("Added a page to the content manager. Size: " + this.contentSize);
+		igloo.log("Added a page to the content manager. Size: " + this.contentSize + ". Score: " + this.content[page.info.pageTitle].score);
 		this.gc();
 
 		return this.content[page.info.pageTitle];
