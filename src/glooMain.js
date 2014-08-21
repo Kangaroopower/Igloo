@@ -41,7 +41,7 @@ var glooLocalBase = 'Wikipedia:Igloo',
 	*/
 var iglooConfiguration = {
 	api: mw.util.wikiScript('api'),
-	defaultContentScore: 20,
+	defaultContentScore: 50,
 	fileHost: window.glooBase + '/', //Holds resources
 	remoteHost: '', //Actual remote server
 	version: "0.9 " + (typeof iglooBranch !== "undefined"? (iglooBranch === "dev" ? "Phoenix" : "Beta") : "Beta"),
@@ -588,7 +588,6 @@ function iglooContentManager () {
 				if (--this.content[i].score === 0) {
 					igloo.log("an item reached a score of 0 and is ready for discard!");
 					this.discardable++;
-					alert(this.discardable);
 				}
 			}
 		}
@@ -602,8 +601,6 @@ function iglooContentManager () {
 			igloo.log("GC removing items to fit limit (" + this.contentSize + "/" + iglooUserSettings.maxContentSize + ")");
 			var j = 0, lastZeroScore = null, gcVal = 0.3, gcStep = 0.05;
 			for (var i in this.content) {
-				//if (igloo.getCurrentView().displaying.page.title === i.title) continue; //dont remove diplayed page from contentmanager
-
 				if (this.content[i].score !== 0 || this.content[i].page.isRecent !== false || this.content[i].page.displaying !== false) {
 					j++;
 					gcVal += gcStep;
@@ -627,7 +624,6 @@ function iglooContentManager () {
 					delete this.content[i];
 					this.contentSize--;
 					this.discardable--;
-					break;
 				} else {
 					j++;
 					gcVal += gcStep;
