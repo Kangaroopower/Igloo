@@ -592,6 +592,7 @@ function iglooContentManager () {
 			}
 		}
 		igloo.log(s);
+		this.gc();
 	};
 
 	this.gc = function () {
@@ -771,6 +772,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 					page.hold = false;
 				}
 				this.recentChanges = this.recentChanges.slice(0, 30);
+				iglooF('contentManager').gc();
 			}
 			
 			// Render the result
