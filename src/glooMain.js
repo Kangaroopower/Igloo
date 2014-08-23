@@ -182,11 +182,11 @@ var iglooUserSettings = {
 	updateTime: 3,
 	hideOwn: false,
 	enableFeedColour: true,
+	maxContentSize: 30,
 	updateQuantity: 10,
 	hideBot: false,
 
 	// Misc
-	maxContentSize: 50,
 	mesysop: false,
 
 	//Diffs
@@ -563,7 +563,7 @@ function iglooContentManager () {
 			hold: true,
 			timeAdded: new Date(),
 			timeTouched: new Date(),
-			score: iglooConfiguration.defaultContentScore
+			score: iglooConfiguration.maxContentSize
 		};
 
 		igloo.log("Added a page to the content manager. Size: " + this.contentSize + ". Score: " + this.content[page.info.pageTitle].score);
@@ -761,17 +761,17 @@ igloo.extendProto(iglooRecentChanges, function () {
 			this.recentChanges.sort(function (a, b) { return b.lastRevision - a.lastRevision; });
 
 			// Truncate the recent changes list to the correct length
-			if (this.recentChanges.length > 30) {
+			if (this.recentChanges.length > iglooUserSettings.maxContentSize) {
 				// Objects that are being removed from the recent changes list are freed in the
 				// content manager for discard.
-				for (var x = 30; x < this.recentChanges.length; x++) {
+				for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
 					if (this.recentChanges[x] === this.currentPage) continue;
 
 					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
 					var page = iglooF('contentManager').getPage(this.recentChanges[x].info.pageTitle);
 					page.hold = false;
 				}
-				this.recentChanges = this.recentChanges.slice(0, 30);
+				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
 			}
 			
 			// Render the result
@@ -1919,6 +1919,27 @@ igloo.extendProto(iglooSettings, function () {
 								}
 							}
 			
+						}));
+
+						cont.innerHTML += "<br/>";
+
+						$(cont).append(me.createOption('Number of pages shown in the RC feeds', 'maxContentSize', {
+							type: "text",
+							value: iglooUserSettings.maxContentSize,
+							onchange: function () {
+								var el = $(this);
+								if (isNaN(parseInt(el.val(), 10))) {
+									el.val(iglooUserSettings.maxContentSize);
+								} else {
+									iglooF('cogs').set("updateTime", el.val(), function (res) {
+										if (res) {
+											iglooUserSettings.maxContentSize = parseInt(el.val(), 10);
+										} else {
+											el.val(iglooUserSettings.maxContentSize);
+										}
+									});
+								}
+							}
 						}));
 
 						cont.innerHTML += "<br/>";
