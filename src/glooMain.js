@@ -648,8 +648,6 @@ function iglooContentManager () {
 					igloo.log("selected an item suitable for discard, discarding");
 					delete this.content[i];
 
-					if (this.content[i].hold === true) this.holdStash--;
-
 					this.contentSize--;
 					this.discardable--;
 					break;
