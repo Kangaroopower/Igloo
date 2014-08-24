@@ -551,26 +551,51 @@ function iglooMain () {
 	*/
 function iglooContentManager () {
 	this.contentSize = 0;
+	this.holdStash = 1; //page that's being displayed always is in here
 	this.discardable = 0;
 	this.content = {};
 
-	this.add = function (page) {
+	this.add = function (page, isHoldPage) {
 		this.decrementScores();
-		this.contentSize++;
-		this.content[page.info.pageTitle] = {
-			exists: true,
-			page: page,
-			hold: true,
-			timeAdded: new Date(),
-			timeTouched: new Date(),
-			score: iglooConfiguration.maxContentSize
-		};
 
-		igloo.log("Added a page to the content manager. Size: " + this.contentSize + ". Score: " + this.content[page.info.pageTitle].score);
-		this.gc();
+		var me = this,
+			holdPage,
+			addPage = function (shouldHold) {
+				me.contentSize++;
+				me.content[page.info.pageTitle] = {
+					exists: true,
+					page: page,
+					hold: shouldHold,
+					timeAdded: new Date(),
+					timeTouched: new Date(),
+					score: iglooUserSettings.maxContentSize
+				};
+
+				igloo.log("Added a page to the content manager. Size: " + me.contentSize + ". Score: " + me.content[page.info.pageTitle].score);
+			};
+
+		holdPage = typeof isHoldPage !== "undefined" ? isHoldPage : false;
+
+		if (this.contentSize >= (iglooUserSettings.maxContentSize + this.holdStash)) {
+			this.gc(addPage, [holdPage]);
+		} else {
+			addPage(holdPage);
+			this.gc();
+		}
 
 		return this.content[page.info.pageTitle];
 	};
+
+	this.addHoldPage = function (page) {
+		this.holdStash++;
+		this.add(page, true);
+	};
+
+	this.resetScore = function (page) {
+		this.content[page.info.pageTitle].score = iglooUserSettings.maxContentSize;
+
+		return this.content[page.info.pageTitle];
+	} 
 
 	this.getPage = function (title) {
 		if (this.content[title]) {
@@ -594,14 +619,14 @@ function iglooContentManager () {
 		igloo.log(s);
 	};
 
-	this.gc = function () {
+	this.gc = function (cb, params) {
 		igloo.log("Running GC");
-		if (this.discardable === 0) return;
-		if (this.contentSize > iglooUserSettings.maxContentSize) {
-			igloo.log("GC removing items to fit limit (" + this.contentSize + "/" + iglooUserSettings.maxContentSize + ")");
+		if (this.discardable === 0) return;		
+		if (this.contentSize > (iglooUserSettings.maxContentSize + this.holdStash)) {
+			igloo.log("GC removing items to fit limit (" + this.contentSize + "/" + (iglooUserSettings.maxContentSize + this.holdStash) + ")");
 			var j = 0, lastZeroScore = null, gcVal = 0.3, gcStep = 0.05;
 			for (var i in this.content) {
-				if (this.content[i].score !== 0 || this.content[i].page.isRecent !== false || this.content[i].page.displaying !== false) {
+				if (this.content[i].score !== 0 || this.content[i].hold === true || this.content[i].page.displaying !== false) {
 					j++;
 					gcVal += gcStep;
 					continue;
@@ -619,9 +644,12 @@ function iglooContentManager () {
 					}
 				}
 
-				if (this.content[i].score === 0 && this.content[i].page.isRecent === false /*&& Math.random() < gcVal */&& this.content[i].page.displaying === false) {
+				if (this.content[i].score === 0 && this.content[i].hold === false /*&& Math.random() < gcVal */&& this.content[i].page.displaying === false) {
 					igloo.log("selected an item suitable for discard, discarding");
 					delete this.content[i];
+
+					if (this.content[i].hold === true) this.holdStash--;
+					 
 					this.contentSize--;
 					this.discardable--;
 					break;
@@ -631,6 +659,8 @@ function iglooContentManager () {
 				}
 			}
 		}
+
+		if (typeof cb !== "undefined" && typeof cb = "function") cb.apply(this, params);
 	};
 }
 
@@ -746,7 +776,9 @@ igloo.extendProto(iglooRecentChanges, function () {
 					if (data[i].title === this.recentChanges[j].info.pageTitle || data[i].title === iglooF('actions').currentPage) {
 						p = iglooF('contentManager').getPage(data[i].title);
 						p.addRevision(new iglooRevision(data[i]));
-						p.hold = true;
+						
+						iglooF('contentManager').resetScore(p);
+
 						exists = true;
 						break;
 					}
@@ -767,9 +799,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 				for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
 					if (this.recentChanges[x] === this.currentPage) continue;
 
-					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is no longer hold");
-					var page = iglooF('contentManager').getPage(this.recentChanges[x].info.pageTitle);
-					page.hold = false;
+					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
 				}
 				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
 			}
@@ -2484,7 +2514,7 @@ function iglooArchive () {
 		// add the PREVIOUS page to the display history.
 		if (page && user && revId) {
 			if (this.canAddtoArchives === true) {
-				// first, remove any history between the current position and 0.
+				// first, keep only the history between the current position and 0.
 				if (this.archivePosition >= 0) {
 					this.archives = this.archives.slice(0, (this.archivePosition + 1));
 				}
@@ -2497,10 +2527,14 @@ function iglooArchive () {
 				};
 
 				this.archives.push(histEntry);
+
+				//remove the earliest history if we've gone over our limit
 				if (this.archives.length > iglooUserSettings.maxArchives) {
 					var toSlice = (this.archives.length - iglooUserSettings.maxArchives) - 1;
 					this.archives = this.archives.slice(0, toSlice);
 				}
+
+				//Change the archive position
 				this.archivePosition = (this.archives.length - 1);
 			}
 		}
