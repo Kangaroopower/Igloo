@@ -595,7 +595,7 @@ function iglooContentManager () {
 		this.content[page.info.pageTitle].score = iglooUserSettings.maxContentSize;
 
 		return this.content[page.info.pageTitle];
-	} 
+	};
 
 	this.getPage = function (title) {
 		if (this.content[title]) {
@@ -649,7 +649,7 @@ function iglooContentManager () {
 					delete this.content[i];
 
 					if (this.content[i].hold === true) this.holdStash--;
-					 
+
 					this.contentSize--;
 					this.discardable--;
 					break;
@@ -660,7 +660,7 @@ function iglooContentManager () {
 			}
 		}
 
-		if (typeof cb !== "undefined" && typeof cb = "function") cb.apply(this, params);
+		if (typeof cb !== "undefined" && typeof cb === "function") cb.apply(this, params);
 	};
 }
 
