@@ -1734,6 +1734,7 @@ igloo.extendProto(iglooSettings, function () {
 									iglooF('cogs').set("updateTime", el.val(), function (res) {
 										if (res) {
 											iglooUserSettings.updateTime = parseInt(el.val(), 10);
+											iglooF("recentChanges").setTickTime(iglooUserSettings.updateTime);
 										} else {
 											el.val(iglooUserSettings.updateTime);
 										}
@@ -1960,7 +1961,7 @@ igloo.extendProto(iglooSettings, function () {
 								if (isNaN(parseInt(el.val(), 10))) {
 									el.val(iglooUserSettings.maxContentSize);
 								} else {
-									iglooF('cogs').set("updateTime", el.val(), function (res) {
+									iglooF('cogs').set("maxContentSize", el.val(), function (res) {
 										if (res) {
 											iglooUserSettings.maxContentSize = parseInt(el.val(), 10);
 										} else {
