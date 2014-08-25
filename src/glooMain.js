@@ -606,10 +606,11 @@ function iglooContentManager () {
 	};
 
 	this.decrementScores = function () {
-		var s = "CSCORE: ";
-		for (var i in this.content) {
-			if (this.content[i].score > 0) {
-				s += this.content[i].score + ", ";
+		var s = "CSCORE: ",
+			content = this.content;
+		for (var i in content) {
+			if (content[i].score > 0) {
+				s += content[i].score + ", ";
 				if (--this.content[i].score === 0) {
 					igloo.log("an item reached a score of 0 and is ready for discard!");
 					this.discardable++;
@@ -1498,7 +1499,7 @@ igloo.extendProto(iglooSettings, function () {
 
 			var setIglooSetting = new iglooRequest({
 				module: 'preferences',
-				params: { key: key, value: JSON.stringify(storedSettings) },
+				params: { key: key, value: setting === "remoteConnect" ? (setting + '') : JSON.stringify(storedSettings) },
 				callback: function (data) {
 					var success = data.options === "success";
 					cb(success);
