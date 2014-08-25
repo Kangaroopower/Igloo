@@ -1499,7 +1499,7 @@ igloo.extendProto(iglooSettings, function () {
 
 			var setIglooSetting = new iglooRequest({
 				module: 'preferences',
-				params: { key: key, value: setting === "remoteConnect" ? (setting + '') : JSON.stringify(storedSettings) },
+				params: { key: key, value: setting === "remoteConnect" ? (value + '') : JSON.stringify(storedSettings) },
 				callback: function (data) {
 					var success = data.options === "success";
 					cb(success);
