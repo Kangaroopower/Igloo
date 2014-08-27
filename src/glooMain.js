@@ -554,8 +554,6 @@ function iglooContentManager () {
 	this.content = {};
 
 	this.add = function (page, module) {
-		this.decrementScores();
-
 		var me = this,
 			holdPage,
 			addPage = function (glooModule) {
