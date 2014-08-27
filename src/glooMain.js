@@ -551,48 +551,37 @@ function iglooMain () {
 	*/
 function iglooContentManager () {
 	this.contentSize = 0;
-	this.holdStash = 1; //page that's being displayed always is in here
-	this.discardable = 0;
 	this.content = {};
 
-	this.add = function (page, isHoldPage) {
+	this.add = function (page, module) {
 		this.decrementScores();
 
 		var me = this,
 			holdPage,
-			addPage = function (shouldHold) {
+			addPage = function (glooModule) {
+				var numC = glooModule === false ? 0 : 1;
+
 				me.contentSize++;
 				me.content[page.info.pageTitle] = {
 					exists: true,
 					page: page,
-					hold: shouldHold,
+					connections: {}, //modules using this page right now
+					numConnections: numC,
 					timeAdded: new Date(),
 					timeTouched: new Date(),
 					score: iglooUserSettings.maxContentSize
 				};
 
-				igloo.log("Added a page to the content manager. Size: " + me.contentSize + ". Score: " + me.content[page.info.pageTitle].score);
+				if (glooModule !== false)
+					me.content[page.info.pageTitle].connections[glooModule] = true;
+
+				igloo.log("Added a page to the content manager. Size: " + me.contentSize + ". Connections: " + me.content[page.info.pageTitle].connections);
 			};
 
-		holdPage = typeof isHoldPage !== "undefined" ? isHoldPage : false;
+		module = typeof module !== "undefined" ? module : false;
 
-		if (this.contentSize >= (iglooUserSettings.maxContentSize + this.holdStash)) {
-			this.gc(addPage, [holdPage]);
-		} else {
-			addPage(holdPage);
-			this.gc();
-		}
-
-		return this.content[page.info.pageTitle];
-	};
-
-	this.addHoldPage = function (page) {
-		this.holdStash++;
-		this.add(page, true);
-	};
-
-	this.resetScore = function (page) {
-		this.content[page.info.pageTitle].score = iglooUserSettings.maxContentSize;
+		addPage(module);
+		this.gc(); //run standard gc
 
 		return this.content[page.info.pageTitle];
 	};
@@ -605,61 +594,41 @@ function iglooContentManager () {
 		}
 	};
 
-	this.decrementScores = function () {
-		var s = "CSCORE: ",
-			content = this.content;
-		for (var i in content) {
-			if (content[i].score > 0) {
-				s += content[i].score + ", ";
-				if (--this.content[i].score === 0) {
-					igloo.log("an item reached a score of 0 and is ready for discard!");
-					this.discardable++;
-				}
-			}
-		}
-		igloo.log(s);
+	this.detatchConnection = function (page, module) {
+		this.content[page].numConnections--;
+		delete this.content[page].connections[module];
 	};
 
-	this.gc = function (cb, params) {
+	this.gc = function (pages, module) {
 		igloo.log("Running GC");
-		if (this.discardable === 0) return;		
-		if (this.contentSize > (iglooUserSettings.maxContentSize + this.holdStash)) {
-			igloo.log("GC removing items to fit limit (" + this.contentSize + "/" + (iglooUserSettings.maxContentSize + this.holdStash) + ")");
-			var j = 0, lastZeroScore = null, gcVal = 0.3, gcStep = 0.05;
-			for (var i in this.content) {
-				if (this.content[i].score !== 0 || this.content[i].hold === true || this.content[i].page.displaying !== false) {
-					j++;
-					gcVal += gcStep;
-					continue;
-				} else {
-					lastZeroScore = i;
-				}
+		igloo.log("GC removing items (" + pages + ")");
 
-				if (j === this.contentSize - 1) {
-					if (lastZeroScore !== null) {
-						igloo.log("failed to randomly select item, discarding the last one seen");
-						delete this.content[lastZeroScore];
-						this.contentSize--;
-						this.discardable--;
-						break;
-					}
-				}
-
-				if (this.content[i].score === 0 && this.content[i].hold === false /*&& Math.random() < gcVal */&& this.content[i].page.displaying === false) {
-					igloo.log("selected an item suitable for discard, discarding");
+		var i;
+			
+		if (typeof pages === "undefined" && typeof module === "undefined") {
+			for (i in this.content) {
+				if (this.content[i].numConnections === 0 && this.content[i].page.displaying === false) {
+					igloo.log("discarding " + pages[i]);
 					delete this.content[i];
 
 					this.contentSize--;
-					this.discardable--;
-					break;
+				}
+			}
+		} else {
+			pages = $.isArray(pages) ? pages : [pages];
+			for (i = 0; i < pages.length; i++) {
+				var cmPage = this.content[pages[i]];
+
+				if (cmPage.numConnections === 1 && cmPage.connections[module] === true && cmPage.page.displaying === false) {
+					igloo.log("discarding " + pages[i]);
+					delete this.content[i];
+
+					this.contentSize--;
 				} else {
-					j++;
-					gcVal += gcStep;
+					this.detatchConnection(cmPage, module);
 				}
 			}
 		}
-
-		if (typeof cb !== "undefined" && typeof cb === "function") cb.apply(this, params);
 	};
 }
 
@@ -776,8 +745,6 @@ igloo.extendProto(iglooRecentChanges, function () {
 						p = iglooF('contentManager').getPage(data[i].title);
 						p.addRevision(new iglooRevision(data[i]));
 						
-						iglooF('contentManager').resetScore(p);
-
 						exists = true;
 						break;
 					}
@@ -785,7 +752,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 				if (!exists) {
 					p = new iglooPage(new iglooRevision(data[i]));
-					iglooF('contentManager').add(p);
+					iglooF('contentManager').add(p, 'recentChanges');
 					this.recentChanges.push(p);
 				}
 			}
@@ -795,12 +762,18 @@ igloo.extendProto(iglooRecentChanges, function () {
 			if (this.recentChanges.length > iglooUserSettings.maxContentSize) {
 				// Objects that are being removed from the recent changes list are freed in the
 				// content manager for discard.
+				var gcPages = [];
+
 				for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
 					if (this.recentChanges[x] === this.currentPage) continue;
+
+					gcPages.push(this.recentchanges[x].info.pageTitle);
 
 					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
 				}
 				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
+
+				iglooF('contentManager').gc(gcPages);
 			}
 			
 			// Render the result
