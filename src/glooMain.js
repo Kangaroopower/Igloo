@@ -610,7 +610,7 @@ function iglooContentManager () {
 		if (typeof pages === "undefined" && typeof module === "undefined") {
 			for (i in this.content) {
 				if (this.content[i].numConnections === 0 && this.content[i].page.displaying === false) {
-					igloo.log("discarding " + pages[i]);
+					igloo.log("discarding " + this.content[i].page.info.pageTitle);
 					delete this.content[i];
 
 					this.contentSize--;
