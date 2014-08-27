@@ -541,13 +541,12 @@ function iglooMain () {
 	** the user request. Because igloo cannot store all
 	** changes for the duration of the program, it must
 	** decide when to discard the page item to save memory.
-	** The content manager uses a relevance score to track
-	** items. This score is created when the manager first
-	** sees the page and decreases when the content manager
-	** sees activity. When an item reaches 0, it is open
-	** to be discarded. If an item sees further actions, its
-	** score can be refreshed, preventing it from being
-	** discarded for longer.
+	** The content manager keeps track of connections between modules.
+	** When a page has zero connections, it gets removed when the next page is added.
+	** A page with only one connection can be removed if the module with that connection
+	** discards it. This means however, that YOU ARE RESPONSIBLE FOR YOUR MEMORY.
+	** You have to call gc when you're done with the object, so Igloo
+	** can move it one step closer to being discarded/discard it.
 	*/
 function iglooContentManager () {
 	this.contentSize = 0;
@@ -765,7 +764,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 				for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
 					if (this.recentChanges[x] === this.currentPage) continue;
 
-					gcPages.push(this.recentchanges[x].info.pageTitle);
+					gcPages.push(this.recentChanges[x].info.pageTitle);
 
 					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
 				}
@@ -936,6 +935,8 @@ igloo.extendProto(iglooView, function () {
 });
 
 // Class iglooPage
+	// iglooPage represents a page- it has revisions, and some metadata
+	// as well as whether it's currently being displayed.
 function iglooPage () {
 	// Details
 	this.info = {
