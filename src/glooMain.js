@@ -572,7 +572,7 @@ function iglooContentManager () {
 				if (glooModule !== false)
 					me.content[page.info.pageTitle].connections[glooModule] = true;
 
-				igloo.log("Added a page to the content manager. Size: " + me.contentSize + ". Connections: " + me.content[page.info.pageTitle].connections);
+				igloo.log("Added a page to the content manager. Size: " + me.contentSize + ". Connections: " + me.content[page.info.pageTitle].numConnections);
 			};
 
 		module = typeof module !== "undefined" ? module : false;
@@ -598,7 +598,12 @@ function iglooContentManager () {
 
 	this.gc = function (pages, module) {
 		igloo.log("Running GC");
-		igloo.log("GC removing items (" + pages + ")");
+
+		if (typeof pages !== "undefined") {
+			igloo.log("GC removing items (" + pages + ")");
+		} else {
+			igloo.log("GC removing items without connections");
+		}
 
 		var i;
 			
@@ -622,7 +627,7 @@ function iglooContentManager () {
 
 					this.contentSize--;
 				} else {
-					this.detatchConnection(cmPage, module);
+					this.detatchConnection(cmPage.page.info.pageTitle, module);
 				}
 			}
 		}
