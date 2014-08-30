@@ -621,6 +621,8 @@ function iglooContentManager () {
 			for (i = 0; i < pages.length; i++) {
 				var cmPage = this.content[pages[i]];
 
+				if (typeof cmPage === 'undefined') continue;
+
 				if (cmPage.numConnections === 1 && cmPage.connections[module] === true && cmPage.page.displaying === false) {
 					igloo.log("discarding " + pages[i]);
 					delete this.content[i];
