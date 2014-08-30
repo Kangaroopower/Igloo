@@ -592,8 +592,10 @@ function iglooContentManager () {
 	};
 
 	this.detatchConnection = function (page, module) {
-		this.content[page].numConnections--;
-		delete this.content[page].connections[module];
+		if (typeof this.content[page].connections[module] !== "undefined") {
+			delete this.content[page].connections[module];
+			this.content[page].numConnections--;
+		}
 	};
 
 	this.gc = function (pages, module) {
@@ -609,7 +611,7 @@ function iglooContentManager () {
 			
 		if (typeof pages === "undefined" && typeof module === "undefined") {
 			for (i in this.content) {
-				if (this.content[i].numConnections === 0 && this.content[i].page.displaying === false) {
+				if (this.content[i].numConnections <= 0 && this.content[i].page.displaying === false) {
 					igloo.log("discarding " + this.content[i].page.info.pageTitle);
 					delete this.content[i];
 
@@ -623,7 +625,7 @@ function iglooContentManager () {
 
 				if (typeof cmPage === 'undefined') continue;
 
-				if (cmPage.numConnections === 1 && cmPage.connections[module] === true && cmPage.page.displaying === false) {
+				if (cmPage.numConnections <= 1 && cmPage.connections[module] === true && cmPage.page.displaying === false) {
 					igloo.log("discarding " + pages[i]);
 					delete this.content[i];
 
@@ -789,19 +791,12 @@ igloo.extendProto(iglooRecentChanges, function () {
 			var me = this;
 			for (var change = 0; change < this.recentChanges.length; change++) {
 				if (me.recentChanges[change].revisions.iglast().revId === revId) {
-					me.recentChanges.splice(change, 1);
-					me.render();
 					me.viewed.push({
 						revId: revId,
 						stillHere: false
 					});
+					me.render();
 					break;
-				}
-			}
-
-			for (var i = 0; i < this.viewed.length; i++) {
-				if (!me.viewed[i].stillHere) {
-					me.viewed.splice(change, 1);
 				}
 			}
 		},
@@ -834,6 +829,8 @@ igloo.extendProto(iglooRecentChanges, function () {
 		render: function () {
 			this.renderResult.innerHTML = '';
 			for (var i = 0; i < this.recentChanges.length; i++) {
+				if ($.inArray(this.recentChanges[i].revisions.iglast().revId, this.viewed) > -1) continue;
+
 				// Create each element
 				var t = document.createElement('li');
 				
