@@ -838,7 +838,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 			for (var i = 0; i < this.recentChanges.length; i++) {
 				var hasViewed = false;
 				for (var k = 0; k < this.viewed.length; k++) {
-					if (this.recentChanges[i].revisions.iglast().revId.revid === this.viewed[k].revId) {
+					if (this.recentChanges[i].revisions.iglast().revId === this.viewed[k].revId) {
 						hasViewed = true;
 					}
 				}
