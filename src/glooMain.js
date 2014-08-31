@@ -779,7 +779,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 				}
 				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
 
-				iglooF('contentManager').gc(gcPages);
+				iglooF('contentManager').gc(gcPages, 'recentChanges');
 			}
 			
 			// Render the result
@@ -798,6 +798,13 @@ igloo.extendProto(iglooRecentChanges, function () {
 					me.render();
 					break;
 				}
+			}
+		},
+
+		//Clean Viewed
+		cleanViewed: function () {
+			for (var i = 0; i < this.viewed.length; i++) {
+				if (this.viewed[i].stillHere === false) this.viewed.splice(i, 1);
 			}
 		},
 
@@ -829,7 +836,12 @@ igloo.extendProto(iglooRecentChanges, function () {
 		render: function () {
 			this.renderResult.innerHTML = '';
 			for (var i = 0; i < this.recentChanges.length; i++) {
-				if ($.inArray(this.recentChanges[i].revisions.iglast().revId, this.viewed) > -1) continue;
+
+				for (var k = 0; k < this.viewed.length; k++) {
+					if (this.recentChanges[i].revisions.iglast().revId.revid === this.viewed[k].revId) {
+						continue;
+					}
+				}
 
 				// Create each element
 				var t = document.createElement('li');
