@@ -613,7 +613,7 @@ function iglooContentManager () {
 			for (i in this.content) {
 				if (this.content[i].numConnections <= 0 && this.content[i].page.displaying === false) {
 					igloo.log("discarding " + this.content[i].page.info.pageTitle);
-					delete this.content[i];
+					delete this.content[pages[i]];
 
 					this.contentSize--;
 				}
@@ -627,7 +627,7 @@ function iglooContentManager () {
 
 				if (cmPage.numConnections <= 1 && cmPage.connections[module] === true && cmPage.page.displaying === false) {
 					igloo.log("discarding " + pages[i]);
-					delete this.content[i];
+					delete this.content[pages[i]];
 
 					this.contentSize--;
 				} else {
