@@ -613,7 +613,7 @@ function iglooContentManager () {
 			for (i in this.content) {
 				if (this.content[i].numConnections <= 0 && this.content[i].page.displaying === false) {
 					igloo.log("discarding " + this.content[i].page.info.pageTitle);
-					delete this.content[pages[i]];
+					delete this.content[i];
 
 					this.contentSize--;
 				}
