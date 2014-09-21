@@ -2099,8 +2099,9 @@ iglooActions.prototype.loadPage = function (page, revId) {
 			}
 		}
 
-		iglooF('contentManager').add(p);
+		iglooF('contentManager').add(p, 'actions');
 		p.display();
+		iglooF('contentManager').gc(p.info.pageTitle, 'actions');
 	});
 };
 
