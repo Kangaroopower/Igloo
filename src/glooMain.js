@@ -777,7 +777,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
 				}
-				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize + 1);
+				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
 
 				iglooF('contentManager').gc(gcPages, 'recentChanges');
 			}
