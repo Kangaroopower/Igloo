@@ -777,7 +777,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
 				}
-				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
+				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize + 1);
 
 				iglooF('contentManager').gc(gcPages, 'recentChanges');
 			}
@@ -2361,6 +2361,11 @@ iglooActions.prototype.reportUser = function(callback, details) {
 
 			break;
 	}
+};
+
+//Restores current Revision
+iglooActions.prototype.reportUser = function(callback, details) {
+
 };
 
 //Handle Final Warning
