@@ -556,18 +556,24 @@ function iglooContentManager () {
 		var me = this,
 			holdPage,
 			addPage = function (glooModule) {
-				var numC = glooModule === false ? 0 : 1;
+				if (typeof me.content[page.info.pageTitle] !== "undefined") {
+					var numC = glooModule === false ? 0 : 1;
 
-				me.contentSize++;
-				me.content[page.info.pageTitle] = {
-					exists: true,
-					page: page,
-					connections: {}, //modules using this page right now
-					numConnections: numC,
-					timeAdded: new Date(),
-					timeTouched: new Date(),
-					score: iglooUserSettings.maxContentSize
-				};
+					me.contentSize++;
+
+					me.content[page.info.pageTitle] = {
+						exists: true,
+						page: page,
+						connections: {}, //modules using this page right now
+						numConnections: numC,
+						timeAdded: new Date(),
+						timeTouched: new Date(),
+						score: iglooUserSettings.maxContentSize
+					};
+				} else {
+					me.content[page.info.pageTitle].connections[glooModule] = true;
+					me.content[page.info.pageTitle].numConnections++;
+				}
 
 				if (glooModule !== false)
 					me.content[page.info.pageTitle].connections[glooModule] = true;
@@ -821,6 +827,9 @@ igloo.extendProto(iglooRecentChanges, function () {
 		show: function (elementId) {
 			var me = this;
 			if (iglooF('actions').stopActions) return false;
+
+			iglooF('contentManager').add(this.recentChanges[elementId], 'loading');
+
 			this.currentRev = elementId;
 			this.recentChanges[elementId].display();
 			var pause = setTimeout(function () {
@@ -1049,8 +1058,7 @@ igloo.extendProto(iglooPage, function () {
 function iglooRevision () {
 	// Content detail
 	this.user = ''; // the user who made this revision
-	this.page = ''; // the page title that this revision belongs to
-	this.pageTitle = ''; // also the page title that this revision belongs to
+	this.pageTitle = ''; // the page title that this revision belongs to
 	this.namespace = 0;
 	this.revId = 0; // the ID of this revision (the diff is between this and oldId)
 	this.oldId = 0; // the ID of the revision from which this was created
@@ -1076,7 +1084,6 @@ igloo.extendProto(iglooRevision, function () {
 	return {
 		//Sets the data of this revision
 		setMetaData: function (newData) {
-			this.page = newData.title;
 			this.pageTitle = newData.title;
 			this.namespace = newData.ns;
 			this.oldId = newData.old_revid;
@@ -1209,6 +1216,7 @@ igloo.extendProto(iglooRevision, function () {
 					user: ''
 				});
 
+				iglooF('contentManager').gc(me.page, 'loading');
 			} else if (displayWhat === 'diff') {
 				var table = document.createElement('table'), 
 					same = document.createElement('div'),
@@ -1266,6 +1274,8 @@ igloo.extendProto(iglooRevision, function () {
 					
 					igloo.diffContainer.panel.appendChild(h2);
 					igloo.diffContainer.panel.appendChild(dispWhat);
+
+					iglooF('contentManager').gc(me.page, 'loading');
 
 					//Alert rollback as to page info
 					igloo.fireEvent('rollback','new-diff', {
