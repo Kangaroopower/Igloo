@@ -2283,7 +2283,7 @@ iglooActions.prototype.warnUser = function(details, withrevert, res, callback) {
 				}
 			} else {
 				message = message.replace(/%MESSAGE%/g, details.template);
-				summary = details.reason;
+				summary = details.reason + ' ' + glooSig;
 			}
 
 			summary = summary.replace (/%LEVEL%/g, warningLevel);
@@ -2293,7 +2293,7 @@ iglooActions.prototype.warnUser = function(details, withrevert, res, callback) {
 
 			var userReport = new iglooRequest({
 				module: 'edit',
-				params: { targ: userPage, isMinor: false, text: message, summary: summary + ' ' + glooSig, where: 'appendtext' },
+				params: { targ: userPage, isMinor: false, text: message, summary: summary, where: 'appendtext' },
 				callback: function (data) {
 					var revertReason;
 
