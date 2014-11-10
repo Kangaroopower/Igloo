@@ -556,7 +556,7 @@ function iglooContentManager () {
 		var me = this,
 			holdPage,
 			addPage = function (glooModule) {
-				if (typeof me.content[page.info.pageTitle] !== "undefined") {
+				if (typeof me.content[page.info.pageTitle] === "undefined") {
 					var numC = glooModule === false ? 0 : 1;
 
 					me.contentSize++;
@@ -778,6 +778,14 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 				for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
 					if (this.recentChanges[x] === this.currentPage) continue;
+
+					if (this.viewed.length > iglooUserSettings.maxContentSize) {
+						for (var k = iglooUserSettings.maxContentSize; k < this.viewed.length; k++) {
+							if (this.recentChanges[x].iglast().revId === this.viewed[k].revId) continue;
+
+							this.viewed.splice(k, 1);
+						} 
+					}
 
 					gcPages.push(this.recentChanges[x].info.pageTitle);
 
