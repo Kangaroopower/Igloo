@@ -571,8 +571,10 @@ function iglooContentManager () {
 						score: iglooUserSettings.maxContentSize
 					};
 				} else {
+					var cmPage = me.content[page.info.pageTitle];
+
+					if(typeof cmPage.connections[glooModule] !== "undefined" && cmPage === true) cmPage.numConnections++;
 					me.content[page.info.pageTitle].connections[glooModule] = true;
-					me.content[page.info.pageTitle].numConnections++;
 				}
 
 				if (glooModule !== false)
