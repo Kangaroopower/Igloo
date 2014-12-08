@@ -1744,7 +1744,7 @@ igloo.extendProto(iglooSettings, function () {
 									iglooF('cogs').set("updateTime", el.val(), function (res) {
 										if (res) {
 											iglooUserSettings.updateTime = parseInt(el.val(), 10);
-											iglooF("recentChanges").setTickTime(iglooUserSettings.updateTime);
+											iglooF("recentChanges").setTickTime(iglooUserSettings.updateTime * 1000);
 										} else {
 											el.val(iglooUserSettings.updateTime);
 										}
