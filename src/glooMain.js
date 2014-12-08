@@ -671,6 +671,8 @@ function iglooRecentChanges () {
 	this.botList = [];
 	this.currentRev = -1;
 	this.currentPage = null;
+	this.rcUpdates = [];
+	this.firstUpdate = true;
 
 	// Methods
 	this.setTickTime = function (newTime) {
@@ -714,7 +716,12 @@ igloo.extendProto(iglooRecentChanges, function () {
 				dataType: 'json',
 				context: me,
 				success: function (data) {
-					me.loadChanges.apply(me, [data]);
+					if (me.firstUpdate) {
+						me.firstUpdate = false;
+						me.loadChanges.apply(me, [data]);
+					} else {
+						me.rcUpdates.push([data]);
+					}
 				}
 			}, 0, false);
 			rcFetch.run();
@@ -774,32 +781,39 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 			// Truncate the recent changes list to the correct length
 			if (this.recentChanges.length > iglooUserSettings.maxContentSize) {
-				// Objects that are being removed from the recent changes list are freed in the
-				// content manager for discard.
-				var gcPages = [];
-
-				for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
-					if (this.recentChanges[x] === this.currentPage) continue;
-
-					if (this.viewed.length > iglooUserSettings.maxContentSize) {
-						for (var k = iglooUserSettings.maxContentSize; k < this.viewed.length; k++) {
-							if (this.recentChanges[x].iglast().revId === this.viewed[k].revId) continue;
-
-							this.viewed.splice(k, 1);
-						} 
-					}
-
-					gcPages.push(this.recentChanges[x].info.pageTitle);
-
-					igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
-				}
-				this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
-				this.render();
-				iglooF('contentManager').gc(gcPages, 'recentChanges');
+				this.doGC();
+			} else {
+				//or run the next update
+				this.loadChanges(this.rcUpdates.shift());
 			}
 			
 			// Render the result
 			this.render();
+		},
+
+		//remove stuff from ticker and all
+		doGC: function () {
+			// Objects that are being removed from the recent changes list are freed in the
+			// content manager for discard.
+			var gcPages = [];
+
+			for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
+				if (this.recentChanges[x] === this.currentPage) continue;
+
+				if (this.viewed.length > iglooUserSettings.maxContentSize) {
+					this.cleanViewed();
+				}
+
+				gcPages.push(this.recentChanges[x].info.pageTitle);
+
+				igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
+			}
+			this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
+			this.render();
+			iglooF('contentManager').gc(gcPages, 'recentChanges');
+			
+			//run the next update
+			this.loadChanges(this.rcUpdates.shift());
 		},
 
 		//Don't show revisions that you've already seen in the feed any more
