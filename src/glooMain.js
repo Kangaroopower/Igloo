@@ -819,8 +819,12 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 		//Clean Viewed
 		cleanViewed: function () {
-			for (var i = 0; i < this.viewed.length; i++) {
+			for (var i = 0; i < (this.viewed.length - iglooUserSettings.maxContentSize); i++) {
 				if (this.viewed[i].stillHere === false) this.viewed.splice(i, 1);
+			}
+
+			for (var k = 0; k < this.viewed.length; k++) {
+				this.viewed[k].stillHere = false;
 			}
 		},
 
