@@ -720,7 +720,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 						me.firstUpdate = false;
 						me.loadChanges.apply(me, [data]);
 					} else {
-						me.rcUpdates.push([data]);
+						me.rcUpdates.push(data);
 					}
 				}
 			}, 0, false);
