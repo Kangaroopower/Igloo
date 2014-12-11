@@ -673,6 +673,7 @@ function iglooRecentChanges () {
 	this.currentPage = null;
 	this.rcUpdates = [];
 	this.firstUpdate = true;
+	this.currentlyFree = true;
 
 	// Methods
 	this.setTickTime = function (newTime) {
@@ -719,6 +720,13 @@ igloo.extendProto(iglooRecentChanges, function () {
 					if (me.firstUpdate) {
 						me.firstUpdate = false;
 						me.loadChanges.apply(me, [data]);
+					} else if (me.currentlyFree) {
+						if (me.rcUpdates.length > 0) {
+							me.rcUpdates.push(data);
+							me.loadChanges.apply(me, [me.rcUpdates.shift()]);
+						} else {
+							me.loadChanges.apply(me, [data]);
+						}
 					} else {
 						me.rcUpdates.push(data);
 					}
@@ -729,6 +737,8 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 		loadChanges: function (changeSet) {
 			var data = changeSet.query.recentchanges;
+
+			this.currentlyFree = false;
 			
 			// For each change, add it to the changeset.
 			var l = data.length;
@@ -782,9 +792,11 @@ igloo.extendProto(iglooRecentChanges, function () {
 			// Truncate the recent changes list to the correct length
 			if (this.recentChanges.length > iglooUserSettings.maxContentSize) {
 				this.doGC();
-			} else {
+			} else if (this.rcUpdates.length > 0) {
 				//or run the next update
 				this.loadChanges(this.rcUpdates.shift());
+			} else {
+				this.currentlyFree = true;
 			}
 			
 			// Render the result
@@ -796,6 +808,8 @@ igloo.extendProto(iglooRecentChanges, function () {
 			// Objects that are being removed from the recent changes list are freed in the
 			// content manager for discard.
 			var gcPages = [];
+
+			this.currentlyFree = false;
 
 			for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
 				if (this.recentChanges[x] === this.currentPage) continue;
@@ -811,9 +825,13 @@ igloo.extendProto(iglooRecentChanges, function () {
 			this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
 			this.render();
 			iglooF('contentManager').gc(gcPages, 'recentChanges');
-			
-			//run the next update
-			this.loadChanges(this.rcUpdates.shift());
+
+			if (this.rcUpdates.length > 0) {
+				//run the next update
+				this.loadChanges(this.rcUpdates.shift());
+			} else {
+				this.currentlyFree = true;
+			}
 		},
 
 		//Don't show revisions that you've already seen in the feed any more
