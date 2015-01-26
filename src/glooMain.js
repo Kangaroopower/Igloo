@@ -554,7 +554,6 @@ function iglooContentManager () {
 
 	this.add = function (page, module) {
 		var me = this,
-			holdPage,
 			addPage = function (glooModule) {
 				if (typeof me.content[page.info.pageTitle] === "undefined") {
 					var numC = glooModule === false ? 0 : 1;
@@ -619,7 +618,7 @@ function iglooContentManager () {
 			
 		if (typeof pages === "undefined" && typeof module === "undefined") {
 			for (i in this.content) {
-				if (this.content[i].numConnections <= 0 && this.content[i].page.displaying === false) {
+				if (this.content[i].numConnections <= 0 && this.content[i].page.displaying === false && this.content[i].page.hold === false) {
 					igloo.log("discarding " + this.content[i].page.info.pageTitle);
 					delete this.content[i];
 
@@ -633,7 +632,7 @@ function iglooContentManager () {
 
 				if (typeof cmPage === 'undefined') continue;
 
-				if (cmPage.numConnections <= 1 && cmPage.connections[module] === true && cmPage.page.displaying === false) {
+				if (cmPage.numConnections <= 1 && cmPage.connections[module] === true && cmPage.page.displaying === false && cmPage.page.hold === false) {
 					igloo.log("discarding " + pages[i]);
 					delete this.content[pages[i]];
 
@@ -717,6 +716,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 				dataType: 'json',
 				context: me,
 				success: function (data) {
+					igloo.log('here');
 					if (me.firstUpdate) {
 						me.firstUpdate = false;
 						me.loadChanges.apply(me, [data]);
@@ -773,9 +773,16 @@ igloo.extendProto(iglooRecentChanges, function () {
 				// Check if we already have information about this page.
 				for (var j = 0; j < l2; j++) {
 					if (data[i].title === this.recentChanges[j].info.pageTitle || data[i].title === iglooF('actions').currentPage) {
+						data[i].hold = true;
+
 						p = iglooF('contentManager').getPage(data[i].title);
+
+						if (!p) igloo.log('PAGE NOT FOUND- ', data[i].title);
+
 						p.addRevision(new iglooRevision(data[i]));
-						
+						p.hold = false;
+						data[i].hold = false;
+
 						exists = true;
 						break;
 					}
@@ -807,21 +814,29 @@ igloo.extendProto(iglooRecentChanges, function () {
 		doGC: function () {
 			// Objects that are being removed from the recent changes list are freed in the
 			// content manager for discard.
-			var gcPages = [];
+			var gcPages = [],
+				me = this,
+				revs = 0,
+				cleanRC = function () {
+					for (var x = iglooUserSettings.maxContentSize; x < me.recentChanges.length; x++) {
+						if (me.recentChanges[x] === me.currentPage || me.recentChanges[x].hold === true) continue;
+
+						gcPages.push(me.recentChanges[x].info.pageTitle);
+
+						igloo.log("Status change. " + me.recentChanges[x].info.pageTitle + " is leaving the ticker");
+					}
+				};
 
 			this.currentlyFree = false;
 
-			for (var x = iglooUserSettings.maxContentSize; x < this.recentChanges.length; x++) {
-				if (this.recentChanges[x] === this.currentPage) continue;
-
-				if (this.viewed.length > iglooUserSettings.maxContentSize) {
-					this.cleanViewed();
-				}
-
-				gcPages.push(this.recentChanges[x].info.pageTitle);
-
-				igloo.log("Status change. " + this.recentChanges[x].info.pageTitle + " is leaving the ticker");
+			while (this.recentChanges.length > iglooUserSettings.maxContentSize && revs < 3) {
+				cleanRC();
 			}
+
+			if (this.viewed.length > iglooUserSettings.maxContentSize) {
+				this.cleanViewed();
+			}
+
 			this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
 			this.render();
 			iglooF('contentManager').gc(gcPages, 'recentChanges');
@@ -1024,6 +1039,7 @@ function iglooPage () {
 	this.changedSinceDisplay = false; // the data of this page has changed since it was first displayed
 	this.isNewPage = false; // whether this page currently only contains the page creation
 	this.isRecent = false;
+	this.hold = false;
 	
 	// Methods
 	
@@ -2336,7 +2352,7 @@ iglooActions.prototype.warnUser = function(details, withrevert, res, callback) {
 					var revertReason;
 
 					if (withrevert) {
-						details.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[details.reason];
+						revertReason = details.isCustom === true ? iglooConfiguration.rollbackReasons.custom : iglooConfiguration.rollbackReasons[details.reason];
 					} else {
 						revertReason = details.reason;
 					}
@@ -2420,7 +2436,7 @@ iglooActions.prototype.reportUser = function(callback, details) {
 };
 
 //Restores current Revision
-iglooActions.prototype.reportUser = function(callback, details) {
+iglooActions.prototype.restoreRevision = function(callback, details) {
 
 };
 
