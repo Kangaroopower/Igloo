@@ -831,6 +831,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 			while (this.recentChanges.length > iglooUserSettings.maxContentSize && revs < 3) {
 				cleanRC();
+				revs++;
 			}
 
 			if (this.viewed.length > iglooUserSettings.maxContentSize) {
