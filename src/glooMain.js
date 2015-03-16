@@ -256,14 +256,14 @@ function iglooMain () {
 	}) || $.noop;
 
 	this.load = function (initData) {
-		var groups = mw.config.get('wgUserGroups');
+		var groups = mw.config.get('wgUserGroups'),
+			me = this;
 
 		document.title = 'igloo - ' + iglooConfiguration.version;
 
-		this.remoteConnect = initData.doRemoteConnect;
-		this.firstRun = initData.isFirstRun;
-		this.sessionKey = initData.sessionId;
-		this.connectLocal = initData.isDown;
+		for (var i in initData) {
+			me[i] = initData[i];
+		}
 
 		for (var i = 0; i < groups.length; i++) {
 			if (groups[i] === 'steward' || groups[i] === 'sysop') { 
