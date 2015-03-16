@@ -780,6 +780,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 						if (!p) igloo.log('PAGE NOT FOUND- ', data[i].title);
 
 						p.addRevision(new iglooRevision(data[i]));
+
 						p.hold = false;
 						data[i].hold = false;
 
@@ -831,7 +832,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 			this.currentlyFree = false;
 
-			while (this.recentChanges.length > iglooUserSettings.maxContentSize && revs < 3) {
+			while (this.recentChanges.length > iglooUserSettings.maxContentSize || revs < 3) {
 				cleanRC();
 				revs++;
 			}
@@ -840,7 +841,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 				this.cleanViewed();
 			}
 
-			this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
+			this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize + 1);
 			this.render();
 			iglooF('contentManager').gc(gcPages, 'recentChanges');
 
@@ -2163,7 +2164,7 @@ iglooActions.prototype.loadPage = function (page, revId) {
 	if (iglooF('actions').stopActions) return false;
 
 	this.getRevInfo(page, revId, function (data) {
-		var p = new iglooPage(new iglooRevision(data));
+		var p;
 
 		for (var j = 0; j < iglooF('recentChanges').recentChanges.length; j++) {
 			if (data.title === iglooF('recentChanges').recentChanges[j].info.pageTitle) {
@@ -2173,6 +2174,8 @@ iglooActions.prototype.loadPage = function (page, revId) {
 				return;
 			}
 		}
+
+		p = new iglooPage(new iglooRevision(data));
 
 		iglooF('contentManager').add(p, 'actions');
 		p.display();
