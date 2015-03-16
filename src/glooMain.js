@@ -819,7 +819,9 @@ igloo.extendProto(iglooRecentChanges, function () {
 				revs = 0,
 				cleanRC = function () {
 					for (var x = iglooUserSettings.maxContentSize; x < me.recentChanges.length; x++) {
-						if (me.recentChanges[x] === me.currentPage || me.recentChanges[x].hold === true) continue;
+						if (me.recentChanges[x] === me.currentPage || me.recentChanges[x].hold === true || $.inArray(me.recentChanges[x], gcPages) > -1) {
+							continue;
+						}
 
 						gcPages.push(me.recentChanges[x].info.pageTitle);
 
