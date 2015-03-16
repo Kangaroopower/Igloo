@@ -841,7 +841,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 				this.cleanViewed();
 			}
 
-			this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize + 1);
+			this.recentChanges = this.recentChanges.slice(0, iglooUserSettings.maxContentSize);
 			this.render();
 			iglooF('contentManager').gc(gcPages, 'recentChanges');
 
