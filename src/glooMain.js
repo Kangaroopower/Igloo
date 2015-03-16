@@ -833,7 +833,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 			this.currentlyFree = false;
 
-			while (this.recentChanges.length > iglooUserSettings.maxContentSize || revs < 3) {
+			while (this.recentChanges.length > iglooUserSettings.maxContentSize && revs < 3) {
 				cleanRC();
 				revs++;
 			}
