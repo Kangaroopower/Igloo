@@ -777,7 +777,7 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 						p = iglooF('contentManager').getPage(data[i].title);
 
-						if (!p) igloo.log('PAGE NOT FOUND- ', data[i].title, me.recentChanges, me.recentChanges[i], i);
+						if (!p) igloo.log('PAGE NOT FOUND- ', data[i].title, this.recentChanges, this.recentChanges[i], i);
 
 						p.addRevision(new iglooRevision(data[i]));
 						iglooF('contentManager').add(p, 'recentChanges');
