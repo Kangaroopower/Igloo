@@ -315,10 +315,10 @@ function iglooMain () {
 			mainPanel.setPosition(0, 0);
 			mainPanel.setSize(0, 0);
 			mainPanel.setInitialDrag(260);
-			mainPanel.setColour(jin.Colour.DARK_GREY);
+			mainPanel.setColour(jin.Colour.DARKER_GREY);
 			mainPanel.dragWidth = 1;
 			
-			mainPanel.left.setColour(jin.Colour.DARK_GREY);
+			mainPanel.left.setColour(jin.Colour.DARKER_GREY);
 			mainPanel.right.setColour(jin.Colour.WHITE);
 			
 			// Expose recent changes panel.
@@ -698,7 +698,7 @@ function iglooRecentChanges () {
 	});
 	$(me.renderResult).on ({
 		mouseover: function () { $(this).css('backgroundColor', jin.Colour.GREY); },
-		mouseout: function () { $(this).css('backgroundColor', jin.Colour.DARK_GREY); },
+		mouseout: function () { $(this).css('backgroundColor', jin.Colour.DARKER_GREY); },
 		click: function () { me.show.apply(me, [$(this).data('elId')]) ; }
 	}, 'li');
 	igloo.ticker.panel.appendChild(this.renderResult);
