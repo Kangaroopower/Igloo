@@ -698,7 +698,7 @@ function iglooRecentChanges () {
 	});
 	$(me.renderResult).on ({
 		mouseover: function () { $(this).css('backgroundColor', jin.Colour.GREY); },
-		mouseout: function () { $(this).css('backgroundColor', jin.Colour.DARKER_GREY); },
+		mouseout: function () { $(this).css('backgroundColor', ''); },
 		click: function () { me.show.apply(me, [$(this).data('elId')]) ; }
 	}, 'li');
 	igloo.ticker.panel.appendChild(this.renderResult);
@@ -922,11 +922,11 @@ igloo.extendProto(iglooRecentChanges, function () {
 
 				// Create each element
 				var t = document.createElement('li');
-				
+
 				// Styling
 				$(t).css ({
 					'padding': '0px 0px 0px 10px',
-					'borderBottom': '1px solid #000000',
+					'border-bottom': '1px solid #424650',
 					'list-style-type': 'none',
 					'list-style-image': 'none',
 					'marker-offset': '0px',
@@ -942,6 +942,8 @@ igloo.extendProto(iglooRecentChanges, function () {
 				$(t).data("elId", i);
 				this.renderResult.appendChild(t);
 			}
+
+
 			igloo.log("Rendered " + i + " recent changes.");
 			
 			return this;
