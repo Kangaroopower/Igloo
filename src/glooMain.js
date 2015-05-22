@@ -697,7 +697,7 @@ function iglooRecentChanges () {
 		'cursor': 'pointer'
 	});
 	$(me.renderResult).on ({
-		mouseover: function () { $(this).css('backgroundColor', DARKER_LIGHTGREY); },
+		mouseover: function () { $(this).css('backgroundColor', jin.Colour.DARKER_LIGHTGREY); },
 		mouseout: function () { $(this).css('backgroundColor', ''); },
 		click: function () { me.show.apply(me, [$(this).data('elId')]) ; }
 	}, 'li');
