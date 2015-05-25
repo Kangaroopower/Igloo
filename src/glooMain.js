@@ -971,7 +971,7 @@ function iglooView () {
 			if (data.page === me.displaying.page) {
 				me.changedSinceDisplay = true;
 				me.displaying = data;
-				me.displaying.show();
+				me.displaying.load();
 			}
 		}
 	});
@@ -992,7 +992,7 @@ igloo.extendProto(iglooView, function () {
 
 			// Set the new revision into the page, then show it.
 			this.displaying = revision;
-			this.displaying.show();
+			this.displaying.load();
 		},
 
 		//Display the welcome message
@@ -1164,7 +1164,7 @@ igloo.extendProto(iglooRevision, function () {
 			this.minor = "";//(newData.minor != "undefined") === true ? 'm' : '';
 		},
 
-		loadRevision: function () {
+		fetchRevision: function () {
 			var me = this;
 
 			iglooF('actions').actionsEnabled = 'pause';
@@ -1188,7 +1188,7 @@ igloo.extendProto(iglooRevision, function () {
 			}
 		},
 
-		loadDiff: function () {
+		fetchDiff: function () {
 			var me = this;
 
 			iglooF('actions').actionsEnabled = 'pause';
@@ -1357,10 +1357,12 @@ igloo.extendProto(iglooRevision, function () {
 					if (iglooF('actions').actionsEnabled === 'pause') iglooF('actions').actionsEnabled = 'yes';
 				});
 			}
+
+			$(body).scrollTop(0);
 		},
 
 		//Called from iglooView/iglooPage- determines what to display
-		show: function () {
+		load: function () {
 			// Determine what to show.
 			var displayWhat;
 		  
@@ -1375,7 +1377,7 @@ igloo.extendProto(iglooRevision, function () {
 				
 				if ((!this.diffLoaded) && (!this.diffRequest)) {
 					this.displayRequest = 'diff';
-					this.loadDiff();
+					this.fetchDiff();
 				} else {
 					this.display('diff');
 				}
@@ -1384,7 +1386,7 @@ igloo.extendProto(iglooRevision, function () {
 				
 				if ((!this.revisionLoaded) && (!this.revisionRequest)) {
 					this.displayRequest = 'revision';
-					this.loadRevision();
+					this.fetchRevision();
 				} else {
 					this.display('revision');
 				}
