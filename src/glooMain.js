@@ -90,7 +90,7 @@ var iglooConfiguration = {
 	aivWhere: 'appendtext',
 	aivIp: 'IPvandal',
 	aivUser: 'vandal',
-	aivMessage: '* {'+'{%TEMPLATE%|%USER%}'+'} - vandalism after final warning. ~~'+'~~',
+	aivMessage: '\n* {'+'{%TEMPLATE%|%USER%}'+'} - vandalism after final warning. ~~'+'~~',
 	aivSummary: 'Reporting [[Special:Contributions/%USER%|%USER%]] - vandalism after final warning ',
 
 	//CSD Module
@@ -1697,7 +1697,7 @@ igloo.extendProto(iglooSettings, function () {
 					break;
 
 				case 'report':
-					var makeSure = confirm('Are you sure you want to report this user to ARV');
+					var makeSure = confirm('Are you sure you want to report this user to AIV');
 					if (makeSure) {
 						iglooF('actions').reportUser();
 					}
@@ -3349,7 +3349,7 @@ igloo.extendProto(iglooBlock, function () {
 			}
 			
 			// nothing went wrong. Display the adjust block system.
-			// generate the dipaly elements
+			// generate the display elements
 			var disabled = '',
 				duration = '',
 				lastlength = '';
