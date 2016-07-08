@@ -3101,7 +3101,7 @@ igloo.extendProto(iglooHist, function () {
 						rev;
 
 					for (var i in data) {
-						if (typeof data[i] === "undefined") continue;
+						if (typeof data[i] === "undefined" || typeof data[i].ids === "undefined") continue;
 						
 						rev = data[i];
 		 
