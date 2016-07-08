@@ -1763,11 +1763,14 @@ igloo.extendProto(iglooSettings, function () {
 
 			var tabcont = document.getElementById('igloo-settings-content'), cont, me = this;
 
-			$('#igloo-settings-tab-' + tabid).click(function () {
-				$(this).css({
-					'padding-bottom': '5px',
-					'border-bottom': '2px solid black'
-				});
+			$('#igloo-settings-tabs div').css({
+				'padding-bottom': '0px',
+				'border-bottom': 'none'
+			});
+
+			$(this).css({
+				'padding-bottom': '5px',
+				'border-bottom': '2px solid black'
 			});
 					
 			switch (tabid) {
