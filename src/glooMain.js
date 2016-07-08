@@ -2372,10 +2372,10 @@ iglooActions.prototype.warnUser = function(details, withrevert, res, callback) {
 					}
 
 					iglooF('statusLog').addStatus('Successfully issued a level <strong>' + warningLevel + '</strong> warning to <strong>' + me.currentUser + '</strong> for ' + revertReason + ' on <strong>' + me.currentPage + '</strong>!');
+					document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
 				}
 			}, 0, true, true);
 			userReport.run();
-			document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
 
 			break;
 	}
@@ -2408,6 +2408,7 @@ iglooActions.prototype.reportUser = function(callback, details) {
 		case 1:
 			var pageData = details[0].content,
 				template = iglooF('actions').isIp ? iglooConfiguration.aivIp : iglooConfiguration.aivUser,
+				cont = true,
 				aivLink,
 				myReport,
 				mySummary;
@@ -2415,13 +2416,18 @@ iglooActions.prototype.reportUser = function(callback, details) {
 			//check if page for AIV exists
 			if (details === false) {
 				iglooF('statusLog').addStatus('Will not report <strong>' + me.currentUser + '</strong> because the report page does not appear to exist.');
-				return false; // error
+				cont = false; // error
 			}
 
 			// check whether they are already reported
 			if (pageData.indexOf ('|' + me.currentUser + '}}') > -1) {
 				iglooF('statusLog').addStatus('Will not report <strong>' + me.currentUser + '</strong> because they have already been reported.');
-				return false; // error
+				cont = false; // error
+			}
+
+			if (cont === false) {
+				document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
+				return false;
 			}
 							
 			// build page link
@@ -2439,11 +2445,12 @@ iglooActions.prototype.reportUser = function(callback, details) {
 			var userReport = new iglooRequest({
 				module: 'edit',
 				params: { targ: aivLink, isMinor: false, text: myReport, summary: mySummary, where: iglooConfiguration.aivWhere },
-				callback: function (data) { iglooF('statusLog').addStatus('Successfully reported <strong>' + me.currentUser + '</strong> to AIV!'); }
+				callback: function (data) {
+					iglooF('statusLog').addStatus('Successfully reported <strong>' + me.currentUser + '</strong> to AIV!');
+					document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
+				}
 			}, 0, true, true);
 			userReport.run();
-
-			document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
 
 			break;
 	}
@@ -3671,7 +3678,7 @@ igloo.extendProto(iglooRollback, function () {
 
 					// check that reversion is switched on
 					if (iglooF('actions').actionsEnabled === 'no') { 
-						alert(noMessage + 'because someone has already done so.');  
+						alert(noMessage + 'because someone else has already or this page has only one author.');  
 						return false; 
 					}
 
@@ -3687,7 +3694,7 @@ igloo.extendProto(iglooRollback, function () {
 					iglooF('actions').actionsEnabled = 'pause';
 									
 					// let the user know we're working...
-					document.getElementById('iglooPageTitle').innerHTML = document.getElementById('iglooPageTitle').innerHTML + ' - reverting edit...';
+					document.getElementById('iglooPageTitle').innerHTML = me.currentPage + ' - reverting edit...';
 
 					// build the reversion summary
 					summary = (thisRevert.isCustom === true) ? (thisRevert.revType + ' ' + glooSig) : iglooConfiguration.rollbackSummary[thisRevert.revType];
@@ -3698,10 +3705,22 @@ igloo.extendProto(iglooRollback, function () {
 						params: { targ: thisRevert.pageTitle, user: thisRevert.revertUser, summary: summary },
 						callback: function (data) {
 							if (typeof data.error !== "undefined") {
-								iglooF('statusLog').addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because another user has already done so.');
+								var errorMessage;
+
+								if (data.error.code === 'alreadyrolled') {
+									errorMessage = 'another user has already done so.';
+								} else if (data.error.code === 'onlyauthor') {
+									errorMessage = 'this page has only one author and therefore the edit cannot be reverted.';
+								} else {
+									errorMessage = 'an error has occured.';
+								}
+							
 								if (thisRevert.pageTitle === iglooF('justice').pageTitle) {
 									iglooF('actions').actionsEnabled = 'no';
 								}
+
+								iglooF('statusLog').addStatus('Will not revert the edit to <strong>' + thisRevert.pageTitle + '</strong> by <strong>' + thisRevert.revertUser + '</strong> because ' + errorMessage);
+								document.getElementById('iglooPageTitle').innerHTML = me.currentPage;
 							} else {
 								iglooF('statusLog').addStatus('Successfully reverted the change to <strong>' + thisRevert.pageTitle + '</strong> made by <strong>' + thisRevert.revertUser + '</strong>!');
 								thisRevert.performRollback(1);
