@@ -1719,7 +1719,7 @@ igloo.extendProto(iglooSettings, function () {
 				me = this;
 
 			if (tabcont === null) {
-				me.popup = new iglooPopup('<div id="igloo-settings-header" style+"padding-left:10px;"><h3 style="font-weight:bold;">Settings</h3></div><div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; margin-bottom: 7px;"></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+				me.popup = new iglooPopup('<div id="igloo-settings-header" style="padding-left:10px;"><h3 style="font-weight:bold;">Settings</h3></div><div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; margin-bottom: 7px;"></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
 				me.popup.buildInterface();
 				// add tabs
 				me.addtab('info', 'user info');
