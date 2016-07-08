@@ -985,6 +985,7 @@ igloo.extendProto(iglooView, function () {
 			// flag for the page to false.
 			if (iglooF('actions').stopActions) return false;
 
+			//update metadata for the page that's currently displayed
 			if (this.displaying) {
 				this.displaying.page.displaying = false;
 				this.displaying.page.changedSinceDisplay = false;
@@ -1104,7 +1105,7 @@ igloo.extendProto(iglooPage, function () {
 				}
 
 				if (toShow !== -1) {
-					currentView.display(this.revisions[x]);
+					currentView.display(this.revisions[toShow]);
 				} else {
 					currentView.display(this.revisions.iglast());
 				}
@@ -2178,7 +2179,7 @@ iglooActions.prototype.loadPage = function (page, revId) {
 			if (data.title === iglooF('recentChanges').recentChanges[j].info.pageTitle) {
 				p = iglooF('contentManager').getPage(data.title);
 				p.addRevision(new iglooRevision(data));
-				p.display();
+				p.display(revId);
 				return;
 			}
 		}
@@ -3591,7 +3592,7 @@ igloo.extendProto(iglooReversion, function () {
 								var customText = '<div style="text-align:center; margin-bottom:10px;">Custom Summary<span id="glooCustomClose" style="float:right; margin-right: 7px; cursor:pointer;"><img src="http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png"/></span></div>';
 									customText += '<div><center><input type="text" id="glooCustomSummary"/></div><div><input type="checkbox" id="glooCustomShouldWarn" /></div></center><br/><div style="text-align:center;">--<a style="cursor:pointer;" id="glooCustomClick">Revert Edit</a>--</div>';
 
-								me.customDialog = new iglooPopup(customText, 500, 70);
+								me.customDialog = new iglooPopup(customText, 500, 100);
 								me.customDialog.buildInterface();
 								me.customDialog.show();
 
