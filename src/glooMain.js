@@ -1768,7 +1768,7 @@ igloo.extendProto(iglooSettings, function () {
 				'border-bottom': 'none'
 			});
 
-			$(this).css({
+			$('#igloo-settings-tab-' + tabid).css({
 				'padding-bottom': '5px',
 				'border-bottom': '2px solid black'
 			});
