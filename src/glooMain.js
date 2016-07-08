@@ -1617,14 +1617,14 @@ igloo.extendProto(iglooSettings, function () {
 				'cursor': 'pointer'
 			});
 
-			this.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+			this.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; margin-bottom: 7px;"></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
 			this.popup.buildInterface();
 
 			// add tabs
-			this.addtab('info', 'user info');
-			this.addtab('general', 'general');
-			this.addtab('interface', 'interface');
-			this.addtab('close', 'close');
+			this.addtab('info', 'User Info');
+			this.addtab('general', 'General');
+			this.addtab('interface', 'Interface');
+			this.addtab('close', 'Close');
 
 			igloo.toolPane.panel.appendChild(settingsButton);
 
@@ -1719,7 +1719,7 @@ igloo.extendProto(iglooSettings, function () {
 				me = this;
 
 			if (tabcont === null) {
-				me.popup = new iglooPopup('<div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
+				me.popup = new iglooPopup('<div id="igloo-settings-header" style+"padding-left:10px;"><h3 style="font-weight:bold;">Settings</h3></div><div id="igloo-settings-tabs" style="width: 790px; height: 14px; padding-left: 10px; "></div><div id="igloo-settings-content" style="width: 800px; height: 385px; border-top: 1px solid #000;"></div>');
 				me.popup.buildInterface();
 				// add tabs
 				me.addtab('info', 'user info');
@@ -1746,24 +1746,31 @@ igloo.extendProto(iglooSettings, function () {
 			iglooF('piano').mode = 'default';
 		},
 				
-		addtab: function ( tabid, tabtext ) {
+		addtab: function (tabid, tabtext) {
 			if (!tabid || !tabtext) return false;
-			var tabscont = document.getElementById( 'igloo-settings-tabs' );
+			var tabscont = document.getElementById('igloo-settings-tabs');
 					
-			tabscont.innerHTML += '<div id="igloo-settings-tab-' + tabid + '" style="float: left; position: relative; top: 1px; font-size: 10px; height: 12px; width: 50px; border: 1px solid #000; text-align: center; cursor: pointer; margin-right: 10px;" onclick="iglooF(\'cogs\').switchtab (\'' + tabid + '\');"> ' + tabtext + '</div>';
+			tabscont.innerHTML += '<div id="igloo-settings-tab-' + tabid + '" style="float: left; position: relative; top: 1px; font-size: 14px; height: 12px; text-align: center; cursor: pointer; margin-right: 10px;" onclick="iglooF(\'cogs\').switchtab (\'' + tabid + '\');" > ' + tabtext + '</div>';
 				
 			return tabscont;
 		},
 				
-		switchtab: function ( tabid ) {
+		switchtab: function (tabid) {
 			if (!tabid) {
 				igloo.log('igloo: unexpected settings call, tab is missing');
 				return false;
 			}
 
 			var tabcont = document.getElementById('igloo-settings-content'), cont, me = this;
+
+			$('#igloo-settings-tab-' + tabid).click(function () {
+				$(this).css({
+					'padding-bottom': '5px',
+					'border-bottom': '2px solid black'
+				});
+			});
 					
-			switch ( tabid ) {
+			switch (tabid) {
 				case 'info':
 					tabcont.innerHTML = ''; // blank
 					tabcont.innerHTML += '<div style="padding: 10px;">Welcome to the igloo settings panel. From here, you can update your igloo settings - there is no need to save your changes or restart igloo as any alterations will take place immediately. igloo currently has the following data regarding your account:<br /><br />- username: ' + mw.config.get('wgUserName') + '<br />- is an admin: ' + iglooUserSettings.mesysop + '<br /></div>';
@@ -2479,7 +2486,7 @@ iglooActions.prototype.handleFinalWarning =  function (callback, data) {
 		case 1:
 			// If already blocked, tell and exit.
 			if (data.query.blocks[0] !== "undefined") {
-				iglooF('statusLog').addStatus( 'igloo will take no further action because <strong>' + me.currentUser + '</strong> is currently blocked.' );
+				iglooF('statusLog').addStatus('igloo will take no further action because <strong>' + me.currentUser + '</strong> is currently blocked.' );
 				return false;
 			}
 
@@ -3180,7 +3187,7 @@ igloo.extendProto(iglooBan, function () {
 				case 1:
 					// If already blocked, tell and exit.
 					if (data.query.blocks.length !== 0) {
-						iglooF('statusLog').addStatus( 'igloo will take no further action because <strong>' + me.user + '</strong> is currently blocked.' );
+						iglooF('statusLog').addStatus('igloo will take no further action because <strong>' + me.user + '</strong> is currently blocked.');
 						return false;
 					}
 
@@ -3469,7 +3476,7 @@ igloo.extendProto(iglooBlock, function () {
 				message = message.replace(/%DURATION%/g, me.useduration);			
 				message = '\n\n{{' + message + '}}';
 
-			iglooF('statusLog').addStatus ( 'Notifying <strong>' + me.currentUser + '</strong> of block (duration: ' + me.useduration + ')...' );
+			iglooF('statusLog').addStatus ('Notifying <strong>' + me.currentUser + '</strong> of block (duration: ' + me.useduration + ')...');
 
 			var notifyBlock = new iglooRequest({
 				module: 'edit',
