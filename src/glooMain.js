@@ -2187,7 +2187,7 @@ iglooActions.prototype.loadPage = function (page, revId) {
 		p = new iglooPage(new iglooRevision(data));
 
 		iglooF('contentManager').add(p, 'actions');
-		p.display();
+		p.display(revId);
 		iglooF('contentManager').gc(p.info.pageTitle, 'actions');
 	});
 };
