@@ -3395,7 +3395,7 @@ igloo.extendProto(iglooBlock, function () {
 			
 			// output the display
 			var content = '';
-			content += '<div style="padding-left: 15px;"><span style="width: 100%; border-bottom: 1px solid #000; font-size: 16px; font-weight: bold;">Block user</span><br /><br/>You are blocking a user - select the block options from below. Remember that you are responsible for all blocks made using your account.';
+			content += '<div style="padding-left: 15px;"><div><h3 style="font-weight: bold;">Block user</h3></div>You are blocking a user - select the block options from below. Remember that you are responsible for all blocks made using your account.';
 			content += '<br /><br />';
 			//content += '<div style="float: right; width: 200px; height: 100px;">' + t2 + '</div>';
 			content += '<table style="border: none; width: 700px;">';
