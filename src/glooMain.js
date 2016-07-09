@@ -3695,7 +3695,7 @@ igloo.extendProto(iglooRollback, function () {
 					iglooF('actions').actionsEnabled = 'pause';
 									
 					// let the user know we're working...
-					document.getElementById('iglooPageTitle').innerHTML = me.currentPage + ' - reverting edit...';
+					document.getElementById('iglooPageTitle').innerHTML = thisRevert.pageTitle + ' - reverting edit...';
 
 					// build the reversion summary
 					summary = (thisRevert.isCustom === true) ? (thisRevert.revType + ' ' + glooSig) : iglooConfiguration.rollbackSummary[thisRevert.revType];
