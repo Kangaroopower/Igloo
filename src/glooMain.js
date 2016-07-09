@@ -2175,6 +2175,10 @@ iglooActions.prototype.loadPage = function (page, revId) {
 	this.getRevInfo(page, revId, function (data) {
 		var p;
 
+		if (typeof revId === 'string') {
+			revId = parseInt(revId, 10);
+		}
+		
 		for (var j = 0; j < iglooF('recentChanges').recentChanges.length; j++) {
 			if (data.title === iglooF('recentChanges').recentChanges[j].info.pageTitle) {
 				p = iglooF('contentManager').getPage(data.title);
