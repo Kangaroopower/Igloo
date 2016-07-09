@@ -2178,7 +2178,7 @@ iglooActions.prototype.loadPage = function (page, revId) {
 		if (typeof revId === 'string') {
 			revId = parseInt(revId, 10);
 		}
-		
+
 		for (var j = 0; j < iglooF('recentChanges').recentChanges.length; j++) {
 			if (data.title === iglooF('recentChanges').recentChanges[j].info.pageTitle) {
 				p = iglooF('contentManager').getPage(data.title);
@@ -3395,10 +3395,10 @@ igloo.extendProto(iglooBlock, function () {
 			
 			// output the display
 			var content = '';
-			content += '<div style="padding-left: 15px;"><span style="width: 100%; border-bottom: 1px solid #000; font-size: 16px; font-weight: bold;">Block user</span><br />You are blocking a user - select the block options from below. Remember that you are responsible for all blocks made using your account.';
+			content += '<div style="padding-left: 15px;"><span style="width: 100%; border-bottom: 1px solid #000; font-size: 16px; font-weight: bold;">Block user</span><br /><br/>You are blocking a user - select the block options from below. Remember that you are responsible for all blocks made using your account.';
 			content += '<br /><br />';
 			//content += '<div style="float: right; width: 200px; height: 100px;">' + t2 + '</div>';
-			content += '<table style="border: none; width: 700px;>';
+			content += '<table style="border: none; width: 700px;">';
 			content += '<tr><td width="140px">Username:</td><td><input id="iglooBlock-username" style="width: 200px;" type="text" ' + disabled + ' value="' + me.user + '" />' + lastlength + '</td></tr>';
 			content += '<tr><td width="140px">Duration:</td><td><select style="width: 205px;" id="iglooBlock-duration-a">' + t + '</select> (or type) <input id="iglooBlock-duration-b" style="width: 200px;" type="text" /></td></tr>';
 			content += '<tr><td width="140px">Reason:</td><td><input id="iglooBlock-reason" style="width: 200px;" type="text" value="' + me.blockReason + '" /></td></tr>';
