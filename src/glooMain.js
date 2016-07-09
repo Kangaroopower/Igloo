@@ -3589,10 +3589,10 @@ igloo.extendProto(iglooReversion, function () {
 					if (confirmRevert === true) {
 						if (me.pageTitle !== '') {
 							if (summary === 'custom') {
-								var customText = '<div style="padding-left:10px; margin-bottom:10px;"><h3 style="font-weight:bold;">Revert with Custom Summary</h3><span id="glooCustomClose" style="float:right; margin-right: 7px; cursor:pointer;"><img src="http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png"/></span></div>';
-									customText += '<div style="padding-left:10px;">Custom Summary: <input type="text" id="glooCustomSummary"/></div><br/><div><input type="checkbox" id="glooCustomShouldWarn" /> Warn User</div><br/><div style="text-align:center;">--<a style="cursor:pointer;" id="glooCustomClick">Revert Edit</a>--</div>';
+								var customText = '<div style="padding-left:10px; margin-bottom:10px;"><span id="glooCustomClose" style="float:right; margin-right: 7px; cursor:pointer;"><img src="http://upload.wikimedia.org/wikipedia/commons/b/b6/Chrome_close_button.png"/></span><h3 style="font-weight:bold;">Revert with Custom Summary</h3></div>';
+									customText += '<div style="padding-left:10px;">Custom Summary: <input type="text" id="glooCustomSummary"/><br/><input type="checkbox" id="glooCustomShouldWarn" /> Warn User</div><div style="text-align:center;">--<a style="cursor:pointer;" id="glooCustomClick">Revert Edit</a>--</div>';
 
-								me.customDialog = new iglooPopup(customText, 500, 200);
+								me.customDialog = new iglooPopup(customText, 500, 120);
 								me.customDialog.buildInterface();
 								me.customDialog.show();
 
